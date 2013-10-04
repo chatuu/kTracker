@@ -46,9 +46,6 @@ GEOMSVCS      = GeomSvc.cxx
 MYSQLSVCO     = MySQLSvc.o
 MYSQLSVCS     = MySQLSvc.cxx
 
-SEEDFINDERO   = SeedFinder.o
-SEEDFINDERS   = SeedFinder.cxx
-
 KALMANUTILO   = KalmanUtil.o
 KALMANUTILS   = KalmanUtil.cxx
 
@@ -79,10 +76,6 @@ SMILLEPEDEO   = SMillepede.o
 SMILLEPEDES   = SMillepede.cxx
 MILLEPEDEO    = millepede.o
 MILLEPEDES    = millepede.f
-
-KSEEDERO      = kSeeder.o
-KSEEDERS      = kSeeder.cxx
-KSEEDER       = kSeeder
 
 KTRACKERMULO  = kTracker.o
 KTRACKERMULS  = kTracker.cxx
@@ -116,11 +109,11 @@ KTRACKERSO    = libkTracker.so
 
 TRKEXTOBJS    = TrackExtrapolator/TrackExtrapolator.o TrackExtrapolator/DetectorConstruction.o TrackExtrapolator/Field.o TrackExtrapolator/TabulatedField3D.o \
 		TrackExtrapolator/Settings.o TrackExtrapolator/GenericSD.o TrackExtrapolator/MCHit.o TrackExtrapolator/TPhysicsList.o 
-CLASSOBJS     = $(GEOMSVCO) $(SRAWEVENTO) $(SRECEVENTO) $(SEEDFINDERO) $(KALMANUTILO) $(KALMANFILTERO) $(KALMANTRACKO) $(KALMANFINDERO) $(KALMANFITTERO) $(VERTEXFITO) \
+CLASSOBJS     = $(GEOMSVCO) $(SRAWEVENTO) $(SRECEVENTO) $(KALMANUTILO) $(KALMANFILTERO) $(KALMANTRACKO) $(KALMANFINDERO) $(KALMANFITTERO) $(VERTEXFITO) \
 		$(SMPUTILO) $(SMILLEPEDEO) $(MILLEPEDEO) $(KALMANFASTO) $(FASTTRACKLETO) $(MYSQLSVCO)
-OBJS          = $(CLASSOBJS) $(KVERTEXO) $(KTRACKERMULO) $(KSEEDERO) $(KVERTEXMO) $(KFASTTRACKO) $(KVERTEXFO) $(KONLINETRACKO) $(MILLEALIGNO)
+OBJS          = $(CLASSOBJS) $(KVERTEXO) $(KTRACKERMULO) $(KVERTEXMO) $(KFASTTRACKO) $(KVERTEXFO) $(KONLINETRACKO) $(MILLEALIGNO)
 SLIBS         = $(KTRACKERSO)
-PROGRAMS      = $(KSEEDER) $(KTRACKERMUL) $(KVERTEX) $(KVERTEXM) $(MILLEALIGN) $(KFASTTRACK) $(KVERTEXF) $(KONLINETRACK)
+PROGRAMS      = $(KTRACKERMUL) $(KVERTEX) $(KVERTEXM) $(MILLEALIGN) $(KFASTTRACK) $(KVERTEXF) $(KONLINETRACK)
 
 all:            $(PROGRAMS) $(SLIBS)
 
@@ -131,10 +124,6 @@ $(MILLEPEDEO): $(MILLEPEDES)
 
 $(KTRACKERSO):  $(CLASSOBJS) $(TRKEXTOBJS)
 	$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
-	@echo "$@ done."
-
-$(KSEEDER):   $(KSEEDERO) $(CLASSOBJS) $(TRKEXTOBJS)
-	$(LD) $(LDFLAGS) $^ -o $@ 
 	@echo "$@ done."
 
 $(KTRACKERMUL):   $(KTRACKERMULO) $(CLASSOBJS) $(TRKEXTOBJS)
