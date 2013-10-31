@@ -16,7 +16,6 @@ Created: 05-28-2013
 #include <TBox.h>
 #include <TMatrixD.h>
 
-#include "KalmanFitter.h"
 #include "KalmanFastTracking.h"
 
 KalmanFastTracking::KalmanFastTracking(bool flag)
@@ -28,13 +27,6 @@ KalmanFastTracking::KalmanFastTracking(bool flag)
 #endif
 
   enable_KF = flag;
-
-  //Initialize Kalman fitter
-  if(enable_KF)
-    {
-      kmfitter = new KalmanFitter();
-      kmfitter->setControlParameter(50, 0.001);
-    }
 
   //Initialize minuit minimizer
   minimizer[0] = ROOT::Math::Factory::CreateMinimizer("Minuit2", "Simplex");
@@ -215,7 +207,6 @@ KalmanFastTracking::KalmanFastTracking(bool flag)
 
 KalmanFastTracking::~KalmanFastTracking()
 {
-  if(enable_KF) delete kmfitter;
   delete minimizer[0];
   delete minimizer[1];
 }
@@ -242,7 +233,6 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
 
   //Initialize tracklet lists
   for(int i = 0; i < 5; i++) trackletsInSt[i].clear();
-  tracks.clear();
 
   //Build tracklets in station 2, 3+, 3-
   //When i = 3, works for st3+, for i = 4, works for st3-
@@ -284,42 +274,6 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
 #endif
 
   if(trackletsInSt[4].empty()) return false;
-  if(!enable_KF) return true;
-
-  //If there is no possibility of a dimuon, return 
-  if(DIMUON_MODE == 1)
-    {
-      int nPlus = 0;
-      int nMinus = 0;
-      for(std::list<Tracklet>::iterator tracklet = trackletsInSt[4].begin(); tracklet != trackletsInSt[4].end(); ++tracklet)
-	{
-	  if(tracklet->getCharge() > 0) 
-	    {
-	      ++nPlus;
-	    }
-	  else
-	    {
-	      ++nMinus;
-	    }
-	}
-
-      if(nPlus < 1 || nMinus < 1) return false;
-    }
- 
-  //Build kalman tracks
-  for(std::list<Tracklet>::iterator tracklet = trackletsInSt[4].begin(); tracklet != trackletsInSt[4].end(); ++tracklet)
-    {
-      processOneTracklet(*tracklet);
-    }
-
-#ifdef _DEBUG_ON
-  Log(tracks.size() << " final tracks:");
-  for(std::list<KalmanTrack>::iterator kmtrk = tracks.begin(); kmtrk != tracks.end(); ++kmtrk)
-    {
-      kmtrk->print();
-    }
-#endif
-
   return true;
 }
 
@@ -1061,99 +1015,4 @@ void KalmanFastTracking::printAtDetectorBack(int stationID, std::string outputFi
   gr.Draw("Psame");
 
   c1.SaveAs(outputFileName.c_str());
-}
-
-void KalmanFastTracking::processOneTracklet(Tracklet& tracklet)
-{
-  //tracklet.print();
-  KalmanTrack kmtrk;
-
-  //Set the whole hit and node list
-  for(std::list<SignedHit>::iterator iter = tracklet.hits.begin(); iter != tracklet.hits.end(); ++iter)
-    {
-      if(iter->hit.index < 0) continue;
-
-      Node node_add(*iter);
-      kmtrk.getNodeList().push_back(node_add);
-      kmtrk.getHitIndexList().push_back(iter->sign*iter->hit.index);
-    }
-
-  //Set initial state
-  TrkPar trkpar_curr;
-  trkpar_curr._z = p_geomSvc->getPlanePosition(kmtrk.getNodeList().back().getHit().detectorID);
-  trkpar_curr._state_kf[0][0] = tracklet.getCharge()*tracklet.invP/sqrt(1. + tracklet.tx*tracklet.tx + tracklet.ty*tracklet.ty);
-  trkpar_curr._state_kf[1][0] = tracklet.tx;
-  trkpar_curr._state_kf[2][0] = tracklet.ty;
-  trkpar_curr._state_kf[3][0] = tracklet.getExpPositionX(trkpar_curr._z);
-  trkpar_curr._state_kf[4][0] = tracklet.getExpPositionY(trkpar_curr._z);
-
-  trkpar_curr._covar_kf.Zero();
-  trkpar_curr._covar_kf[0][0] = 0.001;//1E6*tracklet.err_invP*tracklet.err_invP;
-  trkpar_curr._covar_kf[1][1] = 0.01;//1E6*tracklet.err_tx*tracklet.err_tx;
-  trkpar_curr._covar_kf[2][2] = 0.01;//1E6*tracklet.err_ty*tracklet.err_ty;
-  trkpar_curr._covar_kf[3][3] = 100;//1E6*tracklet.getExpPosErrorX(trkpar_curr._z)*tracklet.getExpPosErrorX(trkpar_curr._z);
-  trkpar_curr._covar_kf[4][4] = 100;//1E6*tracklet.getExpPosErrorY(trkpar_curr._z)*tracklet.getExpPosErrorY(trkpar_curr._z);
-
-  kmtrk.setCurrTrkpar(trkpar_curr);
-  kmtrk.getNodeList().back().getPredicted() = trkpar_curr;
-
-  //Fit the track first with possibily a few nodes unresolved
-  if(!fitTrack(kmtrk)) return;
-
-  //Resolve left-right based on the current solution, re-fit if anything changed
-  resolveLeftRight(kmtrk);
-  if(kmtrk.isValid()) tracks.push_back(kmtrk);
-}
-
-bool KalmanFastTracking::fitTrack(KalmanTrack& kmtrk)
-{
-  if(kmtrk.getNodeList().empty()) return false;
-
-  if(kmfitter->processOneTrack(kmtrk) == 0)
-    {
-      return false;
-    }
-  kmfitter->updateTrack(kmtrk);
-
-  return true;
-}
-
-void KalmanFastTracking::resolveLeftRight(KalmanTrack& kmtrk)
-{
-  bool isUpdated = false;
-
-  std::list<int>::iterator hitID = kmtrk.getHitIndexList().begin();
-  for(std::list<Node>::iterator node = kmtrk.getNodeList().begin(); node != kmtrk.getNodeList().end(); )
-    {
-      if(*hitID == 0)
-	{
-	  double x_hit = node->getSmoothed().get_x();
-	  double y_hit = node->getSmoothed().get_y();
-	  double pos_hit = p_geomSvc->getUinStereoPlane(node->getHit().detectorID, x_hit, y_hit);
-	  
-	  int sign = 0;
-	  if(pos_hit > node->getHit().pos)
-	    {
-	      sign = 1;
-	    }
-	  else
-	    {
-	      sign = -1;
-	    }
-
-	  //update the node list
-	  TMatrixD m(1, 1), dm(1, 1);
-	  m[0][0] = node->getHit().pos + sign*node->getHit().driftDistance;
-	  dm[0][0] = p_geomSvc->getPlaneResolution(node->getHit().detectorID)*p_geomSvc->getPlaneResolution(node->getHit().detectorID); 
-	  node->setMeasurement(m, dm);
-	  *hitID = sign*node->getHit().index;
-
-	  isUpdated = true;
-	}
-
-      ++node;
-      ++hitID;
-    }
-
-  if(isUpdated) fitTrack(kmtrk);
 }

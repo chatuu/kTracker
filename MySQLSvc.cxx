@@ -235,56 +235,6 @@ bool MySQLSvc::getMCInfo(SRawMCEvent* mcEvent, int eventID)
   return true;
 }
 
-void MySQLSvc::writeTrackingRes(SRecEvent* recEvent, TClonesArray* tracklets)
-{
-  //Fill Track table/TrackHit table
-  mom_vertex.clear(); 
-  pos_vertex.clear();
-  int nTracks_local = recEvent->getNTracks();
-  for(int i = 0; i < nTracks_local; ++i)
-    {
-      int trackID = nTracks + i;
-      writeTrackTable(trackID, &recEvent->getTrack(i));
-      writeTrackHitTable(trackID, (Tracklet*)tracklets->At(i));
-    }
-  
-  //Fill dimuon table
-  std::vector<int> idx_plus = recEvent->getChargedTrackIDs(+1);
-  std::vector<int> idx_minus = recEvent->getChargedTrackIDs(-1);
-  for(unsigned int i = 0; i < idx_plus.size(); ++i)
-    {
-      for(unsigned int j = 0; j < idx_minus.size(); ++j)
-	{
-	  writeDimuonTable(nDimuons++, idx_plus[i], idx_minus[j]);
-	}
-    }
-
-  nTracks += nTracks_local;
-}
-
-void MySQLSvc::writeTrackTable(int trackID, SRecTrack* recTrack)
-{
-  double x0 = recTrack->getVtxPar(0);
-  double y0 = recTrack->getVtxPar(1);
-  double z0 = recTrack->getVtxPar(2);
-  double px0, py0, pz0;
-  recTrack->getMomentumVertex(px0, py0, pz0);
-  int charge = recTrack->getCharge();
-
-  //Put the paramters in temporary containers for dimuon combination
-  mom_vertex.push_back(TLorentzVector(px0, py0, pz0, sqrt(px0*px0 + py0*py0 + pz0*pz0 + 0.10566*0.10566)));
-  pos_vertex.push_back(TVector3(x0, y0, z0));
-
-  sprintf(query, "INSERT INTO kTrack(trackID,runID,spillID,eventID,x0,y0,z0,px0,py0,pz0,charge)" 
-	  " VALUES(%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%d)", trackID, runID, spillID, eventID_last, x0,
-	  y0, z0, px0, py0, pz0, charge);
-#ifndef OUT_TO_SCREEN
-  server->Exec(query);
-#else
-  std::cout << __FUNCTION__ << ": " << query << std::endl;
-#endif
-}
-
 void MySQLSvc::writeTrackHitTable(int trackID, Tracklet* tracklet)
 {
   for(std::list<SignedHit>::iterator iter = tracklet->hits.begin(); iter != tracklet->hits.end(); ++iter)

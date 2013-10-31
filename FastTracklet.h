@@ -19,7 +19,6 @@ Created: 06-09-2013
 
 #include "GeomSvc.h"
 #include "SRawEvent.h"
-#include "SRecEvent.h"
 
 class SignedHit : public TObject
 {
@@ -101,9 +100,6 @@ public:
 
   //Debuggin output
   void print();
-
-  //Convert to a SRecTrack
-  SRecTrack getSRecTrack();
 
   //Station ID
   int stationID;

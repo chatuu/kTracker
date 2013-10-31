@@ -21,8 +21,6 @@ Created: 05-24-2013
 
 #include "GeomSvc.h"
 #include "SRawEvent.h"
-#include "KalmanTrack.h"
-#include "KalmanFitter.h"
 #include "FastTracklet.h"
 
 class KalmanFastTracking
@@ -71,19 +69,8 @@ public:
   //Print the distribution of tracklets at detector back/front
   void printAtDetectorBack(int stationID, std::string outputFileName);
 
-  ///Track fitting stuff
-  //Convert Tracklet to KalmanTrack and solve left-right problem
-  void processOneTracklet(Tracklet& tracklet);
-
-  //Use Kalman fitter to fit a track
-  bool fitTrack(KalmanTrack& kmtrk);
-
-  //Resolve left right by Kalman fitting results
-  void resolveLeftRight(KalmanTrack& kmtrk);
-
   ///Final output
   std::list<Tracklet>& getFinalTracklets() { return trackletsInSt[4]; }
-  std::list<KalmanTrack>& getKalmanTracks() { return tracks; }
 
 private:
   //Raw event input
@@ -93,9 +80,6 @@ private:
   //Tracklets in one event, id = 0, 1, 2 for station 1, 2, 3+/-, id = 3 for station 2&3 combined, id = 4 for global tracks
   //Likewise for the next part
   std::list<Tracklet> trackletsInSt[5];
-
-  //Final kalman tracks
-  std::list<KalmanTrack> tracks;
 
   ///Configurations of tracklet finding
   //Hodo. IDs and prop. tube IDs for masking
@@ -147,9 +131,6 @@ private:
   //Least chi square fitter and functor
   ROOT::Math::Minimizer* minimizer[2];
   ROOT::Math::Functor fcn;
-
-  //Kalman fitter
-  KalmanFitter* kmfitter;
 
   //Geometry service
   GeomSvc* p_geomSvc;

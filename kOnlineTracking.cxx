@@ -14,11 +14,8 @@
 
 #include "GeomSvc.h"
 #include "SRawEvent.h"
-#include "SRecEvent.h"
 #include "FastTracklet.h"
 #include "KalmanFastTracking.h"
-#include "KalmanFitter.h"
-#include "VertexFit.h"
 #include "MySQLSvc.h"
 
 #include "MODE_SWITCH.h"
@@ -37,7 +34,6 @@ int main(int argc, char *argv[])
 
   //Data output definition
   SRawEvent* rawEvent = new SRawEvent();
-  SRecEvent* recEvent = new SRecEvent();
   TClonesArray* tracklets = new TClonesArray("Tracklet");
   TClonesArray& arr_tracklets = *tracklets;
 
@@ -45,13 +41,11 @@ int main(int argc, char *argv[])
   TTree* saveTree = new TTree("save", "save");
 
   saveTree->Branch("rawEvent", &rawEvent, 256000, 99);
-  saveTree->Branch("recEvent", &recEvent, 256000, 99);
   saveTree->Branch("tracklets", &tracklets, 256000, 99);
   tracklets->BypassStreamer();
 
   //Initialize track finder
   KalmanFastTracking* fastfinder = new KalmanFastTracking(false);
-  VertexFit*          vtxfinder  = new VertexFit();
 
   //Start endless tracking
   bool stopRun = false;
@@ -75,26 +69,19 @@ int main(int argc, char *argv[])
       std::list<Tracklet>& rec_tracklets = fastfinder->getFinalTracklets();
       if(rec_tracklets.empty()) continue;
 
-      recEvent->setRawEvent(rawEvent);
       int nTracklets = 0;
       for(std::list<Tracklet>::iterator iter = rec_tracklets.begin(); iter != rec_tracklets.end(); ++iter)
 	{
 	  iter->print();
 	  iter->calcChisq();
 	  new(arr_tracklets[nTracklets++]) Tracklet(*iter);
-
-	  SRecTrack recTrack = iter->getSRecTrack();
-	  recTrack.setZVertex(vtxfinder->findSingleMuonVertex(recTrack));
-	  recEvent->insertTrack(recTrack);
 	}
   
       if(nTracklets > 0)
 	{
-	  p_mysqlSvc->writeTrackingRes(recEvent, tracklets);
   	  saveTree->Fill();
 	}	 
       rawEvent->clear();
-      recEvent->clear();
 
       //Get stop run signal
       stopRun = p_mysqlSvc->isRunStopped();
@@ -105,7 +92,5 @@ int main(int argc, char *argv[])
   saveFile->Close();
 
   delete fastfinder;
-  delete vtxfinder;
-
   return 1;
 }

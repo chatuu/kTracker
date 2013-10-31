@@ -464,54 +464,6 @@ double Tracklet::Eval(const double* par)
   return calcChisq();
 }
 
-SRecTrack Tracklet::getSRecTrack()
-{
-  GeomSvc* p_geomSvc = GeomSvc::instance();
-
-  SRecTrack strack;
-  strack.setChisq(chisq);
-  for(std::list<SignedHit>::iterator iter = hits.begin(); iter != hits.end(); ++iter)
-    {
-      if(iter->hit.index < 0) continue;
-
-      double z = p_geomSvc->getPlanePosition(iter->hit.detectorID);
-      double tx_val, tx_err, x0_val, x0_err;
-      if(iter->hit.detectorID <= 6)
-	{
-	  getXZInfoInSt1(tx_val, x0_val);
-          getXZErrorInSt1(tx_err, x0_err);
-	}
-      else
-	{
-	  tx_val = tx;
-	  x0_val = x0;
-	  tx_err = err_tx;
-	  x0_err = err_x0;
-	}
-
-      TMatrixD state(5, 1), covar(5, 5);
-      state[0][0] = getCharge()*invP*sqrt((1. + tx_val*tx_val)/(1. + tx_val*tx_val + ty*ty));
-      state[1][0] = tx_val;
-      state[2][0] = ty;
-      state[3][0] = getExpPositionX(z);
-      state[4][0] = getExpPositionY(z);
-
-      covar.Zero();
-      covar[0][0] = err_invP*err_invP;
-      covar[1][1] = tx_err*tx_err;
-      covar[2][2] = err_ty*err_ty;
-      covar[3][3] = getExpPosErrorX(z)*getExpPosErrorX(z);
-      covar[4][4] = getExpPosErrorY(z)*getExpPosErrorY(z);
-      
-      strack.insertHitIndex(iter->hit.index*iter->sign);
-      strack.insertStateVector(state);
-      strack.insertCovariance(covar);
-      strack.insertZ(z);
-    }
-
-  return strack;
-}
-
 void Tracklet::print()
 {
   using namespace std;

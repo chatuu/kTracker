@@ -14,11 +14,8 @@
 
 #include "GeomSvc.h"
 #include "SRawEvent.h"
-#include "SRecEvent.h"
 #include "FastTracklet.h"
 #include "KalmanFastTracking.h"
-#include "KalmanFitter.h"
-#include "VertexFit.h"
 
 #include "MODE_SWITCH.h"
 
@@ -52,15 +49,8 @@ int main(int argc, char *argv[])
   int nTracklets;
   double time;
 
-#ifdef _ENABLE_KF
-  SRecEvent* recEvent = new SRecEvent();
-#endif
-
   TFile* saveFile = new TFile(argv[2], "recreate");
   TTree* saveTree = dataTree->CloneTree(0);
-#ifdef _ENABLE_KF
-  saveTree->Branch("recEvent", &recEvent, 256000, 99);
-#endif
 
   saveTree->Branch("runID", &runID, "runID/I");
   saveTree->Branch("spillID", &spillID, "spillID/I");
@@ -72,13 +62,7 @@ int main(int argc, char *argv[])
 
   //Initialize track finder
   Log("Initializing the track finder and kalman filter ... ");
-#ifdef _ENABLE_KF
-  KalmanFilter* filter = new KalmanFilter();
-  KalmanFastTracking *fastfinder = new KalmanFastTracking();
-  VertexFit* vtxfit = new VertexFit();
-#else
   KalmanFastTracking *fastfinder = new KalmanFastTracking(false);
-#endif
 
   int offset = argc > 3 ? atoi(argv[3]) : 0;
   int nEvtMax = argc > 4 ? atoi(argv[4]) + offset : dataTree->GetEntries();
@@ -108,18 +92,6 @@ int main(int argc, char *argv[])
 	  nTracklets++;
 	}
 
-#ifdef _ENABLE_KF
-      recEvent->setRawEvent(rawEvent);
-      std::list<KalmanTrack>& rec_tracks = fastfinder->getKalmanTracks();
-      for(std::list<KalmanTrack>::iterator iter = rec_tracks.begin(); iter != rec_tracks.end(); ++iter)
-	{
-	  iter->print();
-	  SRecTrack recTrack = iter->getSRecTrack();
-	  recTrack.setZVertex(vtxfit->findSingleMuonVertex(recTrack));
-          recEvent->insertTrack(recTrack);
-	}
-#endif
-
       runID = rawEvent->getRunID();
       spillID = rawEvent->getSpillID();
       eventID = rawEvent->getEventID();
@@ -128,14 +100,7 @@ int main(int argc, char *argv[])
       time = double(time_single)/CLOCKS_PER_SEC;
       Log("It takes " << time << " seconds for this event.");
 
-#ifdef _ENABLE_KF
-      recEvent->reIndex();
-#endif
       saveTree->Fill();
-      
-#ifdef _ENABLE_KF
-      recEvent->clear();
-#endif
       rawEvent->clear();
     }
 
@@ -144,9 +109,5 @@ int main(int argc, char *argv[])
   saveFile->Close();
 
   delete fastfinder;
-#ifdef _ENABLE_KF
-  filter->close();
-#endif
-
   return 1;
 }
