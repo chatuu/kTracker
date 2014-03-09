@@ -92,8 +92,11 @@ public:
   int getCharge() const { return (tx*Z_KMAG_BEND + x0)/Z_KMAG_BEND > tx ? 1 : -1; }
 
   //Get the slope and intersection in station 1
-  void getXZInfoInSt1(double& tx_st1, double& x0_st1);
-  void getXZErrorInSt1(double& err_tx_st1, double& err_x0_st1);
+  void getXZInfoInSt1(double& tx_st1, double& x0_st1) const;
+  void getXZErrorInSt1(double& err_tx_st1, double& err_x0_st1) const;
+
+  void getXZInfoInSt2(double& tx_st2, double& x0_st2) const;
+  void getXZErrorInSt2(double& err_tx_st2, double& err_x0_st2) const;
 
   //For sorting tracklet list
   bool operator<(const Tracklet& elem) const;

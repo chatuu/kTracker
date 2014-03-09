@@ -125,12 +125,20 @@ double Tracklet::getProb() const
 
 double Tracklet::getExpPositionX(double z) const
 {
-  if(KMAG_ON == 1 && stationID >= 5 && z < Z_KMAG_BEND - 1.)
+  if(KMAG_ON == 1 && stationID >= 5)
     {
-      double tx_st1 = tx + PT_KICK_KMAG*invP*getCharge();
-      double x0_st1 = tx*Z_KMAG_BEND + x0 - tx_st1*Z_KMAG_BEND;
+      double tx_local = tx;
+      double x0_local = x0;
+      if(z < Z_KMAG_BEND - 1.)
+	{
+	  getXZInfoInSt1(tx_local, x0_local);
+	}
+      else if(z < Z_KMAG_FRINGE_BEND - 1.)
+	{
+	  getXZInfoInSt2(tx_local, x0_local);
+	}
 
-      return x0_st1 + tx_st1*z;
+      return x0_local + tx_local*z;
     }
   else
     {
@@ -141,13 +149,20 @@ double Tracklet::getExpPositionX(double z) const
 double Tracklet::getExpPosErrorX(double z) const
 {
   double err_x;
-  if(KMAG_ON == 1 && stationID >= 5 && z < Z_KMAG_BEND - 1.)
-    {
-      double err_kick = err_invP*PT_KICK_KMAG;
-      double err_tx_st1 = err_tx + err_kick;
-      double err_x0_st1 = err_x0 + err_kick*Z_KMAG_BEND;
+  if(KMAG_ON == 1 && stationID >= 5)
+    {  
+      double err_tx_local = err_tx;
+      double err_x0_local = err_x0;
+      if(z < Z_KMAG_BEND - 1.) 
+	{
+	  getXZErrorInSt1(err_tx_local, err_x0_local);
+	}
+      else if(z < Z_KMAG_FRINGE_BEND - 1.)
+	{
+	  getXZErrorInSt2(err_tx_local, err_x0_local);
+	}
 
-      err_x = err_x0_st1 + fabs(err_tx_st1*z);
+      err_x = err_x0_local + fabs(err_tx_local*z);
     }
   else
     {
@@ -179,7 +194,7 @@ double Tracklet::getExpPositionW(int detectorID)
   double x_exp = getExpPositionX(z);
   double y_exp = getExpPositionY(z);
 
-  return p_geomSvc->getCostheta(detectorID)*x_exp + p_geomSvc->getSintheta(detectorID)*y_exp;
+  return p_geomSvc->getInterceptionFast(detectorID, x_exp, y_exp);
 }
 
 bool Tracklet::operator<(const Tracklet& elem) const
@@ -255,7 +270,7 @@ double Tracklet::getMomentum() const
   return p;
 }
 
-void Tracklet::getXZInfoInSt1(double& tx_st1, double& x0_st1)
+void Tracklet::getXZInfoInSt1(double& tx_st1, double& x0_st1) const
 {
   if(KMAG_ON == 1)
     {
@@ -269,13 +284,42 @@ void Tracklet::getXZInfoInSt1(double& tx_st1, double& x0_st1)
     }  
 }
 
-void Tracklet::getXZErrorInSt1(double& err_tx_st1, double& err_x0_st1)
+void Tracklet::getXZErrorInSt1(double& err_tx_st1, double& err_x0_st1) const
 {
   if(KMAG_ON == 1)
     {
       double err_kick = err_invP*PT_KICK_KMAG;
       err_tx_st1 = err_tx + err_kick;
       err_x0_st1 = err_x0 + err_kick*Z_KMAG_BEND;
+    }
+  else
+    {
+      err_tx_st1 = err_tx;
+      err_x0_st1 = err_x0;
+    }
+}
+
+void Tracklet::getXZInfoInSt2(double& tx_st2, double& x0_st2) const
+{
+  if(KMAG_ON == 1)
+    {
+      tx_st2 = tx + PT_KICK_KMAG_FRINGE*invP*getCharge();
+      x0_st2 = tx*Z_KMAG_FRINGE_BEND + x0 - tx_st2*Z_KMAG_FRINGE_BEND;
+    }
+  else
+    {
+      tx_st2 = tx;
+      x0_st2 = x0;
+    }  
+}
+
+void Tracklet::getXZErrorInSt2(double& err_tx_st1, double& err_x0_st1) const
+{
+  if(KMAG_ON == 1)
+    {
+      double err_kick = err_invP*PT_KICK_KMAG_FRINGE;
+      err_tx_st1 = err_tx + err_kick;
+      err_x0_st1 = err_x0 + err_kick*Z_KMAG_FRINGE_BEND;
     }
   else
     {
@@ -403,10 +447,17 @@ double Tracklet::calcChisq()
   GeomSvc* p_geomSvc = GeomSvc::instance();
   chisq = 0.;
 
-  double tx_st1, x0_st1;
+  double tx_st1, x0_st1, tx_st2, x0_st2;
   if(stationID == 6 && KMAG_ON == 1)
     {
       getXZInfoInSt1(tx_st1, x0_st1);
+      getXZInfoInSt2(tx_st2, x0_st2);
+    }
+  else if(stationID == 5 && KMAG_ON == 1)
+    {
+      //getXZInfoInSt2(tx_st2, x0_st2);
+      tx_st2 = tx;
+      x0_st2 = x0;
     }
 
   for(std::list<SignedHit>::const_iterator iter = hits.begin(); iter != hits.end(); ++iter)
@@ -426,22 +477,27 @@ double Tracklet::calcChisq()
       if(iter->sign != 0) sigma = p_geomSvc->getPlaneResolution(detectorID);
 
       double p = iter->hit.pos + iter->sign*fabs(iter->hit.driftDistance);
-      if(stationID == 6 || stationID == 5)
+      if(KMAG_ON == 1 && (stationID == 6 || stationID == 5))
 	{
-	  if(KMAG_ON == 1 && detectorID <= 6)
+	  if(detectorID <= 6)
 	    {
 	      residual[index] = p - p_geomSvc->getInterception(detectorID, tx_st1, ty, x0_st1, y0);
+	    }
+	  else if(detectorID > 6 && detectorID <= 12)
+	    {
+	      residual[index] = p - p_geomSvc->getInterception(detectorID, tx_st2, ty, x0_st2, y0);
 	    }
 	  else
 	    {
 	      residual[index] = p - p_geomSvc->getInterception(detectorID, tx, ty, x0, y0);
-	    } 
+	    }
 	}
       else
 	{
-	  residual[index] = p - p_geomSvc->getInterceptionFast(detectorID, tx, ty, x0, y0);
+	  residual[index] = p - p_geomSvc->getInterception(detectorID, tx, ty, x0, y0);
 	}
-     
+    
+      //LogInfo(stationID << " " << detectorID << "  " << tx << "  " << tx_st1 << "  " << tx_st2 << "  " << invP << "  " << residual[index]); 
       chisq += (residual[index]*residual[index]/sigma/sigma);
       //std::cout << iter->hit.detectorID << "  " << iter->hit.elementID << "  " << iter->sign << "  " << iter->hit.pos << "  " << iter->hit.driftDistance << "  " << costheta << "  " << sintheta << "  " << z << "  " << (x0_st1 + tx_st1*z) << "  " << (x0 + tx*z) << "  " << (y0 + ty*z) << "  " << sigma << std::endl;
     }

@@ -369,21 +369,26 @@ bool MySQLSvc::getEventHeader(SRawMCEvent* mcEvent, int eventID)
       mcEvent->nHits[i] = getInt(0);
        
       //At station 1,2,3,4
-      sprintf(query, "SELECT hpx,hpy,hpz,hx,hy,hz FROM mHit WHERE detectorName RLIKE '^H[1-4][TB]$' AND mTrackID=%d", trackID[i]);
-      if(makeQuery() != 4) return false;
-
+      sprintf(query, "SELECT hpx,hpy,hpz,hx,hy,hz FROM mHit WHERE detectorName LIKE 'D1V%%' AND mTrackID=%d", trackID[i]);
+      if(makeQuery() < 1) return false;
       nextEntry();
       mcEvent->p_station1[i].SetXYZ(getDouble(0), getDouble(1), getDouble(2));
       mcEvent->v_station1[i].SetXYZ(getDouble(3), getDouble(4), getDouble(5));
-    
+ 
+      sprintf(query, "SELECT hpx,hpy,hpz,hx,hy,hz FROM mHit WHERE detectorName LIKE 'D2V%%' AND mTrackID=%d", trackID[i]);
+      if(makeQuery() < 1) return false;
       nextEntry();
       mcEvent->p_station2[i].SetXYZ(getDouble(0), getDouble(1), getDouble(2));
       mcEvent->v_station2[i].SetXYZ(getDouble(3), getDouble(4), getDouble(5));
 
+      sprintf(query, "SELECT hpx,hpy,hpz,hx,hy,hz FROM mHit WHERE detectorName LIKE 'D3_V%%' AND mTrackID=%d", trackID[i]);
+      if(makeQuery() < 1) return false;
       nextEntry();
       mcEvent->p_station3[i].SetXYZ(getDouble(0), getDouble(1), getDouble(2));
       mcEvent->v_station3[i].SetXYZ(getDouble(3), getDouble(4), getDouble(5));
 
+      sprintf(query, "SELECT hpx,hpy,hpz,hx,hy,hz FROM mHit WHERE detectorName LIKE 'H4%%' AND mTrackID=%d", trackID[i]);
+      if(makeQuery() < 1) return false;
       nextEntry();
       mcEvent->p_station4[i].SetXYZ(getDouble(0), getDouble(1), getDouble(2));
       mcEvent->v_station4[i].SetXYZ(getDouble(3), getDouble(4), getDouble(5));
