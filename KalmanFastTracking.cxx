@@ -960,6 +960,9 @@ bool KalmanFastTracking::acceptTracklet(Tracklet& tracklet)
 
 bool KalmanFastTracking::muonID(Tracklet& tracklet)
 {
+  //Set the cut value on multiple scattering
+  double cut = tracklet.stationID == 6 ? MUID_REJECT*(MUID_P0 + MUID_P1/tracklet.invP + MUID_P2/tracklet.invP/tracklet.invP) : 0.03; 
+
   double slope[2] = {tracklet.tx, tracklet.ty};
   PropSegment* segs[2] = {&(tracklet.seg_x), &(tracklet.seg_y)};
   for(int i = 0; i < 2; ++i)
@@ -996,7 +999,7 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
 	}
       
       segs[i]->fit();
-      if(!(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < 0.03)) return false;
+      if(!(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut)) return false;
     }
 
   return true;

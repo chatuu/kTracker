@@ -54,13 +54,24 @@ int main(int argc, char *argv[])
   vector<int> pflags, mflags;
   ptracks.clear(); mtracks.clear();
   pflags.clear(); mflags.clear();
+  ptracks.reserve(200000); mtracks.reserve(200000);
+  pflags.reserve(200000); mflags.reserve(200000);
 
   //Extract all the tracks and put in the container
+  TRandom rnd;
+  rnd.SetSeed(atoi(argv[4]));
+ 
   int nEvtMax = dataTree->GetEntries();
+  double lo = atof(argv[5]);
+  double hi = atof(argv[6]);
   for(int i = 0; i < nEvtMax; i++)
     {
       dataTree->GetEntry(i);
-      
+      if(i % 1000 == 0) cout << "  " << i << "/" << nEvtMax << endl;
+
+      //intensity selection
+      if(rawEvent->getIntensity() < lo || rawEvent->getIntensity() > hi) continue;
+
       int nTracks = recEvent->getNTracks();
       for(int j = 0; j < nTracks; j++)
 	{
@@ -87,12 +98,10 @@ int main(int argc, char *argv[])
   int nEntries = atoi(argv[3]);
   LogInfo("Totally " << nPlus << " positive tracks and " << nMinus << " negative tracks ..");
 
-  TRandom rnd;
-  rnd.SetSeed(atoi(argv[4]));
+  int nEntriesMax = int(nPlus < nMinus ? 0.8*nPlus : 0.8*nMinus);
+  if(nEntries > nEntriesMax) nEntries = nEntriesMax;
   while(saveTree->GetEntries() < nEntries)
     {
-      cout << saveTree->GetEntries() << endl;
-
       int id1 = int(rnd.Rndm()*nPlus);
       int id2 = int(rnd.Rndm()*nMinus);
 

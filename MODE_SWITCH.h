@@ -27,7 +27,7 @@
 //#define LOAD_ONLINE_ALIGNMENT
 
 //--------------- Geometry version ---------------
-#define GEOMETRY_VERSION "geometry_G1_run2"
+#define GEOMETRY_VERSION "geometry_G3_run2"
 
 //-------------- SQL database --------------------
 #define MYSQL_SERVER_ADDR "localhost"
@@ -58,6 +58,12 @@
 #define PROB_LOOSE 0.0
 #define PROB_TIGHT 0.001
 #define HIT_REJECT 3.
+
+//--------------- Muon identification -----------
+#define MUID_REJECT 4.
+#define MUID_P0 6.43
+#define MUID_P1 -0.09
+#define MUID_P2 0.00046
 
 //--------------- Geometry setup -----------------
 #define nChamberPlanes 24
