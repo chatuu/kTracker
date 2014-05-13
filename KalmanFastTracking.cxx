@@ -398,11 +398,44 @@ bool KalmanFastTracking::acceptEvent(SRawEvent* rawEvent)
 
 void KalmanFastTracking::buildBackPartialTracks()
 {
+  //Temporary container for a simple chisq fit
+  int nHitsX2, nHitsX3;
+  double z_fit[4], x_fit[4];
+  double a, b;
+
   for(std::list<Tracklet>::iterator tracklet3 = trackletsInSt[2].begin(); tracklet3 != trackletsInSt[2].end(); ++tracklet3)
     {
+      nHitsX3 = 0;
+      for(std::list<SignedHit>::iterator ptr_hit = tracklet3->hits.begin(); ptr_hit != tracklet3->hits.end(); ++ptr_hit)
+	{
+	  if(ptr_hit->hit.index < 0) continue;
+	  if(p_geomSvc->getPlaneType(ptr_hit->hit.detectorID) == 1) 
+	    {
+	      z_fit[nHitsX3] = z_plane[ptr_hit->hit.detectorID];
+	      x_fit[nHitsX3] = ptr_hit->hit.pos;
+	      ++nHitsX3;
+	    }
+	}
+
       Tracklet tracklet_best;
       for(std::list<Tracklet>::iterator tracklet2 = trackletsInSt[1].begin(); tracklet2 != trackletsInSt[1].end(); ++tracklet2)
 	{
+	  //Before real tracking, see if the two tracks actually match
+	  nHitsX2 = nHitsX3;
+	  for(std::list<SignedHit>::iterator ptr_hit = tracklet2->hits.begin(); ptr_hit != tracklet2->hits.end(); ++ptr_hit)
+	    {
+	      if(ptr_hit->hit.index < 0) continue;
+	      if(p_geomSvc->getPlaneType(ptr_hit->hit.detectorID) == 1) 
+		{
+		  z_fit[nHitsX2] = z_plane[ptr_hit->hit.detectorID];
+		  x_fit[nHitsX2] = ptr_hit->hit.pos;
+		  ++nHitsX2;
+		}
+	    }
+	  
+	  chi2fit(nHitsX2, z_fit, x_fit, a, b);
+	  if(fabs(a) > TX_MAX || fabs(b) > X0_MAX) continue;
+
 	  Tracklet tracklet_23 = (*tracklet2) + (*tracklet3);
 #ifdef _DEBUG_ON
 	  LogInfo("Using following two tracklets:");
@@ -1282,4 +1315,36 @@ void KalmanFastTracking::resolveLeftRight(KalmanTrack& kmtrk)
     }
 
   if(isUpdated) fitTrack(kmtrk);
+}
+
+void KalmanFastTracking::chi2fit(int n, double x[], double y[], double& a, double& b)
+{
+  double sum = 0.;
+  double sx = 0.;
+  double sy = 0.;
+  double sxx = 0.;
+  double syy = 0.;
+  double sxy = 0.;
+
+  for(int i = 0; i < n; ++i)
+    {
+      ++sum;
+      sx += x[i];
+      sy += y[i];
+      sxx += (x[i]*x[i]);
+      syy += (y[i]*y[i]);
+      sxy += (x[i]*y[i]);
+    }
+
+  double det = sum*sxx - sx*sx;
+  if(fabs(det) < 1E-20) 
+    {
+      a = 0.;
+      b = 0.;
+
+      return;
+    }
+
+  a = (sum*sxy - sx*sy)/det;
+  b = (sy*sxx - sxy*sx)/det;
 }
