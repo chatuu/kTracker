@@ -398,13 +398,17 @@ bool KalmanFastTracking::acceptEvent(SRawEvent* rawEvent)
 
 void KalmanFastTracking::buildBackPartialTracks()
 {
+#ifndef ALIGNMENT_MODE
   //Temporary container for a simple chisq fit
   int nHitsX2, nHitsX3;
   double z_fit[4], x_fit[4];
   double a, b;
+#endif
 
   for(std::list<Tracklet>::iterator tracklet3 = trackletsInSt[2].begin(); tracklet3 != trackletsInSt[2].end(); ++tracklet3)
     {
+#ifndef ALIGNMENT_MODE
+      //Extract the X hits only from station-3 tracks
       nHitsX3 = 0;
       for(std::list<SignedHit>::iterator ptr_hit = tracklet3->hits.begin(); ptr_hit != tracklet3->hits.end(); ++ptr_hit)
 	{
@@ -416,11 +420,12 @@ void KalmanFastTracking::buildBackPartialTracks()
 	      ++nHitsX3;
 	    }
 	}
-
+#endif
       Tracklet tracklet_best;
       for(std::list<Tracklet>::iterator tracklet2 = trackletsInSt[1].begin(); tracklet2 != trackletsInSt[1].end(); ++tracklet2)
 	{
-	  //Before real tracking, see if the two tracks actually match
+#ifndef ALIGNMENT_MODE
+	  //Extract the X hits from station-2 tracke
 	  nHitsX2 = nHitsX3;
 	  for(std::list<SignedHit>::iterator ptr_hit = tracklet2->hits.begin(); ptr_hit != tracklet2->hits.end(); ++ptr_hit)
 	    {
@@ -433,8 +438,27 @@ void KalmanFastTracking::buildBackPartialTracks()
 		}
 	    }
 	  
+	  //Apply a simple linear fit to get rough estimation of X-Z slope and intersection
 	  chi2fit(nHitsX2, z_fit, x_fit, a, b);
 	  if(fabs(a) > TX_MAX || fabs(b) > X0_MAX) continue;
+
+	  //Project to proportional tubes to see if there is enough
+	  int nPropHits = 0;
+	  for(int i = 0; i < 4; ++i)
+	    {
+	      double x_exp = a*z_mask[detectorIDs_muid[0][i] - 25] + b;
+	      for(std::list<int>::iterator iter = hitIDs_muid[0][i].begin(); iter != hitIDs_muid[0][i].end(); ++iter)
+		{
+		  if(fabs(hitAll[*iter].pos - x_exp) < 2.54)
+		    {
+		      ++nPropHits;
+		      break;
+		    }
+		}
+	      if(nPropHits > 0) break;
+	    }
+	  if(nPropHits == 0) continue;
+#endif
 
 	  Tracklet tracklet_23 = (*tracklet2) + (*tracklet3);
 #ifdef _DEBUG_ON
@@ -938,12 +962,11 @@ bool KalmanFastTracking::acceptTracklet(Tracklet& tracklet)
       return false;
     }
 
-  int nMinimum = stationIDs_mask[tracklet.stationID-1].size();
- 
   //LogInfo(tracklet.stationID);
   int nHodoHits = 0;
   for(std::vector<int>::iterator stationID = stationIDs_mask[tracklet.stationID-1].begin(); stationID != stationIDs_mask[tracklet.stationID-1].end(); ++stationID)
     {
+      bool masked = false;
       for(std::list<int>::iterator iter = hitIDs_mask[*stationID-1].begin(); iter != hitIDs_mask[*stationID-1].end(); ++iter)
        	{
 	  int detectorID = hitAll[*iter].detectorID;
@@ -971,14 +994,18 @@ bool KalmanFastTracking::acceptTracklet(Tracklet& tracklet)
 	  if(x_hodo > x_min && x_hodo < x_max && y_hodo > y_min && y_hodo < y_max)
     	    {
     	      nHodoHits++;
+	      masked = true;
+
+	      break;
     	    }
 	}
+
+      if(!masked) return false;
     }
 
 #ifdef _DEBUG_ON
-  LogInfo(tracklet.stationID << "  " << nHodoHits);
+  LogInfo(tracklet.stationID << "  " << nHodoHits << "  " << stationIDs_mask[tracklet.stationID-1].size());
 #endif
-  if(nHodoHits < nMinimum) return false;
 
   //For back partials, require projection inside KMAG, and muon id in prop. tubes
   if(tracklet.stationID > 4)
