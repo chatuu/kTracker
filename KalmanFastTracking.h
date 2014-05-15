@@ -87,6 +87,9 @@ public:
   std::list<Tracklet>& getBackPartials() { return trackletsInSt[3]; }
   std::list<KalmanTrack>& getKalmanTracks() { return tracks; }
 
+  ///Tool, a simple-minded chi square fit
+  void chi2fit(int n, double x[], double y[], double& a, double& b);
+
 private:
   //Raw event input
   SRawEvent* rawEvent;
