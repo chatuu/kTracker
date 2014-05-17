@@ -35,11 +35,29 @@
 // GEANT4 tag $Name: geant4-09-01-patch-02 $
 
 #include "TabulatedField3D.hh"
-#include "../MODE_SWITCH.h"
+
+#include "Settings.hh"
+
+#include <fstream>
+#include <vector>
+#include <cmath>
+#include <cstdlib>
+#include <wordexp.h>
+
+#include "G4MagneticField.hh"
+#include "G4ios.hh"
+
+#include "G4SystemOfUnits.hh"
+
+using namespace std;
+
+// This gets called by Field.cc, and reads in the values of the magnetic field and stores them
 
 TabulatedField3D::TabulatedField3D(double zOffset, int nX, int nY, int nZ, bool fMagnet, Settings* settings) 
 {
   mySettings = settings;
+
+  m_isOK = true;
   if (mySettings->asciiFieldMap)
   {
 
@@ -49,28 +67,39 @@ TabulatedField3D::TabulatedField3D(double zOffset, int nX, int nY, int nZ, bool 
     ny = nY;
     nz = nZ;
 
-    G4String filename;
+    G4String filename = mySettings->magnetPath + "/";
+
+    // We don't know exactly where these will be stored when moving these files to the grid and running jobs
+    // $SEAQUEST_COMMON doesn't work in these circumstances
+    // We must not remove the ability to change the file path in options
 
     if (fmag)
-      filename = settings->fMagName;
+      filename.append(mySettings->fMagName);
     else
-      filename = settings->kMagName;
+      filename.append(mySettings->kMagName);
+
+    //expand environmental variables in filename
+    wordexp_t exp_result;
+    if (wordexp(filename.c_str(), &exp_result, 0) != 0)
+    {
+      cout << "Could not parse magnetic field map filename" << filename << endl;
+      m_isOK = false;
+    }
+
+    G4String expandedFilename = exp_result.we_wordv[0];
+    cout << "Filename expanded to " << expandedFilename << endl;
 
     double fieldUnit= tesla; 
-    G4cout << "\n-----------------------------------------------------------"
-	   << "\n      Magnetic field"
-	   << "\n-----------------------------------------------------------"
-	   << "\n ---> " "Reading the field grid from " << filename << " ... " << endl; 
-    ifstream file( filename );
+    G4cout << "\n Reading the magnetic field map from " << expandedFilename << endl; 
+    ifstream file( expandedFilename );
     if (!file.good())
+    {
       cout << "Field map input file error." << endl;
+      m_isOK = false;
+    }
 
     char buffer[256];
     file.getline(buffer,256);
-
-    G4cout << "  [ Number of values x,y,z: " 
-	   << nx << " " << ny << " " << nz << " ] "
-	   << endl;
 
     // Set up storage space for table
     xField.resize( nx );
@@ -92,7 +121,6 @@ TabulatedField3D::TabulatedField3D(double zOffset, int nX, int nY, int nZ, bool 
 
     // Read in the data
     double xval,yval,zval,bx,by,bz;
-    double temp;
 
     minx = miny = minz = maxx = maxy = maxz = 0;
 
@@ -102,7 +130,6 @@ TabulatedField3D::TabulatedField3D(double zOffset, int nX, int nY, int nZ, bool 
       {
         for (iz=0; iz<nz; iz++)
         {
-	  //  The field map has 1 column we don't use
           file >> xval >> yval >> zval >> bx >> by >> bz;
           if (xval*cm < minx)
             minx = xval * cm;
@@ -123,10 +150,8 @@ TabulatedField3D::TabulatedField3D(double zOffset, int nX, int nY, int nZ, bool 
       }
     }
     file.close();
-
-    G4cout << "\n ---> ... done reading " << endl;
   }
-  else // if loading field map from MySQL
+  else // if loading field map from MySQL, best to avoid if possible
   {
     fZoffset = zOffset;
     nx = nX;
@@ -139,22 +164,11 @@ TabulatedField3D::TabulatedField3D(double zOffset, int nX, int nY, int nZ, bool 
 
     con = mysql_init(NULL);
     mysql_real_connect(con, mySettings->sqlServer, mySettings->login, mySettings->password, mySettings->magnetSchema, 
-		       MYSQL_SERVER_PORT, NULL, 0);
-
-    cout << mysql_error(con) << endl;
-    cout << mySettings->magnetSchema << endl;
+		       mySettings->mysqlPort, NULL, 0);
   
     fmag = fMagnet;
 
-    double fieldUnit= tesla; 
-
-    G4cout << "\n-----------------------------------------------------------"
-	   << "\n      Magnetic field"
-	   << "\n-----------------------------------------------------------\n";
-
-    G4cout << "  [ Number of values x,y,z: " 
-	   << nx << " " << ny << " " << nz << " ] "
-	   << endl;
+    double fieldUnit= tesla;
 
     // Set up storage space for table
     xField.resize( nx );
@@ -178,13 +192,13 @@ TabulatedField3D::TabulatedField3D(double zOffset, int nX, int nY, int nZ, bool 
 
     if (fmag)
     {
-      mysql_query(con, "SELECT minX, minY, minZ, maxX, maxY, maxZ FROM Fmag_limits");
+      mysql_query(con, "SELECT MIN(X), MIN(Y), MIN(Z), MAX(X), MAX(Y), MAX(Z) FROM Fmag");
       cout << mysql_error(con) << endl;
       resLimits = mysql_store_result(con);
     }
     else
     {
-      mysql_query(con, "SELECT minX, minY, minZ, maxX, maxY, maxZ FROM Kmag_limits");
+      mysql_query(con, "SELECT MIN(X), MIN(Y), MIN(Z), MAX(X), MAX(Y), MAX(Z) FROM Kmag");
       cout << mysql_error(con) << endl;
       resLimits = mysql_store_result(con);
     }
@@ -234,26 +248,17 @@ TabulatedField3D::TabulatedField3D(double zOffset, int nX, int nY, int nZ, bool 
     }
 
     mysql_free_result(resField);
-
-    G4cout << "\n ---> ... done reading " << endl;
+    mysql_close(con);
   }
 
   // This code is run whether it is loaded from ascii or MySQL
 
-  G4cout << "\n ---> Min values x,y,z: " 
-	 << minx/cm << " " << miny/cm << " " << minz/cm << " cm "
-	 << "\n ---> Max values x,y,z: " 
-	 << maxx/cm << " " << maxy/cm << " " << maxz/cm << " cm "
-	 << "\n ---> The field will be offset by " << zOffset/cm << " cm " << endl;
-
   dx = maxx - minx;
   dy = maxy - miny;
   dz = maxz - minz;
-
-  G4cout << "\n ---> Dif values x,y,z (range): " 
-	 << dx/cm << " " << dy/cm << " " << dz/cm << " cm in z "
-	 << "\n-----------------------------------------------------------" << endl;
 }
+
+// This calculates the magnetic field at a point within this map
 
 void TabulatedField3D::GetFieldValue(const double point[3], double *Bfield ) const
 {
@@ -336,4 +341,10 @@ void TabulatedField3D::GetFieldValue(const double point[3], double *Bfield ) con
     Bfield[1] = Bfield[1]*mySettings->kMagMultiplier;
     Bfield[2] = Bfield[2]*mySettings->kMagMultiplier;
   }
+}
+  
+
+bool TabulatedField3D::IsOK() const
+{
+  return m_isOK;
 }

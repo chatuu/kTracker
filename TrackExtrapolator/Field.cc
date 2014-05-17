@@ -2,67 +2,47 @@
 Version 05/12/2008
 Larry Isenhower modified by Aldo Raeliarijaona
 */
+
 #include "Field.hh"
-#include "../MODE_SWITCH.h"
+
+#include "TabulatedField3D.hh"
+#include "Settings.hh"
+
+#include "G4SystemOfUnits.hh"
+
+using namespace std;
 
 Field::Field(Settings* settings)
 {
   mySettings = settings;
-  if (settings->asciiFieldMap)
+
+  Mag1Field= new TabulatedField3D(0.0*cm, 131, 121, 73, true, mySettings);
+  Mag2Field= new TabulatedField3D(-1064.26*cm, 49, 37, 81, false, mySettings);
+
+  //check that we read magnetic fields
+  //throw exception?  will probably crash
+  //must cast to TabulatedField3D because fields are stored as
+  if( ! Mag1Field->IsOK() )
   {
-    char *gmcroot, *filepath=new char[300], *originalpath, *buf=new char[300];
-    long size;
-    FILE * filecheck;
-    bool errorFlag = true;
-
-    cout << "Preparing to read magnetic field map file...\n"; 
-
-    // get path name for directory in which to look for the field map file
-    gmcroot = (char *)getenv("GMCROOT");
-
-    size = 1000;
-    originalpath = getcwd(buf, size);   
-
-    filepath = new char[300];
-    sprintf(filepath,"%s/TrackExtrapolator", KTRACKER_ROOT);
-      
-    if(filepath[0] != (char)NULL)
-    {
-      if(!chdir(filepath))
-      {
-        filecheck = fopen(mySettings->fMagName,"r");
-        if(filecheck != NULL)
-        {
-          errorFlag = false;
-	  fclose(filecheck);
-	  cout << "Reading field maps..." << endl;
-	  //                             zOffset, nx, ny, nz, fmag, settings
-	  Mag1Field= new TabulatedField3D(0.0, 131, 121, 73, true, settings);
-	  Mag2Field= new TabulatedField3D(-1064.26*cm, 49, 37, 81, false, settings);
-        }
-	else
-	  cout << "File not found!" << endl;
-      }
-      else
-        cout << "Failed to find directory for magnetic field maps" << endl;
-    }
-   
-    // This exception prevents an error by keeping physiWorld from trying 
-    // to acces a world volume if no file input was read
-    if(errorFlag)
-      cout << "No magnetic field input file found! \nPlease check your field map file location and your GMCROOT environment variable." << endl;
-   
-   // Move back to original working directory
-    chdir(originalpath);
+    if( mySettings->asciiFieldMap )
+      cout << "FATAL: Could not ascii file field map for kMag: " << mySettings->kMagName << endl;
+    else
+      cout << "FATAL: Could not get magnetic field map from database for kMag" << endl;
+    delete Mag1Field;
+    Mag1Field=0;
   }
-  else // if reading in field map from MySQL
+
+  if( ! Mag2Field->IsOK() )
   {
-    G4cout << "Preparing to read magnetic field map files...\n"; 
-    G4cout << "Reading field maps...\n";
-    Mag1Field= new TabulatedField3D(0.0, 131, 121, 73, true, settings);
-    Mag2Field= new TabulatedField3D(-1064.26*cm, 49, 37, 81, false, settings);
+    if( mySettings->asciiFieldMap )
+      cout << "FATAL: Could not ascii file field map for fMag: " << mySettings->fMagName << endl;
+    else
+      cout << "FATAL: Could not get magnetic field map from database for fMag" << endl;
+
+    delete Mag2Field;
+    Mag2Field=0;
   }
-  G4cout << "Finished loading magnetic field map files!\n";
+
 
   // These should probably be softcoded at some point, but doesn't matter as long as field maps don't get resized.
 
@@ -74,7 +54,13 @@ Field::Field(Settings* settings)
 
 Field::~Field()
 {
+  if(Mag1Field)
+    delete Mag1Field;
+  if(Mag2Field)
+    delete Mag2Field;
 }
+
+// This function looks up the magnetic field at a point, used by Geant4
 
 void Field::GetFieldValue(const double Point[3], double *Bfield) const
 {

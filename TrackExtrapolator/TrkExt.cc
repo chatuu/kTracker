@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 {
   TrackExtrapolator j;
 
-  j.init("geometry_R997");
+  j.init("geometry_G3_run2");
 
   TMatrixD state_i(5, 1), state_f(5, 1);
   //state_i[0][0] = 0.0197863;
@@ -59,7 +59,21 @@ int main(int argc, char *argv[])
   cov_i[4][4] = 2.738;
 
   //cov_i.Zero();
+  j.setLengthCalc(true);
+  for(int i = 0; i < 10; ++i)
+    {
+      //cout << i << "  " <<  600.-i*50 << " ================= " << 500.-i*50 << endl;
+      cout << i << "  " << i*10 << endl;
+      state_i[0][0] = 1./i/10.;
+      j.setInitialStateWithCov(1600., state_i, cov_i);
+      j.extrapolateTo(-10.);
+      j.getFinalStateWithCov(state_f, cov_f);
+      cout << j.getTravelLength() << endl;
 
+      cout << 1./state_i[0][0] << "  " << 1./state_f[0][0] << "  " << 1./state_f[0][0] - 1./state_i[0][0] << endl;
+    }
+
+  /*
   for(int i = 0; i < 1; i++) {
   j.setInitialStateWithCov(atof(argv[1]), state_i, cov_i);
   j.extrapolateTo(atof(argv[2]));
@@ -81,6 +95,7 @@ int main(int argc, char *argv[])
   printMatrix(prop*cov_i*prop_T, "propagated error matrix");
 
   printMatrix(cov_f - prop*cov_i*prop_T, "extra added on err matrix");
+  */
 
   return 1;
 }

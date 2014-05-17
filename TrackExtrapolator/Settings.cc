@@ -1,44 +1,37 @@
 #include "Settings.hh"
-#include "../MODE_SWITCH.h"
+
+#include "G4SystemOfUnits.hh"
 
 Settings::Settings()
 {
-  //  These are the settings that will be used by the monte carlo if parameters are not specified.
+  //  These are the default settings that will be used by the monte carlo if parameters are not specified.
 
   seed = 0;
   beamMomentum = 120*GeV;
   beamCurrent = 2e12;
   asciiFieldMap = true;
   generator = "gun";
-  energyCut = 1.0*GeV;
   recordMethod = "hits";
   eventPos = "both";
   dimuonSource = "both";
+  pythiaSource = "single";
   login = "seaguest";
   outputFileName = "test_default";
   password = "qqbar2mu+mu-";
+  magnetPath = "/Users/liuk/currentWork/kTracker_dev/TrackExtrapolator";
   fMagName = "tab.Fmag";
   kMagName = "tab.Kmag";
-  sqlServer = MYSQL_SERVER_ADDR;
+  sqlServer = "localhost";
   dimuonRepeat = 1;
   ironOn = true;
-  trackingZCut = 400*cm;
-  trackingEnergyCut = 1.0*GeV;
-#if defined ALIGNMENT_MODE
-  kMagMultiplier = 0.;
-  fMagMultiplier = 0.;
-#elif defined MC_MODE
-  kMagMultiplier = 1.;
-  fMagMultiplier = 1.;
-#else
-  kMagMultiplier = 1.;
-  fMagMultiplier = 0.95;
-#endif
-  geometrySchema = "geometry_R997";
+  kMagMultiplier = 1;
+  fMagMultiplier = 1;
+  geometrySchema = "geometry_G3_run2";
   magnetSchema = "geometry_R996_magneticFields";
   target = 1;
   pythia_shower = true;
   bucket_size = 40000;
+  mysqlPort = 3306;     // This is for seaquel.physics.illinois.edu.  Most others would be 3306.
 }
 
 Settings::~Settings()

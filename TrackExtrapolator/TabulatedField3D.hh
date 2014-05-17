@@ -1,3 +1,6 @@
+#ifndef TabulatedField3D_h
+#define TabulatedField3D_h 1
+
 // ********************************************************************
 // * License and Disclaimer                                           *
 // *                                                                  *
@@ -34,19 +37,15 @@
 // $Id: PurgMagTabulatedField3D.hh,v 1.3 2006/06/29 16:06:05 gunter Exp $
 // GEANT4 tag $Name: geant4-09-01-patch-02 $
 
-#include "globals.hh"
 #include "G4MagneticField.hh"
-#include "G4ios.hh"
 #include "Settings.hh"
-#include <fstream>
 #include <vector>
-#include <cmath>
+
+using std::vector;
+
 #include <mysql.h>
 
-using namespace std;
-
 class TabulatedField3D: public G4MagneticField
-
 {
   // Storage space for the table
   vector< vector< vector< double > > > xField;
@@ -63,11 +62,16 @@ class TabulatedField3D: public G4MagneticField
   double dx, dy, dz;
   double fZoffset;
   bool fmag;
+  bool m_isOK; ///< Was the magnetic field set correctly?
 
   MYSQL* con;
 
 public:
   TabulatedField3D(double, int, int, int, bool, Settings*);
   void  GetFieldValue(const double Point[3], double *Bfield) const;
+  /// Was the magnetic field set correctly?
+  bool IsOK() const;
   Settings* mySettings;
 };
+
+#endif

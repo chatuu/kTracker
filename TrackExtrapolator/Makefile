@@ -26,7 +26,7 @@ LDFLAGS      += $(G4LDFLAGS)
 CXXFLAGS     += -I$(MYSQL_INCLUDE)
 LDFLAGS      += -lz -L$(MYSQL_LIB) -lmysqlclient
 
-TRKEXTO       = TrackExtrapolator.o DetectorConstruction.o Field.o TabulatedField3D.o Settings.o GenericSD.o MCHit.o TPhysicsList.o 
+TRKEXTO       = TrackExtrapolator.o DetectorConstruction.o Field.o TabulatedField3D.o Settings.o GenericSD.o MCHit.o DigiPlane.o TPhysicsList.o 
 TRKEXTSO      = libTrkExt.so
 
 TESTO         = TrkExt.o

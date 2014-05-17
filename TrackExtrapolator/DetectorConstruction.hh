@@ -31,16 +31,19 @@
 #include "G4SubtractionSolid.hh"
 #include "G4PVPlacement.hh"
 #include "G4ios.hh"
-#include "G4RunManager.hh"
+
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <string>
 #include <mysql.h>
+#include <vector>
+
 #include "GenericSD.hh"
 #include "Field.hh"
-#include "globals.hh"
+#include "DigiPlane.hh"
+#include "Settings.hh"
 
 class G4Box;
 class G4Tubs;
@@ -54,32 +57,39 @@ class DetectorConstruction : public G4VUserDetectorConstruction
 {
   public:
 
-    DetectorConstruction(Settings*);
+    DetectorConstruction(Settings* settings);
     ~DetectorConstruction();
 
     G4VPhysicalVolume* Construct();
 
-  public:
-
-    GenericSD* staSD;
-
     G4Material* targetMat;
+    G4Tubs* targetSolid;
+    G4LogicalVolume* targetVol;
+    vector<G4PVPlacement*> targetPhyVec;
+
+    double targetLength;
+    double targetCenter;
+    double targetRadius;
+    int targetNumPieces;
+    double targetSpacing;
+
     G4Material* defaultMagnetMat;
-    G4LogicalVolume* targetVolume;
     G4LogicalVolume* magnetVolume;
 
-    G4double targetLength;
-    G4double targetCenter;
-    G4double targetRadius;
     G4double fmagCenter;
     G4double fmagLength;
+
     G4double z1v, z2v, z1h, z2h;
 
     vector<G4Element*> elementVec;
     vector<G4Material*> materialVec;
     vector<G4VSolid*> solidVec;
     vector<G4LogicalVolume*> logicalVolumeVec;
+    vector<G4PVPlacement*> placementVec;
     vector<G4RotationMatrix*> rotationMatrixVec;
+    vector<G4VisAttributes*> visAttributesVec;
+    vector<vector<DigiPlane> > digiPlaneVec;
+    vector<G4String> detectorNameVec;
 
     const G4Material* GetTargetMaterial() {return targetMat;};
     const G4double GetTargetRadius() {return targetRadius;};
@@ -88,15 +98,16 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     const G4double GetFmagCenter() {return fmagCenter;};
     const G4double GetFmagLength() {return fmagLength;};
 
-    void SetTargetMaterial(G4String);
     void IronToggle(bool);
-    void ReloadMagField();
+    void AssembleDigiPlanes();
 
   private:
 
+    bool detectorLoaded;
+
     G4VPhysicalVolume* physiWorld;
-    int AssignAttributes(G4VPhysicalVolume*);
     MYSQL* con;
+
     Settings* mySettings;
 };
 
