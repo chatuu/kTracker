@@ -402,6 +402,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     mysql_free_result(res);
   }
 
+#ifdef MC_MODE
   sprintf(qry, "SELECT tID, length, radius, zPos, mID, num_pieces, spacing, vID "
                "FROM TargetInfo WHERE tID = %i", mySettings->target);
   mysql_query(con, qry);
@@ -445,7 +446,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   else
     cout << "No target loaded!" << endl;
   mysql_free_result(res);
-
+#endif
   mysql_query(con, "SELECT * FROM ConstantsDerived");
   if (mysql_errno(con) != 0)
   {
