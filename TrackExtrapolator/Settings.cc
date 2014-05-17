@@ -30,11 +30,11 @@ Settings::Settings()
   kMagMultiplier = 0.;
   fMagMultiplier = 0.;
 #elif defined MC_MODE
-  kMagMultiplier = 0.;
-  fMagMultiplier = 0.;
+  kMagMultiplier = 1.;
+  fMagMultiplier = 1.;
 #else
-  kMagMultiplier = 0.;
-  fMagMultiplier = 0.;
+  kMagMultiplier = 1.;
+  fMagMultiplier = 1.;
 #endif
   geometrySchema = GEOMETRY_VERSION;
   magnetSchema = "geometry_R996_magneticFields";
