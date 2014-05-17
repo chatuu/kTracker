@@ -1,6 +1,7 @@
 #include "Settings.hh"
-
 #include "G4SystemOfUnits.hh"
+
+#include "../MODE_SWITCH.h"
 
 Settings::Settings()
 {
@@ -18,20 +19,29 @@ Settings::Settings()
   login = "seaguest";
   outputFileName = "test_default";
   password = "qqbar2mu+mu-";
-  magnetPath = "/Users/liuk/currentWork/kTracker_dev/TrackExtrapolator";
+  magnetPath = KTRACKER_ROOT
+    "/TrackExtrapolator";
   fMagName = "tab.Fmag";
   kMagName = "tab.Kmag";
-  sqlServer = "localhost";
+  sqlServer = MYSQL_SERVER_ADDR;
   dimuonRepeat = 1;
   ironOn = true;
-  kMagMultiplier = 1;
-  fMagMultiplier = 1;
-  geometrySchema = "geometry_G3_run2";
+#if defined ALIGNMENT_MODE
+  kMagMultiplier = 0.;
+  fMagMultiplier = 0.;
+#elif defined MC_MODE
+  kMagMultiplier = 0.;
+  fMagMultiplier = 0.;
+#else
+  kMagMultiplier = 0.;
+  fMagMultiplier = 0.;
+#endif
+  geometrySchema = GEOMETRY_VERSION;
   magnetSchema = "geometry_R996_magneticFields";
   target = 1;
   pythia_shower = true;
   bucket_size = 40000;
-  mysqlPort = 3306;     // This is for seaquel.physics.illinois.edu.  Most others would be 3306.
+  mysqlPort = MYSQL_SERVER_PORT;     // This is for seaquel.physics.illinois.edu.  Most others would be 3306.
 }
 
 Settings::~Settings()

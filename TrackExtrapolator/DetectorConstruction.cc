@@ -413,7 +413,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }
   res = mysql_store_result(con);
 
-  if(row = mysql_fetch_row(res))
+  if((row = mysql_fetch_row(res)))
   {
     int tID = atoi(row[0]);
     targetLength = atof(row[1])*cm;
