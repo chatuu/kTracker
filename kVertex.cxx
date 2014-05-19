@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     {
       dataTree->GetEntry(i);
       cout << "\r Processing event " << i << " with eventID = " << recEvent->getEventID() << ", ";
-      cout << (i + 1)*100/nEvtMax << "% finished .. ";
+      cout << (i + 1)*100/nEvtMax << "% finished .. " << flush;
 
       vtxfit->setRecEvent(recEvent);
 
