@@ -298,7 +298,7 @@ void SRecTrack::swimToVertex(TVector3* pos, TVector3* mom)
       double p_tot_f;
       if(pos[iStep][2] > FMAG_HOLE_LENGTH || pos[iStep].Perp() > FMAG_HOLE_RADIUS)
 	{
-  	  p_tot_f = p_tot_b + (eloss_unit_0 + p_tot_b*eloss_unit_1 + p_tot_i*p_tot_i*eloss_unit_2)*trajVec2.Mag();
+  	  p_tot_f = p_tot_b + (eloss_unit_0 + p_tot_b*eloss_unit_1 + p_tot_b*p_tot_b*eloss_unit_2)*trajVec2.Mag();
 	}
       else
 	{
