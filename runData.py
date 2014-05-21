@@ -15,6 +15,7 @@ parser = OptionParser('Usage: %prog executable sources targets [options]')
 parser.add_option('-l', '--list', type = 'string', dest = 'list', help = 'List of run IDs', default = '')
 parser.add_option('-m', '--jobs', type = 'int', dest = 'nJobsMax', help = 'Maximum number of jobs running', default = 6)
 parser.add_option('-n', '--notify', type = 'string', dest = 'notify', help = 'E-mail sent to notify the end of jobs', default = '')
+parser.add_option('-o', '--output', type = 'string', dest = 'output', help = 'Output file name (i.e. call hadd at the end)', default = '')
 (options, args) = parser.parse_args()
 
 exe = args[0]
@@ -66,6 +67,13 @@ while nRunning != 0:
 
     nRunning = int(os.popen('pgrep -u %s -g %d %s | wc -l' % (username, os.getpgrp(), exe)).read().strip())
     print(exe+': '+str(nMinutes)+' minutes passed, '+str(nSubmitted)+" submitted, "+str(nRunning)+' running ...' )
+
+## run hadd to merge all final output to a single file
+if '.root' in options.output:
+	cmd = 'hadd -f ' + options.output
+	for runID in schemas:
+		cmd = cmd + ' ' + pattern2.replace('?', runID)
+	runCmd(cmd)
 
 ## Send out notification if required
 if '@' in options.notify:
