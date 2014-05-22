@@ -16,11 +16,13 @@ parser.add_option('-l', '--list', type = 'string', dest = 'list', help = 'List o
 parser.add_option('-m', '--jobs', type = 'int', dest = 'nJobsMax', help = 'Maximum number of jobs running', default = 6)
 parser.add_option('-n', '--notify', type = 'string', dest = 'notify', help = 'E-mail sent to notify the end of jobs', default = '')
 parser.add_option('-o', '--output', type = 'string', dest = 'output', help = 'Output file name (i.e. call hadd at the end)', default = '')
+parser.add_option('-s', '--suffix', type = 'string', dest = 'suffix', help = 'Additional arguments needed in commands', default = '')
 (options, args) = parser.parse_args()
 
 exe = args[0]
 pattern1 = args[1]
 pattern2 = args[2]
+suffix = options.suffix
 runlist = options.list
 nJobsMax = options.nJobsMax
 
@@ -50,8 +52,9 @@ while nSubmitted < len(schemas):
         ## make the actual command
         inputFile = pattern1.replace('?', schemas[nSubmitted])
         outputFile = pattern2.replace('?', schemas[nSubmitted])
+        arguments = suffix.replace('?', schemas[nSubmitted])
         logFile = 'log_%s_%s' % (exe, schemas[nSubmitted])
-        cmd = './%s %s %s > %s &' % (exe, inputFile, outputFile, logFile)
+        cmd = './%s %s %s %s > %s &' % (exe, inputFile, outputFile, arguments, logFile)
 
         runCmd(cmd)
         nSubmitted = nSubmitted + 1

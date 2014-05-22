@@ -84,6 +84,7 @@ public:
   
   int getInt(int id, int default_val = 0);
   double getDouble(int id, double default_val = 0.);
+  std::string getString(int id, std::string default_val = "");
 
 private:
   //pointer to the only instance

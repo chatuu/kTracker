@@ -105,6 +105,27 @@ void MySQLSvc::setWorkingSchema(std::string schema)
   if(!readQIE) std::cout << "MySQLSvc: QIE information readout is disabled." << std::endl; 
   if(!readTriggerHits) std::cout << "MySQLSvc: TriggerHits table readout is disabled." << std::endl;
   if(!readTargetPos) std::cout << "MySQLSvc: Target position readout is disabled." << std::endl;
+
+  //Enable index if not enabled already
+  bool indexEnabled = true;
+  sprintf(query, "SELECT COMMENT FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA='%s' AND TABLE_NAME='Hit' AND Column_name='detectorName'", dataSchema.c_str());
+  if(makeQuery() == 0)
+    { 
+      indexEnabled = false;
+    }
+  else if(getString(0) == "disabled")
+    {
+      indexEnabled = false;
+    }
+
+  if(!indexEnabled) 
+    {
+      std::cout << "MySQLSvc: Index is not enabled for this schema, enable it now." << std::endl;
+
+      sprintf(query, "ALTER TABLE Hit ENABLE KEYS"); server->Exec(query);
+      if(readTriggerHits) sprintf(query, "ALTER TABLE TriggerHit ENABLE KEYS"); server->Exec(query);
+      sprintf(query, "OPTIMIZE LOCAL TABLE `Run`, `Spill`, `Event`, `Hit`, `TriggerHit`, `Scaler`"); server->Exec(query);
+    }
 }
 
 bool MySQLSvc::isRunStopped()
@@ -728,4 +749,14 @@ double MySQLSvc::getDouble(int id, double default_val)
     }
 
   return boost::lexical_cast<double>(row->GetField(id));
+}
+
+std::string MySQLSvc::getString(int id, std::string default_val)
+{
+  if(row->GetField(id) == NULL)
+    {
+      return default_val;
+    }
+
+  return std::string(row->GetField(id));
 }
