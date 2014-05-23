@@ -113,9 +113,10 @@ void MySQLSvc::setWorkingSchema(std::string schema)
     { 
       indexEnabled = false;
     }
-  else if(getString(0) == "disabled")
+  else
     {
-      indexEnabled = false;
+      nextEntry();
+      if(getString(0) == "disabled") indexEnabled = false;
     }
 
   if(!indexEnabled) 
