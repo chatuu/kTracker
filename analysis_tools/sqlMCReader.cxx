@@ -30,7 +30,7 @@ int main(int argc, char **argv)
   MySQLSvc* p_mysqlSvc = MySQLSvc::instance();
   if(argc > 3)
     {
-      p_mysqlSvc->connect(argv[3]);
+      p_mysqlSvc->connect(argv[3], atoi(argv[4]));
     }
   else
     {
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
   saveTree->Branch("rawEvent", &rawEvent, 256000, 99);
 
   int nEvents = p_mysqlSvc->getNEventsFast();
-  if(argc > 4) nEvents = atoi(argv[4]);
+  if(argc > 5) nEvents = atoi(argv[5]);
   cout << "Totally " << nEvents << " events in this run" << endl;
   for(int i = 0; i < nEvents; ++i)
     {
