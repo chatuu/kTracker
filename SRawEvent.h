@@ -224,6 +224,7 @@ public:
   Double_t pT;
   Double_t x1;
   Double_t x2;
+  Double_t costh;
   TVector3 vtx;
  
   //Track info, 0 for mu+, 1 for mu-
@@ -247,7 +248,7 @@ public:
   TVector3 p_stationH4[2];
   TVector3 v_stationH4[2];
 
-  ClassDef(SRawMCEvent, 2) 
+  ClassDef(SRawMCEvent, 3) 
 };
 
 #endif

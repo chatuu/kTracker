@@ -402,7 +402,7 @@ bool MySQLSvc::getEventHeader(SRawEvent* rawEvent, int eventID)
 
 bool MySQLSvc::getMCGenInfo(SRawMCEvent* mcEvent, int eventID)
 {
-  sprintf(query, "SELECT mTrackID1,mTrackID2,sigWeight,mass,xF,xB,xT,dx,dy,dz,dpx,dpy,runID,spillID FROM mDimuon WHERE acceptHodoAll=1 AND acceptDriftAll=1 AND eventID=%d", eventID);
+  sprintf(query, "SELECT mTrackID1,mTrackID2,sigWeight,mass,xF,xB,xT,dx,dy,dz,dpx,dpy,runID,spillID,theta_mu FROM mDimuon WHERE acceptHodoAll=1 AND acceptDriftAll=1 AND eventID=%d", eventID);
   if(makeQuery() != 1) return false;
   nextEntry();
 
@@ -416,8 +416,9 @@ bool MySQLSvc::getMCGenInfo(SRawMCEvent* mcEvent, int eventID)
   mcEvent->xF = getDouble(4);
   mcEvent->x1 = getDouble(5);
   mcEvent->x2 = getDouble(6);
+  mcEvent->costh = cos(getDouble(14));
   mcEvent->vtx.SetXYZ(getDouble(7), getDouble(8), getDouble(9));
-
+  
   double px = getDouble(10);
   double py = getDouble(11);
   mcEvent->pT = sqrt(px*px + py*py);
