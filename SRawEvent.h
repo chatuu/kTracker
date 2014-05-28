@@ -45,11 +45,7 @@ public:
 
   //overiden comparison operator for track seeding 
   bool operator<(const Hit& elem) const;
-  bool operator>(const Hit& elem) const { return detectorID > elem.detectorID; }
-  bool operator==(const Hit& elem) const { return detectorID == elem.detectorID; }
-
-  //comparison function for after pulse removal
-  static bool sameChannel(const Hit& elem1, const Hit& elem2);
+  bool operator==(const Hit& elem) const;
 
   //Debugging output
   void print() { std::cout << index << " : " << detectorID << " : " << elementID << " : " << pos << " : " << driftDistance << " : " << inTime << " : " << hodoMask << std::endl; }
@@ -94,6 +90,8 @@ public:
   Hit getHit(Int_t detectorID, Int_t elementID); 
   void setHit(Int_t index, Hit hit) { fAllHits[index] = hit; }
   void setTriggerHit(Int_t index, Hit hit) { fTriggerHits[index] = hit; }
+  void setHitFlag(Int_t index, Int_t flag) { fAllHits[index].inTime = flag; }
+  void setHitFlag(Int_t detectorID, Int_t elementID, Int_t flag) { fAllHits[findHit(detectorID, elementID)].inTime = flag; }
 
   Int_t getRunID() { return fRunID; }
   Int_t getEventID() { return fEventID; }

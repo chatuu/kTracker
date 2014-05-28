@@ -6,7 +6,7 @@
 
 //--------------- Mode controls ------------------
 //=== Enable this when running over MC events
-//#define MC_MODE
+#define MC_MODE
 
 //=== Enable alignment mode
 //#define ALIGNMENT_MODE
@@ -23,11 +23,14 @@
 //=== Enable Kalman fitting in fast tracking and alignment, enabled by default
 //#define _ENABLE_KF
 
+//=== Enable triming of hodoscope hits by trigger requirements
+#define TRIGGER_TRIMING
+
 //=== Enable reading the alignment data from online schema instead of external ascii file
-//#define LOAD_ONLINE_ALIGNMENT
+#define LOAD_ONLINE_ALIGNMENT
 
 //--------------- Geometry version ---------------
-#define GEOMETRY_VERSION "geometry_G3_run2"
+#define GEOMETRY_VERSION "geometry_R1124_run2"
 
 //-------------- SQL database --------------------
 #define MYSQL_SERVER_ADDR "localhost"

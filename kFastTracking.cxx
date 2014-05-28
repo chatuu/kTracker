@@ -19,7 +19,7 @@
 #include "KalmanFastTracking.h"
 #include "KalmanFitter.h"
 #include "VertexFit.h"
-
+#include "TriggerAnalyzer.h"
 #include "MODE_SWITCH.h"
 
 using namespace std;
@@ -49,10 +49,6 @@ int main(int argc, char *argv[])
   TClonesArray* tracklets = new TClonesArray("Tracklet");
   TClonesArray& arr_tracklets = *tracklets;
 
-  //int nTracklets_back;
-  //TClonesArray* tracklets_back = new TClonesArray("Tracklet");
-  //TClonesArray& arr_tracklets_back = *tracklets_back;
-
   double time;
   SRecEvent* recEvent = new SRecEvent();
 
@@ -63,10 +59,7 @@ int main(int argc, char *argv[])
   saveTree->Branch("time", &time, "time/D");
   saveTree->Branch("nTracklets", &nTracklets, "nTracklets/I");
   saveTree->Branch("tracklets", &tracklets, 256000, 99);
-  //saveTree->Branch("nTracklets_back", &nTracklets_back, "nTracklets_back/I");
-  //saveTree->Branch("tracklets_back", &tracklets_back, 256000, 99);
   tracklets->BypassStreamer();
-  //tracklets_back->BypassStreamer();
 
   //Initialize track finder
   LogInfo("Initializing the track finder and kalman filter ... ");
@@ -75,6 +68,12 @@ int main(int argc, char *argv[])
   KalmanFastTracking* fastfinder = new KalmanFastTracking();
 #else
   KalmanFastTracking* fastfinder = new KalmanFastTracking(false);
+#endif
+
+#ifdef TRIGGER_TRIMING
+  TriggerAnalyzer* triggerAna = new TriggerAnalyzer();
+  triggerAna->init();
+  triggerAna->buildTriggerTree();
 #endif
 
   int offset = argc > 3 ? atoi(argv[3]) : 0;
@@ -89,26 +88,18 @@ int main(int argc, char *argv[])
 
       clock_t time_single = clock();
 
+#ifdef TRIGGER_TRIMING
+      triggerAna->trimEvent(rawEvent);
+      rawEvent->reIndex("aoct");
+#else
       rawEvent->reIndex("aoc");
+#endif
       if(!fastfinder->setRawEvent(rawEvent)) continue;
 
       //Fill the TClonesArray
       arr_tracklets.Clear();
-      //arr_tracklets_back.Clear();
       std::list<Tracklet>& rec_tracklets = fastfinder->getFinalTracklets();
-      //std::list<Tracklet>& rec_tracklets_back = fastfinder->getBackPartials();
       if(rec_tracklets.empty()) continue;
-
-      /*
-      nTracklets_back = 0;
-      for(std::list<Tracklet>::iterator iter = rec_tracklets_back.begin(); iter != rec_tracklets_back.end(); ++iter)
-	{
-	  iter->calcChisq();
-
-	  new(arr_tracklets_back[nTracklets_back]) Tracklet(*iter);
-	  ++nTracklets_back;
-	}
-      */
 
       nTracklets = 0;
       recEvent->setRawEvent(rawEvent);
@@ -155,6 +146,10 @@ int main(int argc, char *argv[])
   delete fastfinder;
 #ifdef _ENABLE_KF
   filter->close();
+#endif
+
+#ifdef TRIGGER_TRIMING
+  delete triggerAna;
 #endif
 
   return 1;

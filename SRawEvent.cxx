@@ -50,14 +50,14 @@ bool Hit::operator<(const Hit& elem) const
     }
 }
 
-bool Hit::sameChannel(const Hit& elem1, const Hit& elem2)
+bool Hit::operator==(const Hit& elem) const
 {
-  if(elem1.detectorID == elem2.detectorID && elem1.elementID == elem2.elementID)
+  if(detectorID == elem.detectorID && elementID == elem.elementID)
     {
       return true;
     }
 
-  if(elem1.detectorID == elem2.detectorID && fabs(elem1.pos - elem2.pos) < 1E-3)
+  if(detectorID == elem.detectorID && fabs(pos - elem.pos) < 1E-3)
     {
       return true;
     }
@@ -461,6 +461,7 @@ void SRawEvent::reIndex(std::string option)
   bool _nonchamber = false;
   bool _decluster = false;
   bool _mergehodo = false;
+  bool _triggermask = false;
 
   TString option_lower(option.c_str());
   option_lower.ToLower();
@@ -470,6 +471,7 @@ void SRawEvent::reIndex(std::string option)
   if(option_lower.Contains("n")) _nonchamber = true;
   if(option_lower.Contains("c")) _decluster = true;
   if(option_lower.Contains("u")) _mergehodo = true;
+  if(option_lower.Contains("t")) _triggermask = true;
 
   ///Dump the vector into a list and do the reduction
   std::list<Hit> hitlist_temp;
@@ -479,6 +481,7 @@ void SRawEvent::reIndex(std::string option)
       if(_outoftime && iter->inTime == 0) continue;
       if(_hodomask && iter->hodoMask == 0) continue;
       if(_nonchamber && iter->detectorID > 24) continue;
+      if(_triggermask && iter->detectorID >= 24 && iter->detectorID <= 40 && iter->inTime != 2) continue;
 
       hitlist_temp.push_back(*iter);
     }
@@ -492,7 +495,7 @@ void SRawEvent::reIndex(std::string option)
   hitlist_temp.sort();
   if(_afterhit)
     {
-      hitlist_temp.unique(Hit::sameChannel);
+      hitlist_temp.unique();
     }
  
   if(_decluster)
@@ -608,7 +611,7 @@ void SRawEvent::mixEvent(SRawEvent *event, int nBkgHits)
     {
       for(std::vector<Hit>::iterator jter = hits_mix.begin(); jter != hits_mix.end(); ++jter)
 	{
-	  if(Hit::sameChannel(*iter, *jter))
+	  if(*iter == *jter)
 	    {
 	      hits_mix.erase(jter);
 	      break;

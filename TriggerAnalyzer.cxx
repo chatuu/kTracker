@@ -561,3 +561,19 @@ void TriggerAnalyzer::outputEnabled()
     }
   fout_pair.close();
 }
+
+void TriggerAnalyzer::trimEvent(SRawEvent* rawEvent)
+{
+  acceptEvent(rawEvent, 2);
+
+  for(int i = 0; i < 2; ++i)
+    {
+      for(std::list<TriggerRoad>::iterator iter = roads_found[i].begin(); iter != roads_found[i].end(); ++iter)
+	{
+	  for(int j = 0; j < 4; ++j)
+	    {
+	      rawEvent->setHitFlag(iter->detectorIDs[j], iter->elementIDs[j], 2);
+	    }
+	}
+    }
+}
