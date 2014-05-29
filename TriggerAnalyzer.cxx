@@ -320,11 +320,11 @@ bool TriggerAnalyzer::acceptEvent(SRawEvent* rawEvent, int mode)
   int elementIDs[10000];
 
   std::vector<Hit> triggerHits;
-  if(mode == 1)
+  if(mode == USE_TRIGGER_HIT)
     {
       triggerHits = rawEvent->getTriggerHits();
     }
-  else
+  else if(mode == USE_HIT)
     {
       triggerHits = rawEvent->getAllHits();
     }
@@ -564,7 +564,7 @@ void TriggerAnalyzer::outputEnabled()
 
 void TriggerAnalyzer::trimEvent(SRawEvent* rawEvent)
 {
-  acceptEvent(rawEvent, 2);
+  acceptEvent(rawEvent, USE_HIT);
 
   for(int i = 0; i < 2; ++i)
     {

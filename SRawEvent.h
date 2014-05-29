@@ -90,8 +90,8 @@ public:
   Hit getHit(Int_t detectorID, Int_t elementID); 
   void setHit(Int_t index, Hit hit) { fAllHits[index] = hit; }
   void setTriggerHit(Int_t index, Hit hit) { fTriggerHits[index] = hit; }
-  void setHitFlag(Int_t index, Int_t flag) { fAllHits[index].inTime = flag; }
-  void setHitFlag(Int_t detectorID, Int_t elementID, Int_t flag) { fAllHits[findHit(detectorID, elementID)].inTime = flag; }
+  void setHitFlag(Int_t index, Int_t flag) { if(index < 0) return; fAllHits[index].inTime = flag; }
+  void setHitFlag(Int_t detectorID, Int_t elementID, Int_t flag) { setHitFlag(findHit(detectorID, elementID), flag); }
 
   Int_t getRunID() { return fRunID; }
   Int_t getEventID() { return fEventID; }
@@ -104,7 +104,7 @@ public:
   void insertHit(Hit h);
   void insertTriggerHit(Hit h) { fTriggerHits.push_back(h); }
   
-  ///Find a hit
+  ///Find a hit -- binary search since hit list is sorted
   Int_t findHit(Int_t detectorID, Int_t elementID);
 
   ///Manipulation/reduction of hit list

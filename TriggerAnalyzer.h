@@ -48,7 +48,7 @@ public:
   //Accept a event
   bool acceptEvent(TriggerRoad& p_road, TriggerRoad& m_road);
   bool acceptEvent(int nHits, int detectorIDs[], int elementIDs[]);
-  bool acceptEvent(SRawEvent* rawEvent, int mode = 1);
+  bool acceptEvent(SRawEvent* rawEvent, int mode = USE_TRIGGER_HIT);
  
   //Trim a event's hodoscope hits
   void trimEvent(SRawEvent* rawEvent);

@@ -6,7 +6,7 @@
 
 //--------------- Mode controls ------------------
 //=== Enable this when running over MC events
-#define MC_MODE
+//#define MC_MODE
 
 //=== Enable alignment mode
 //#define ALIGNMENT_MODE
@@ -27,10 +27,10 @@
 #define TRIGGER_TRIMING
 
 //=== Enable reading the alignment data from online schema instead of external ascii file
-#define LOAD_ONLINE_ALIGNMENT
+//#define LOAD_ONLINE_ALIGNMENT
 
 //--------------- Geometry version ---------------
-#define GEOMETRY_VERSION "geometry_R1124_run2"
+#define GEOMETRY_VERSION "geometry_G3_run2"
 
 //-------------- SQL database --------------------
 #define MYSQL_SERVER_ADDR "localhost"
@@ -101,6 +101,10 @@
 #define ELOSS_FMAG_RAD 0.0078
 #define Z_UPSTREAM -500.
 #define Z_DOWNSTREAM 500.
+
+//-------------- Trigger analyzer modes ---------
+#define USE_TRIGGER_HIT 1
+#define USE_HIT 2
 
 //-------------- Useful marcros -----------------
 #define LogInfo(message) std::cout << "DEBUG: " << __FILE__ << "  " << __LINE__ << "  " << __FUNCTION__ << " :::  " << message << std::endl

@@ -105,11 +105,32 @@ Int_t SRawEvent::findHit(Int_t detectorID, Int_t elementID)
   if(detectorID < 1 || detectorID > 48) return -1;
   if(elementID < 0) return -1;
 
-  for(Int_t i = 0; i < fNHits[0]; i++)
+  Hit h_dummy;
+  h_dummy.detectorID = detectorID;
+  h_dummy.elementID = elementID;
+
+  /*
+  This method produces problems in case of duplicate channels and thus people need to be cautious;
+  It's okay here for two reasons:
+     1. inTime is required when searching for trigger roads;
+     2. hodoscope hit doesn't need tdcTime information as long as it's in-time;
+  */
+  Int_t idx_start = getNChamberHitsAll();
+  Int_t idx_end = idx_start + getNHodoHitsAll();
+  while(idx_start <= idx_end)
     {
-      if(fAllHits[i].detectorID == detectorID && fAllHits[i].elementID == elementID)
+      Int_t idx_mid = Int_t((idx_start + idx_end)/2);
+      if(fAllHits[idx_mid] == h_dummy)
 	{
-	  return i;
+	  return idx_mid;
+	}
+      else if(fAllHits[idx_mid] < h_dummy)
+	{
+	  idx_start = idx_mid + 1;
+	}
+      else
+	{
+	  idx_end = idx_mid - 1;
 	}
     }
 
