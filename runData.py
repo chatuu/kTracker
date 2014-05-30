@@ -44,7 +44,7 @@ nMinutes = 0.
 while nSubmitted < len(schemas):
     # control the total number of running programs, no matter it's from this thread or nor
     nRunning = int(os.popen('pgrep -u %s %s | wc -l' % (username, exe)).read().strip())
-    print(exe+': '+str(nMinutes)+' minutes passed, '+str(nSubmitted)+" submitted, "+str(nRunning)+' running ...' )
+    print(exe+': '+str(nMinutes)+' minutes passed, '+str(nSubmitted)+'/'+str(len(schemas))+' submitted, '+str(nRunning)+' running ...' )
     for i in range(nRunning, nJobsMax):
         ## check if all jobs are submitted
     	if nSubmitted >= len(schemas): break
@@ -69,7 +69,7 @@ while nRunning != 0:
     nMinutes = nMinutes + 0.5
 
     nRunning = int(os.popen('pgrep -u %s -g %d %s | wc -l' % (username, os.getpgrp(), exe)).read().strip())
-    print(exe+': '+str(nMinutes)+' minutes passed, '+str(nSubmitted)+" submitted, "+str(nRunning)+' running ...' )
+    print(exe+': '+str(nMinutes)+' minutes passed, '+str(nSubmitted)+'/'+str(len(schemas))+' submitted, '+str(nRunning)+' running ...' )
 
 ## run hadd to merge all final output to a single file
 if '.root' in options.output:
