@@ -169,6 +169,7 @@ public:
   double getInterception(int detectorID, double tx, double ty, double x0, double y0) { return planes[detectorID].intercept(tx, ty, x0, y0); }
   double getInterceptionFast(int detectorID, double tx, double ty, double x0, double y0);
   double getInterceptionFast(int detectorID, double x_exp, double y_exp) { return planes[detectorID].getW(x_exp, y_exp); }
+  
   ///Convert the detectorID and elementID to the actual hit position
   void getMeasurement(int detectorID, int elementID, double& measurement, double& dmeasurement);
   double getMeasurement(int detectorID, int elementID);

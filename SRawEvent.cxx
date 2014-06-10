@@ -115,8 +115,24 @@ Int_t SRawEvent::findHit(Int_t detectorID, Int_t elementID)
      1. inTime is required when searching for trigger roads;
      2. hodoscope hit doesn't need tdcTime information as long as it's in-time;
   */
-  Int_t idx_start = getNChamberHitsAll();
-  Int_t idx_end = idx_start + getNHodoHitsAll();
+  Int_t idx_start;
+  Int_t idx_end;
+  if(detectorID <= 24)
+    {
+      idx_start = 0;
+      idx_end = getNChamberHitsAll() - 1;
+    }
+  else if(detectorID <= 40)
+    {
+      idx_start = getNChamberHitsAll();
+      idx_end = idx_start + getNHodoHitsAll();
+    }
+  else
+    {
+      idx_start = getNChamberHitsAll() + getNHodoHitsAll();
+      idx_end = fNHits[0] - 1;
+    }
+
   while(idx_start <= idx_end)
     {
       Int_t idx_mid = Int_t((idx_start + idx_end)/2);

@@ -86,6 +86,7 @@ public:
   std::vector<Hit> getAllHits() { return fAllHits; }
   std::vector<Hit> getTriggerHits() { return fTriggerHits; }
   Hit getTriggerHit(Int_t index) { return fTriggerHits[index]; } 
+
   Hit getHit(Int_t index) { return fAllHits[index]; } 
   Hit getHit(Int_t detectorID, Int_t elementID); 
   void setHit(Int_t index, Hit hit) { fAllHits[index] = hit; }
