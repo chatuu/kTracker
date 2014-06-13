@@ -12,6 +12,7 @@ Created: 11-21-2011
 #include <algorithm>
 #include <cmath>
 
+#include "JobOptsSvc.h"
 #include "KalmanFilter.h"
 
 KalmanFilter* KalmanFilter::p_kmfit = NULL;
@@ -36,7 +37,8 @@ void KalmanFilter::close()
 
 KalmanFilter::KalmanFilter(bool limitedStep)
 {
-  _extrapolator.init(GEOMETRY_VERSION);
+  JobOptsSvc* p_jobOptsSvc = JobOptsSvc::instance();
+  _extrapolator.init(p_jobOptsSvc->m_geomVersion);
 }
 
 bool KalmanFilter::fit_node(Node& _node)

@@ -12,10 +12,13 @@ Created: 2-8-2012
 #include <cmath>
 #include <TMatrixD.h>
 
+#include "JobOptsSvc.h"
 #include "VertexFit.h"
 
 VertexFit::VertexFit()
 {
+  JobOptsSvc* p_jobOptsSvc = JobOptsSvc::instance();
+
   ///In construction, initialize the projector for the vertex node
   TMatrixD proj(2, 5);
   proj.Zero();
@@ -38,7 +41,7 @@ VertexFit::VertexFit()
 
   _kmfit = KalmanFilter::instance();
   _kmfit->enableDumpCorrection();
-  _extrapolator.init(GEOMETRY_VERSION);
+  _extrapolator.init(p_jobOptsSvc->m_geomVersion);
   
   ///Single track finding doesn't require a propagation matrix
   _extrapolator.setPropCalc(false);

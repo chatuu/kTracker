@@ -26,6 +26,7 @@ Created: 2013.9.29
 #include "SRawEvent.h"
 #include "FastTracklet.h"
 #include "TriggerAnalyzer.h"
+#include "JobOptsSvc.h"
 
 //#define OUT_TO_SCREEN
 //#define USE_M_TABLES
@@ -38,7 +39,7 @@ public:
   static MySQLSvc* instance();
   
   //Connect to the server
-  bool connect(std::string sqlServer = MYSQL_SERVER_ADDR, int serverPort = MYSQL_SERVER_PORT);
+  bool connect();
 
   //Set username/password
   void setUserPasswd(std::string user_input, std::string passwd_input) { user = user_input; passwd = passwd_input; }

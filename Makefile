@@ -9,6 +9,10 @@ G4CONFIG     := geant4-config
 G4CFLAGS     := $(shell $(G4CONFIG) --cflags) 
 G4LDFLAGS    := $(shell $(G4CONFIG) --libs) 
 
+MYSQLCONIG   := mysql_config
+MYSQLCFLAGS  := $(shell $(MYSQLCONIG) --include)
+MYSQLLDFLAGS := $(shell $(MYSQLCONIG) --libs)
+
 CXX           = g++
 CXXFLAGS      = -O3 -Wall -fPIC
 LD            = g++
@@ -31,13 +35,14 @@ CXXFLAGS     += -I$(BOOST)
 CXXFLAGS     += $(G4CFLAGS)
 LDFLAGS      += $(G4LDFLAGS)
 
-CXXFLAGS     += -I$(MYSQL_INCLUDE)
-LDFLAGS      += -lz -L$(MYSQL_LIB) -lmysqlclient
+CXXFLAGS     += $(MYSQLCFLAGS)
+LDFLAGS      += $(MYSQLLDFLAGS)
 
 SRAWEVENTO    = SRawEvent.o SRawEventDict.o
 SRECEVENTO    = SRecEvent.o SRecEventDict.o
 GEOMSVCO      = GeomSvc.o
 MYSQLSVCO     = MySQLSvc.o
+JOBOPTSSVCO   = JobOptsSvc.o
 KALMANUTILO   = KalmanUtil.o
 KALMANFILTERO = KalmanFilter.o
 KALMANTRACKO  = KalmanTrack.o
@@ -60,23 +65,26 @@ KFASTTRACK    = kFastTracking
 KONLINETRACKO   = kOnlineTracking.o
 KONLINETRACK    = kOnlineTracking
 
+KTRACKERO     = kTracker.o
+KTRACKER      = kTracker
+
 KVERTEXO      = kVertex.o 
 KVERTEX       = kVertex
 
 MILLEALIGNO   = milleAlign.o
 MILLEALIGN    = milleAlign
 
-KTRACKERSO    = libkTracker.so
-SRAWEVENTSO   = libSRawEvent.so
+KTRACKERSO    = $(KTRACKER_LIB)/libkTracker.so
+SRAWEVENTSO   = $(KTRACKER_LIB)/libSRawEvent.so
 
 TRKEXTOBJS    = TrackExtrapolator/TrackExtrapolator.o TrackExtrapolator/DetectorConstruction.o TrackExtrapolator/Field.o TrackExtrapolator/TabulatedField3D.o \
 		TrackExtrapolator/Settings.o TrackExtrapolator/GenericSD.o TrackExtrapolator/MCHit.o TrackExtrapolator/TPhysicsList.o 
-CLASSOBJS     = $(GEOMSVCO) $(SRAWEVENTO) $(SRECEVENTO) $(KALMANUTILO) $(KALMANFILTERO) $(KALMANTRACKO) $(KALMANFITTERO) $(VERTEXFITO) \
+CLASSOBJS     = $(GEOMSVCO) $(JOBOPTSSVCO) $(SRAWEVENTO) $(SRECEVENTO) $(KALMANUTILO) $(KALMANFILTERO) $(KALMANTRACKO) $(KALMANFITTERO) $(VERTEXFITO) \
 		$(KALMANFASTO) $(FASTTRACKLETO) $(MYSQLSVCO) $(TRIGGERROADO) $(TRIGGERANALYZERO)
 ALIGNOBJS     = $(SMPUTILO) $(SMILLEPEDEO) $(MILLEPEDEO)
-OBJS          = $(CLASSOBJS) $(ALIGNOBJS) $(KVERTEXO) $(KTRACKERMULO) $(KSEEDERO) $(KVERTEXMO) $(KFASTTRACKO) $(KONLINETRACKO) $(MILLEALIGNO)
+OBJS          = $(CLASSOBJS) $(ALIGNOBJS) $(KVERTEXO) $(KTRACKERMULO) $(KSEEDERO) $(KVERTEXMO) $(KFASTTRACKO) $(KONLINETRACKO) $(MILLEALIGNO) $(KTRACKERO)
 SLIBS         = $(KTRACKERSO) $(SRAWEVENTSO)
-PROGRAMS      = $(KVERTEX) $(MILLEALIGN) $(KFASTTRACK) $(KONLINETRACK)
+PROGRAMS      = $(KVERTEX) $(MILLEALIGN) $(KFASTTRACK) $(KONLINETRACK) $(KTRACKER)
 
 all:            $(PROGRAMS) $(SLIBS)
 
@@ -102,6 +110,10 @@ $(KFASTTRACK):   $(KFASTTRACKO) $(CLASSOBJS) $(TRKEXTOBJS)
 	@echo "$@ done."
 
 $(KONLINETRACK):   $(KONLINETRACKO) $(CLASSOBJS) $(TRKEXTOBJS)
+	$(LD) $^ -o $@ $(LDFLAGS) 
+	@echo "$@ done."
+
+$(KTRACKER):   $(KTRACKERO) $(CLASSOBJS) $(TRKEXTOBJS)
 	$(LD) $^ -o $@ $(LDFLAGS) 
 	@echo "$@ done."
 

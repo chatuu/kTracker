@@ -173,6 +173,7 @@ GeomSvc* GeomSvc::instance()
   if(p_geometrySvc == NULL)
     {
       p_geometrySvc = new GeomSvc;
+      p_geometrySvc->init();
     }
 
   return p_geometrySvc;
@@ -195,7 +196,7 @@ void GeomSvc::close()
     }
 }
 
-void GeomSvc::init(std::string geometrySchema)
+void GeomSvc::init()
 {
   using namespace std;
 
@@ -261,9 +262,8 @@ void GeomSvc::init(std::string geometrySchema)
 
   ///Initialize the geometrical variables which should be from MySQL database
   //Connect server
-  char serverName[200];
-  sprintf(serverName, "mysql://%s:%d", MYSQL_SERVER_ADDR, MYSQL_SERVER_PORT);
-  TSQLServer* con = TSQLServer::Connect(serverName, "seaguest","qqbar2mu+mu-");
+  p_jobOptsSvc = JobOptsSvc::instance();
+  TSQLServer* con = TSQLServer::Connect(p_jobOptsSvc->m_mySQLurl.c_str(), "seaguest","qqbar2mu+mu-");
   
   //Make query to Planes table
   char query[300];
@@ -271,7 +271,7 @@ void GeomSvc::init(std::string geometrySchema)
     "xPrimeOffset,x0,y0,z0,planeWidth,planeHeight,theta_x,theta_y,theta_z from %s.Planes WHERE"
     " detectorName LIKE 'D%%' OR detectorName LIKE 'H__' OR detectorName LIKE 'H____' OR "
     "detectorName LIKE 'P____'";
-  sprintf(query, buf_planes, geometrySchema.c_str());
+  sprintf(query, buf_planes, p_jobOptsSvc->m_geomVersion.c_str());
   TSQLResult* res = con->Query(query);
 
   unsigned int nRows = res->GetRowCount();
@@ -351,50 +351,53 @@ void GeomSvc::init(std::string geometrySchema)
       planes[i].update();
     }
 
-#ifdef LOAD_ONLINE_ALIGNMENT
+
   //load the initial value in the planeOffsets table
-  const char* buf_offsets = "SELECT detectorName,deltaX,deltaY,deltaZ,rotateAboutZ FROM %s.PlaneOffsets WHERE"
-    " detectorName LIKE 'D%%' OR detectorName LIKE 'H__' OR detectorName LIKE 'H____' OR detectorName LIKE 'P____'";
-  sprintf(query, buf_offsets, geometrySchema.c_str());
-  res = con->Query(query);
-
-  nRows = res->GetRowCount();
-  if(nRows >= 24) cout << "GeomSvc: loaded chamber alignment parameters from database: " << geometrySchema.c_str() << endl; 
-  for(unsigned int i = 0; i < nRows; ++i)
+  if(p_jobOptsSvc->m_enableOnlineAlignment)
     {
-      TSQLRow* row = res->Next();
-      string detectorName(row->GetField(0));
-      toLocalDetectorName(detectorName, dummy);
+      const char* buf_offsets = "SELECT detectorName,deltaX,deltaY,deltaZ,rotateAboutZ FROM %s.PlaneOffsets WHERE"
+	" detectorName LIKE 'D%%' OR detectorName LIKE 'H__' OR detectorName LIKE 'H____' OR detectorName LIKE 'P____'";
+      sprintf(query, buf_offsets, p_jobOptsSvc->m_geomVersion.c_str());
+      res = con->Query(query);
 
-      int detectorID = map_detectorID[detectorName];
-      if(detectorID > 40) 
+      nRows = res->GetRowCount();
+      if(nRows >= 24) cout << "GeomSvc: loaded chamber alignment parameters from database: " << p_jobOptsSvc->m_geomVersion.c_str() << endl; 
+      for(unsigned int i = 0; i < nRows; ++i)
         {
-	  delete row;
-	  continue;
-	}
+          TSQLRow* row = res->Next();
+          string detectorName(row->GetField(0));
+          toLocalDetectorName(detectorName, dummy);
 
-      planes[detectorID].deltaX = atof(row->GetField(1));
-      planes[detectorID].deltaY = atof(row->GetField(2));
-      planes[detectorID].deltaZ = atof(row->GetField(3));
-      planes[detectorID].rotZ = atof(row->GetField(4));
+	  int detectorID = map_detectorID[detectorName];
+          if(detectorID > 40) 
+            {
+	      delete row;
+	      continue;
+	    }
+
+    	  planes[detectorID].deltaX = atof(row->GetField(1));
+	  planes[detectorID].deltaY = atof(row->GetField(2));
+	  planes[detectorID].deltaZ = atof(row->GetField(3));
+	  planes[detectorID].rotZ = atof(row->GetField(4));
      
-      planes[detectorID].update();
-      planes[detectorID].deltaW = planes[detectorID].getW(planes[detectorID].deltaX, planes[detectorID].deltaY);
-      if(detectorID <= 24) planes[detectorID].resolution = RESOLUTION_DC; 
+	  planes[detectorID].update();
+          planes[detectorID].deltaW = planes[detectorID].getW(planes[detectorID].deltaX, planes[detectorID].deltaY);
+          if(detectorID <= 24) planes[detectorID].resolution = RESOLUTION_DC; 
 
-      delete row;
+          delete row;
+        }
+      delete res;
     }
 
-  delete res;
-#endif
   delete con;
 
   /////Here starts the user-defined part
   //load alignment parameters
-#ifndef LOAD_ONLINE_ALIGNMENT
-  loadAlignment("alignment.txt", "alignment_hodo.txt", "alignment_prop.txt");
-  loadMilleAlignment("align_mille.txt");
-#endif
+  if(p_jobOptsSvc->m_enableOnlineAlignment)
+    {
+      loadAlignment(p_jobOptsSvc->m_alignmentFileChamber, p_jobOptsSvc->m_alignmentFileHodo, p_jobOptsSvc->m_alignmentFileProp);
+      loadMilleAlignment(p_jobOptsSvc->m_alignmentFileMille);
+    }
   calibration_loaded = false;
 
   ///Initialize the position look up table for all wires, hodos, and tubes
@@ -609,7 +612,7 @@ double GeomSvc::getInterceptionFast(int detectorID, double tx, double ty, double
   return (tx*planes[detectorID].zc + x0)*planes[detectorID].costheta + (ty*planes[detectorID].zc + y0)*planes[detectorID].sintheta;
 }
 
-void GeomSvc::loadAlignment(std::string alignmentFile_chamber, std::string alignmentFile_hodo, std::string alignmentFile_prop)
+void GeomSvc::loadAlignment(const std::string& alignmentFile_chamber, const std::string& alignmentFile_hodo, const std::string& alignmentFile_prop)
 {
   using namespace std;
 
@@ -702,7 +705,7 @@ void GeomSvc::loadAlignment(std::string alignmentFile_chamber, std::string align
     }
 }
 
-void GeomSvc::loadMilleAlignment(std::string alignmentFile_mille)
+void GeomSvc::loadMilleAlignment(const std::string& alignmentFile_mille)
 {
   using namespace std;
   
@@ -738,7 +741,7 @@ void GeomSvc::loadMilleAlignment(std::string alignmentFile_mille)
   _align_mille.close();
 }
 
-void GeomSvc::loadCalibration(std::string calibrationFile)
+void GeomSvc::loadCalibration(const std::string& calibrationFile)
 {
   using namespace std;
  

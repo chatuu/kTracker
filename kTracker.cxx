@@ -19,8 +19,10 @@
 #include "KalmanFastTracking.h"
 #include "KalmanFitter.h"
 #include "VertexFit.h"
-#include "TriggerAnalyzer.h"
+#include "MySQLSvc.h"
 #include "JobOptsSvc.h"
+#include "TriggerAnalyzer.h"
+
 #include "MODE_SWITCH.h"
 
 using namespace std;
@@ -36,40 +38,38 @@ int main(int argc, char *argv[])
   JobOptsSvc* jobOptsSvc = JobOptsSvc::instance();
   jobOptsSvc->init(argv[1]);
 
-  //Retrieve the raw event
+  //Initialize geometry service with calibration
+  GeomSvc* geometrySvc = GeomSvc::instance();
+  geometrySvc->loadCalibration(jobOptsSvc->m_calibrationsFile);
+
+  //Retrive the raw data
   SRawEvent* rawEvent = jobOptsSvc->m_mcMode ? (new SRawMCEvent()) : (new SRawEvent());
 
   TFile* dataFile = new TFile(jobOptsSvc->m_inputFile.c_str(), "READ");
-  TTree* dataTree = (TTree *)dataFile->Get("save");
+  TTree* dataTree = (TTree*)dataFile->Get("save"); 
 
   dataTree->SetBranchAddress("rawEvent", &rawEvent);
- 
-  //Output definition
+
+  //Data output definition
   int nTracklets;
+  SRecEvent* recEvent = new SRecEvent();
   TClonesArray* tracklets = new TClonesArray("Tracklet");
   TClonesArray& arr_tracklets = *tracklets;
-
-  double time;
-  SRecEvent* recEvent = new SRecEvent();
 
   TFile* saveFile = new TFile(jobOptsSvc->m_outputFile.c_str(), "recreate");
   TTree* saveTree = dataTree->CloneTree(0);
 
-  saveTree->Branch("recEvent", &recEvent, 256000, 99);
-  saveTree->Branch("time", &time, "time/D");
   saveTree->Branch("nTracklets", &nTracklets, "nTracklets/I");
+  saveTree->Branch("rawEvent", &rawEvent, 256000, 99);
+  saveTree->Branch("recEvent", &recEvent, 256000, 99);
   saveTree->Branch("tracklets", &tracklets, 256000, 99);
   tracklets->BypassStreamer();
 
   //Initialize track finder
-  LogInfo("Initializing the track finder and kalman filter ... ");
-#ifdef _ENABLE_KF
-  KalmanFilter* filter = new KalmanFilter();
-  KalmanFastTracking* fastfinder = new KalmanFastTracking();
-#else
   KalmanFastTracking* fastfinder = new KalmanFastTracking(false);
-#endif
+  VertexFit* vtxfit  = new VertexFit();
 
+  //Initialize the trigger analyzer
   TriggerAnalyzer* triggerAna = new TriggerAnalyzer();
   if(jobOptsSvc->m_enableTriggerMask)
     {
@@ -77,17 +77,26 @@ int main(int argc, char *argv[])
       triggerAna->buildTriggerTree();
     }
 
+  //Quality control numbers and plots
+  int nEvents_loaded = 0;
+  int nEvents_tracked = 0;
+  int nEvents_dimuon = 0;
+  int nEvents_dimuon_real = 0;
+
+  //Start tracking
   const int offset = jobOptsSvc->m_firstEvent;
   int nEvtMax = jobOptsSvc->m_nEvents > 0 ? jobOptsSvc->m_nEvents + offset : dataTree->GetEntries();
   if(nEvtMax > dataTree->GetEntries()) nEvtMax = dataTree->GetEntries();
   LogInfo("Running from event " << offset << " through to event " << nEvtMax);
-  for(int i = offset; i < nEvtMax; ++i)
+  for(int i = 0; i < nEvtMax; ++i) 
     {
       dataTree->GetEntry(i);
-      cout << "\r Processing event " << i << " with eventID = " << rawEvent->getEventID() << ", ";
-      cout << (i - offset + 1)*100/(nEvtMax - offset) << "% finished .. ";
+      ++nEvents_loaded;
 
-      clock_t time_single = clock();
+      //Do the tracking
+      cout << "\r Tracking runID = " << rawEvent->getRunID() << " eventID = " << rawEvent->getEventID() << ", " << (i+1)*100/(nEvtMax - offset) << "% finished. ";
+      cout << nEvents_tracked*100/nEvents_loaded << "% have at least one track, " << nEvents_dimuon*100/nEvents_loaded << "% have at least one dimuon pair, ";
+      cout << nEvents_dimuon_real*100/nEvents_loaded << "% have successful dimuon vertex fit.";
 
       if(jobOptsSvc->m_enableTriggerMask)
 	{
@@ -96,62 +105,56 @@ int main(int argc, char *argv[])
 	}
       else
 	{
-	  rawEvent->reIndex("aoc");
+	  rawEvent->reIndex("oac");
 	}
       if(!fastfinder->setRawEvent(rawEvent)) continue;
+      ++nEvents_tracked;
 
-      //Fill the TClonesArray
+      //Output
       arr_tracklets.Clear();
       std::list<Tracklet>& rec_tracklets = fastfinder->getFinalTracklets();
       if(rec_tracklets.empty()) continue;
 
-      nTracklets = 0;
       recEvent->setRawEvent(rawEvent);
+      nTracklets = 0;
+      int nPos = 0;
+      int nNeg = 0;
       for(std::list<Tracklet>::iterator iter = rec_tracklets.begin(); iter != rec_tracklets.end(); ++iter)
 	{
-	  iter->calcChisq();
 	  //iter->print();
-	  new(arr_tracklets[nTracklets]) Tracklet(*iter);
-	  ++nTracklets;
+	  iter->calcChisq();
+	  new(arr_tracklets[nTracklets++]) Tracklet(*iter);
 
-#ifndef _ENABLE_KF
 	  SRecTrack recTrack = iter->getSRecTrack();
 	  recEvent->insertTrack(recTrack);
-#endif
-	}
 
-#ifdef _ENABLE_KF
-      std::list<KalmanTrack>& rec_tracks = fastfinder->getKalmanTracks();
-      for(std::list<KalmanTrack>::iterator iter = rec_tracks.begin(); iter != rec_tracks.end(); ++iter)
+	  iter->getCharge() > 0 ? ++nPos : ++nNeg;
+	}
+      if(nPos > 0 && nNeg > 0) ++nEvents_dimuon;
+ 
+      //Perform dimuon vertex fit 
+      if(vtxfit->setRecEvent(recEvent)) ++nEvents_dimuon_real;
+
+      if(nTracklets > 0)
 	{
-	  //iter->print();
-	  SRecTrack recTrack = iter->getSRecTrack();
-          recEvent->insertTrack(recTrack);
-	}
-#endif
-
-      time_single = clock() - time_single;
-      time = double(time_single)/CLOCKS_PER_SEC;
-      cout << "it takes " << time << " seconds for this event." << flush;
-
-      recEvent->reIndex();
-      saveTree->Fill();
-      
-      recEvent->clear();
+  	  saveTree->Fill();
+	}	 
       rawEvent->clear();
+      recEvent->clear();
     }
   cout << endl;
-  cout << "kFastTracking ends successfully." << endl;
+  cout << "kTracker ended successfully." << endl;
+  cout << "In total " << nEvents_loaded << " events loaded from " << argv[1] << ": " << nEvents_tracked << " events have at least one track, ";
+  cout << nEvents_dimuon << " events have at least one dimuon pair, ";
+  cout << nEvents_dimuon_real << " events have successful dimuon vertex fit." << endl;
 
   saveFile->cd();
   saveTree->Write();
   saveFile->Close();
 
   delete fastfinder;
+  delete vtxfit;
   delete triggerAna;
-#ifdef _ENABLE_KF
-  filter->close();
-#endif
 
   return 1;
 }
