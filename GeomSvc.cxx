@@ -740,7 +740,7 @@ void GeomSvc::loadCalibration(const std::string& calibrationFile)
   using namespace std;
  
   fstream _cali_file;
-  _cali_file.open(calibrationFile, ios::in);
+  _cali_file.open(calibrationFile.c_str(), ios::in);
  
   char buf[300];
   int iBin, nBin, detectorID;
