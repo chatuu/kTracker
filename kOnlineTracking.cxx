@@ -29,6 +29,12 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+  if(argc != 2)
+    {
+      cout << "Usage: " << argv[0] << "  <options file>" << endl;
+      exit(0);
+    }
+
   //Initialize job options
   JobOptsSvc* jobOptsSvc = JobOptsSvc::instance();
   jobOptsSvc->init(argv[1]);

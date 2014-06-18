@@ -393,7 +393,7 @@ void GeomSvc::init()
 
   /////Here starts the user-defined part
   //load alignment parameters
-  if(p_jobOptsSvc->m_enableOnlineAlignment)
+  if(!p_jobOptsSvc->m_enableOnlineAlignment)
     {
       loadAlignment(p_jobOptsSvc->m_alignmentFileChamber, p_jobOptsSvc->m_alignmentFileHodo, p_jobOptsSvc->m_alignmentFileProp);
       loadMilleAlignment(p_jobOptsSvc->m_alignmentFileMille);

@@ -20,8 +20,8 @@ Settings::Settings()
   login = "seaguest";
   outputFileName = "test_default";
   password = "qqbar2mu+mu-";
-  fMagName = "tab.Fmag";
-  kMagName = "tab.Kmag";
+  fMagName = p_jobOptsSvc->m_fMagFile;
+  kMagName = p_jobOptsSvc->m_kMagFile;
   sqlServer = p_jobOptsSvc->m_mySQLServer;
   sqlPort = p_jobOptsSvc->m_mySQLPort;
   dimuonRepeat = 1;
