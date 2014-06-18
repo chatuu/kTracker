@@ -50,6 +50,11 @@ public:
   std::string m_alignmentFileProp; ///< Name of prop tune alignment file
   std::string m_alignmentFileMille; ///< Name of mille alignment file
 
+  std::string m_roadFile_pt;  ///< road file of mu+ top
+  std::string m_roadFile_pb;  ///< road file of mu+ bottom
+  std::string m_roadFile_mt;  ///< road file of mu- top
+  std::string m_roadFile_mb;  ///< road file of mu- bottom
+
   std::string m_calibrationsFile; ///< Name of calibrations file
 
   std::string m_fMagFile; ///< Name of fMag ascii file

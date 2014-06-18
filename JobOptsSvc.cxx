@@ -87,6 +87,11 @@ bool JobOptsSvc::init(const char* configfile)
   stringOpts["AlignmentFile_Prop"] = &m_alignmentFileProp;
   stringOpts["AlignmentFile_Chamber"] = &m_alignmentFileChamber;
 
+  stringOpts["RoadFile_plus_top"] = &m_roadFile_pt;
+  stringOpts["RoadFile_plus_bottom"] = &m_roadFile_pb;
+  stringOpts["RoadFile_minus_top"] = &m_roadFile_mt;
+  stringOpts["RoadFile_minus_bottom"] = &m_roadFile_mb;
+
   stringOpts["CalibrationsFile"] = &m_calibrationsFile;
 
   stringOpts["fMagFile"] = &m_fMagFile;
@@ -121,9 +126,9 @@ bool JobOptsSvc::init(const char* configfile)
       stringstream ss(line);
       string key, val;
       ss >> key >> val;
-      if( val.empty() )
+      if(val.empty())
 	{
-	  cout << "JobOptsSvc::init - WARNING - caught std::logic_error on line.  Possible value missing in line: " << line << endl;
+	  if(debug()) cout << "JobOptsSvc::init - WARNING - caught std::logic_error on line.  Possible value missing in line: " << line << endl;
 	  continue;
 	}
 

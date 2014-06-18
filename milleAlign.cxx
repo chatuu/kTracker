@@ -25,11 +25,15 @@
 #include "SRecEvent.h"
 #include "SMillepede.h"
 #include "SMillepedeUtil.h"
+#include "JobOptsSvc.h"
 
 #include "MODE_SWITCH.h"
 
 int main(int argc, char *argv[])
 {
+  //Initialize default job options
+  JobOptsSvc* jobOptsSvc = JobOptsSvc::instance();
+
   //Initialize geometry service
   GeomSvc* geometrySvc = GeomSvc::instance();
   geometrySvc->init();
