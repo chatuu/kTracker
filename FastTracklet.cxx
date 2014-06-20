@@ -20,6 +20,7 @@ ClassImp(SignedHit)
 ClassImp(PropSegment)
 ClassImp(Tracklet)
 
+//Signed hit definition
 SignedHit::SignedHit()
 {
   hit.index = -1;
@@ -41,6 +42,9 @@ SignedHit::SignedHit(Hit hit_input, int sign_input)
   hit = hit_input;
   sign = sign_input;
 }
+
+//Proptube segment definition
+const GeomSvc* PropSegment::p_geomSvc = GeomSvc::instance();
 
 PropSegment::PropSegment()
 {
@@ -87,7 +91,6 @@ bool PropSegment::isValid()
 void PropSegment::fit()
 {
   if(getNHits() < 3) return;
-  GeomSvc* p_geomSvc = GeomSvc::instance();
 
   //Sign assignment for 1st and 2nd hits
   if(hits[0].hit.index > 0 && hits[1].hit.index > 0)
@@ -158,6 +161,9 @@ void PropSegment::fit()
       chisq += ((y[i] - a*x[i] -b)*(y[i] - a*x[i] -b));
     }
 }
+
+//General tracklet part
+const GeomSvc* Tracklet::p_geomSvc = GeomSvc::instance();
 
 Tracklet::Tracklet()
 {
@@ -291,7 +297,6 @@ double Tracklet::getExpPosErrorY(double z) const
 
 double Tracklet::getExpPositionW(int detectorID)
 {
-  GeomSvc* p_geomSvc = GeomSvc::instance();
   double z = p_geomSvc->getPlanePosition(detectorID);
 
   double x_exp = getExpPositionX(z);
@@ -518,7 +523,6 @@ void Tracklet::addDummyHits()
 
 double Tracklet::calcChisq()
 {
-  GeomSvc* p_geomSvc = GeomSvc::instance();
   chisq = 0.;
 
   double tx_st1, x0_st1;
@@ -588,8 +592,6 @@ double Tracklet::Eval(const double* par)
 
 SRecTrack Tracklet::getSRecTrack()
 {
-  GeomSvc* p_geomSvc = GeomSvc::instance();
-
   SRecTrack strack;
   strack.setChisq(chisq);
   for(std::list<SignedHit>::iterator iter = hits.begin(); iter != hits.end(); ++iter)
