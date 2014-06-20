@@ -169,7 +169,7 @@ private:
   GeomSvc* p_geomSvc;
 
   //Flag for enable Kalman fitting
-  bool enable_KF;
+  const bool enable_KF;
 };
 
 #endif

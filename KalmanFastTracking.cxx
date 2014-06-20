@@ -19,15 +19,13 @@ Created: 05-28-2013
 #include "KalmanFitter.h"
 #include "KalmanFastTracking.h"
 
-KalmanFastTracking::KalmanFastTracking(bool flag)
+KalmanFastTracking::KalmanFastTracking(bool flag) : enable_KF(flag)
 {
   using namespace std;
 #ifdef _DEBUG_ON
   cout << "Initialization of KalmanFastTracking ..." << endl;
   cout << "========================================" << endl;
 #endif
-
-  enable_KF = flag;
 
   //Initialize Kalman fitter
   if(enable_KF)
