@@ -401,7 +401,7 @@ void SRecDimuon::calcVariables()
   Double_t ebeam = 120.;
 
   TLorentzVector p_beam(0., 0., sqrt(ebeam*ebeam - mp*mp), ebeam);
-  TTMath::Exp(y);LorentzVector p_target(0., 0., 0., mp);
+  TLorentzVector p_target(0., 0., 0., mp);
 
   TLorentzVector p_cms = p_beam + p_target;
   TVector3 bv_cms = p_cms.BoostVector();
