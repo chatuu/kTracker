@@ -114,6 +114,8 @@ Int_t SRawEvent::findHit(Int_t detectorID, Int_t elementID)
   It's okay here for two reasons:
      1. inTime is required when searching for trigger roads;
      2. hodoscope hit doesn't need tdcTime information as long as it's in-time;
+  
+  Please also note that this is valid only when the hit list is sorted.
   */
   Int_t idx_start = getNChamberHitsAll();
   Int_t idx_end = idx_start + getNHodoHitsAll();

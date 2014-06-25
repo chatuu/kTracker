@@ -523,7 +523,6 @@ int GeomSvc::getExpElementID(int detectorID, double pos_exp)
 
 void GeomSvc::get2DBoxSize(int detectorID, int elementID, double& x_min, double& x_max, double& y_min, double& y_max)
 {
-  std::string detectorName = getDetectorName(detectorID);
   if(planes[detectorID].planeType == 1)
     {
       double x_center = map_wirePosition[std::make_pair(detectorID, elementID)];
