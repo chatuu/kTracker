@@ -427,6 +427,9 @@ void GeomSvc::init(std::string geometrySchema)
 	}
     } 
 
+  ///Initialize the hodoscope masking min and max
+  initHodoMasking();
+
   ///Initialize channel mapping  --- not needed at the moment
   xmin_kmag = -57.*2.54;
   xmax_kmag = 57.*2.54;
@@ -523,6 +526,10 @@ int GeomSvc::getExpElementID(int detectorID, double pos_exp)
 
 void GeomSvc::get2DBoxSize(int detectorID, int elementID, double& x_min, double& x_max, double& y_min, double& y_max)
 {
+  //If it's chamber, return the starting/end point (x1, y1) and (x2, y2)
+  //If it's hodoscope/prop tube, return the two corner of the paddle (x_min, y_min) and (x_max, y_max)  
+
+  //For hodo and prop tubes
   if(planes[detectorID].planeType == 1)
     {
       double x_center = map_wirePosition[std::make_pair(detectorID, elementID)];
@@ -542,6 +549,17 @@ void GeomSvc::get2DBoxSize(int detectorID, int elementID, double& x_min, double&
 
       x_min = planes[detectorID].x1;
       x_max = planes[detectorID].x2;
+    }
+
+  if(detectorID < 25)
+    {
+      double x_center = planes[detectorID].x0 + ((elementID - (planes[detectorID].nElements+1.)/2.)*planes[detectorID].spacing + planes[detectorID].xoffset + planes[detectorID].deltaW)/planes[detectorID].costheta;
+      
+      x_min = x_center - 0.5*(planes[detectorID].y2 - planes[detectorID].y1)*planes[detectorID].tantheta;
+      x_max = x_center + 0.5*(planes[detectorID].y2 - planes[detectorID].y1)*planes[detectorID].tantheta;
+
+      y_min = planes[detectorID].y1;
+      y_max = planes[detectorID].y2;
     }
 }
 
@@ -782,6 +800,179 @@ bool GeomSvc::isInTime(int detectorID, double tdcTime)
   if(planes[detectorID].rtprofile != NULL) return tdcTime > planes[detectorID].tmin && tdcTime < planes[detectorID].tmax;
 
   return true;
+}
+
+void GeomSvc::initHodoMasking()
+{
+  //Initialize everything
+  for(int i = 0; i < 8; ++i)
+    {
+      for(int j = 0; j < 23; ++j)
+	{
+	  for(int k = 0; k < 12; ++k)
+	    {
+	      element_min_hodomask[i][j][k] = 1000;
+	      element_max_hodomask[i][j][k] = -1;
+	    }
+	}
+    }
+
+  int hodoIDs[] = {25, 26, 31, 32, 33, 34, 39, 40};
+  int map_hodo_cham[8][12] = {{1, 2, 3, 4, 5, 6, -1, -1, -1, -1, -1, -1}, {1, 2, 3, 4, 5, 6, -1, -1, -1, -1, -1, -1}, 
+	{7, 8, 9, 10, 11, 12, -1, -1, -1, -1, -1, -1}, {7, 8, 9, 10, 11, 12, -1, -1, -1, -1, -1, -1},
+       	{13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}, {13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}, 
+	{41, 42, 43, 44, 45, 46, 47, 48, -1, -1, -1, -1}, {41, 42, 43, 44, 45, 46, 47, 48, -1, -1, -1, -1}};
+  for(int i = 0; i < 8; ++i)
+    {
+      for(int j = 0; j < 12; ++j)
+	{
+	  initHodoMasking(hodoIDs[i], map_hodo_cham[i][j]);
+	}
+    }
+
+  for(int i = 0; i < 8; ++i)
+    {
+      for(int j = 0; j < 23; ++j)
+	{
+	  if(j > planes[hodoIDs[i]].nElements) continue;
+	  for(int k = 0; k < 12; ++k)
+	    {
+	      if(map_hodo_cham[i][k] < 0) continue;
+	      std::cout << i << "  " << j << "  " << k << "  ";
+	      std::cout << planes[hodoIDs[i]].detectorName << "  " << planes[map_hodo_cham[i][k]].detectorName << "   " << element_min_hodomask[i][j][k];
+	      std::cout << "  " << element_max_hodomask[i][j][k] << std::endl;
+	    }
+	}
+    }
+
+
+}
+
+void GeomSvc::initHodoMasking(int detectorID_hodo, int detectorID_cham)
+{
+  if(detectorID_cham < 1 || detectorID_cham > 24) return;
+  if(detectorID_hodo < 25 || detectorID_cham > 40) return;
+
+  int idx_cham = -1;
+  if(detectorID_cham <= 6)
+    {
+      idx_cham = detectorID_cham - 1;
+    }
+  else if(detectorID_cham <= 12)
+    {
+      idx_cham = detectorID_cham - 7;
+    }
+  else if(detectorID_cham <= 24)
+    {
+      idx_cham = detectorID_cham - 13;
+    }
+
+  int idx_hodo = -1;
+  if(detectorID_hodo == 25 || detectorID_hodo == 26)
+    {
+      idx_hodo = detectorID_hodo - 25;
+    }
+  else if(detectorID_hodo == 31 || detectorID_hodo == 32)
+    {
+      idx_hodo = detectorID_hodo - 31 + 2;
+    }
+  else if(detectorID_hodo == 33 || detectorID_hodo == 34)
+    {
+      idx_hodo = detectorID_hodo - 33 + 4;
+    }
+  else if(detectorID_hodo == 39 || detectorID_hodo == 40)
+    {
+      idx_hodo = detectorID_hodo - 39 + 6;
+    }
+
+  LogInfo(detectorID_cham << "  " << detectorID_hodo << "  " << idx_cham << "   " << idx_hodo << "  " << planes[detectorID_cham].detectorName << "   " << planes[detectorID_hodo].detectorName);
+
+  for(int i = 1; i <= planes[detectorID_hodo].nElements; ++i)
+    {
+      double x1_hodo, x2_hodo, y1_hodo, y2_hodo;
+      get2DBoxSize(detectorID_hodo, i, x1_hodo, x2_hodo, y1_hodo, y2_hodo);
+
+      double points_hodo[5][2] = {{x1_hodo, y1_hodo}, {x1_hodo, y2_hodo}, {x2_hodo, y2_hodo}, {x2_hodo, y1_hodo}, {x1_hodo, y1_hodo}};
+      for(int j = 1; j <= planes[detectorID_cham].nElements; ++j)
+	{
+	  double points_cham[2][2];
+	  get2DBoxSize(detectorID_cham, j, points_cham[0][0], points_cham[1][0], points_cham[0][1], points_cham[1][1]);
+
+	  LogInfo(i << "  " << j);
+
+	  for(int k = 1; k <= 4; ++k)
+	    {
+	      double x1, y1, x2, y2;
+	      x1 = points_hodo[k-1][0]; y1 = points_hodo[k-1][1];
+	      x2 = points_hodo[k][0]; y2 = points_hodo[k][1];
+	      
+	      double x3, y3, x4, y4;
+              x3 = points_cham[0][0]; y3 = points_cham[0][1];
+              x4 = points_cham[1][0]; y4 = points_cham[1][1];
+
+	      LogInfo(x1 << ", " << x2 << ", " << x3 << ", " << x4);
+	      LogInfo(y1 << ", " << y2 << ", " << y3 << ", " << y4);
+
+	      double s1x = x2 - x1;
+	      double s1y = y2 - y1;
+	      double s2x = x4 - x3;
+	      double s2y = y4 - y3;
+
+	      double s = (-s1y*(x1 - x3) + s1x*(y1 - y3))/(-s2x*s1y + s1x*s2y);
+	      double t = (s2x*(y1 - y3) - s2y*(x1 - x3))/(-s2x*s1y + s1x*s2y);
+
+	      LogInfo(k << "   " << s << "  " << t);
+
+	      if(s >= 0 && s <= 1 && t >= 0 && t <= 1)
+		{
+		  if(j < element_min_hodomask[idx_hodo][i-1][idx_cham]) element_min_hodomask[idx_hodo][i-1][idx_cham] = j;
+		  if(j > element_max_hodomask[idx_hodo][i-1][idx_cham]) element_max_hodomask[idx_hodo][i-1][idx_cham] = j;
+		  
+		  break;
+		}
+	    }
+	  //LogInfo(i << "  " << j << "   " << element_min_hodomask[idx_hodo][i-1][idx_cham] << "  " << element_max_hodomask[idx_hodo][i-1][idx_cham]);
+	}
+    }
+}
+
+bool GeomSvc::isHodoMasked(int detectorID_cham, int elementID_cham, int detectorID_hodo, int elementID_hodo)
+{
+  int idx_cham = -1;
+  if(detectorID_cham <= 6)
+    {
+      idx_cham = detectorID_cham - 1;
+    }
+  else if(detectorID_cham <= 12)
+    {
+      idx_cham = detectorID_cham - 7;
+    }
+  else if(detectorID_cham <= 24)
+    {
+      idx_cham = detectorID_cham - 13;
+    }
+
+  int idx_hodo = -1;
+  if(detectorID_hodo == 25 || detectorID_hodo == 26)
+    {
+      idx_hodo = detectorID_hodo - 25;
+    }
+  else if(detectorID_hodo == 31 || detectorID_hodo == 32)
+    {
+      idx_hodo = detectorID_hodo - 31 + 2;
+    }
+  else if(detectorID_hodo == 33 || detectorID_hodo == 34)
+    {
+      idx_hodo = detectorID_hodo - 33 + 4;
+    }
+  else if(detectorID_hodo == 39 || detectorID_hodo == 40)
+    {
+      idx_hodo = detectorID_hodo - 39 + 6;
+    }
+
+  if(idx_cham < 0 || idx_hodo < 0) return false;
+
+  return elementID_cham >= element_min_hodomask[idx_hodo][elementID_hodo-1][idx_cham] && elementID_cham <= element_max_hodomask[idx_hodo][elementID_hodo-1][idx_cham];
 }
 
 void GeomSvc::printWirePosition()

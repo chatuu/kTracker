@@ -191,6 +191,11 @@ public:
   bool isInElement(int detectorID, int elementID, double x, double y, double tolr = 0.);
   bool isInKMAG(double x, double y);
 
+  ///Hodosope masking numbers calculation
+  void initHodoMasking();
+  void initHodoMasking(int detectorID_hodo, int detectorID_cham);  
+  bool isHodoMasked(int detectorID_cham, int elementID_cham, int detectorID_hodo, int elementID_hodo);
+
   ///Debugging print of the content
   void printAlignPar();
   void printTable();
@@ -215,6 +220,11 @@ private:
 
   //Mapping to wire position
   std::map<std::pair<int, int>, double> map_wirePosition;
+
+  //max and min elementID on chambers/prop. tubes allowed by each hodoscope paddle
+  //we have 8 X hodo planes, each has no more than 23 paddles, and responsible for no more than 12 chamber/proptube planes
+  int element_min_hodomask[8][23][12];
+  int element_max_hodomask[8][23][12];
 
   //singleton pointor 
   static GeomSvc* p_geometrySvc;

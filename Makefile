@@ -67,7 +67,6 @@ MILLEALIGNO   = milleAlign.o
 MILLEALIGN    = milleAlign
 
 KTRACKERSO    = libkTracker.so
-SRAWEVENTSO   = libSRawEvent.so
 
 TRKEXTOBJS    = TrackExtrapolator/TrackExtrapolator.o TrackExtrapolator/DetectorConstruction.o TrackExtrapolator/Field.o TrackExtrapolator/TabulatedField3D.o \
 		TrackExtrapolator/Settings.o TrackExtrapolator/GenericSD.o TrackExtrapolator/MCHit.o TrackExtrapolator/TPhysicsList.o 
@@ -75,7 +74,7 @@ CLASSOBJS     = $(GEOMSVCO) $(SRAWEVENTO) $(SRECEVENTO) $(KALMANUTILO) $(KALMANF
 		$(KALMANFASTO) $(FASTTRACKLETO) $(MYSQLSVCO) $(TRIGGERROADO) $(TRIGGERANALYZERO)
 ALIGNOBJS     = $(SMPUTILO) $(SMILLEPEDEO) $(MILLEPEDEO)
 OBJS          = $(CLASSOBJS) $(ALIGNOBJS) $(KVERTEXO) $(KTRACKERMULO) $(KSEEDERO) $(KVERTEXMO) $(KFASTTRACKO) $(KONLINETRACKO) $(MILLEALIGNO)
-SLIBS         = $(KTRACKERSO) $(SRAWEVENTSO)
+SLIBS         = $(KTRACKERSO)
 PROGRAMS      = $(KVERTEX) $(MILLEALIGN) $(KFASTTRACK) $(KONLINETRACK)
 
 all:            $(PROGRAMS) $(SLIBS)
@@ -87,10 +86,6 @@ $(MILLEPEDEO): $(MILLEPEDES)
 
 $(KTRACKERSO):  $(CLASSOBJS) $(TRKEXTOBJS)
 	$(LD) $^ -o $@  $(SOFLAGS) $(LDFLAGS) 
-	@echo "$@ done."
-
-$(SRAWEVENTSO):  $(SRAWEVENTO)
-	$(LD) $^ -o $@  $(SOFLAGS) $(LDFLAGS)
 	@echo "$@ done."
 
 $(KTRACKERMUL):   $(KTRACKERMULO) $(CLASSOBJS) $(TRKEXTOBJS)

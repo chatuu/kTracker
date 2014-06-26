@@ -14,6 +14,7 @@ Created: 10-24-2011
 #include <TMath.h>
 #include <TString.h>
 
+#include "GeomSvc.h"
 #include "SRawEvent.h"
 
 ClassImp(Hit)
@@ -478,41 +479,44 @@ Int_t SRawEvent::getNHitsInD3m()
 
 void SRawEvent::reIndex(std::string option)
 {
-  bool _afterhit = false;
-  bool _hodomask = false;
-  bool _outoftime = false;
-  bool _nonchamber = false;
-  bool _decluster = false;
-  bool _mergehodo = false;
-  bool _triggermask = false;
+  bool _afterhit = false;         //after pulse removal
+  bool _hodomask = false;         //hodoscope masking -- on chambers/prop. tubes
+  bool _outoftime = false;        //out-of-time hits removal
+  bool _decluster = false;        //hit cluster removal
+  bool _triggermask = false;      //remove the hodo hits which are not on a road
+  //bool _mergehodo = false;        //merge the hodo hits from trigger hit and hit table
+  //bool _nonchamber = false;     //non-chamber hits removal
 
   TString option_lower(option.c_str());
   option_lower.ToLower();
   if(option_lower.Contains("a")) _afterhit = true;
   if(option_lower.Contains("h")) _hodomask = true;
   if(option_lower.Contains("o")) _outoftime = true;
-  if(option_lower.Contains("n")) _nonchamber = true;
   if(option_lower.Contains("c")) _decluster = true;
-  if(option_lower.Contains("u")) _mergehodo = true;
   if(option_lower.Contains("t")) _triggermask = true;
+  //if(option_lower.Contains("u")) _mergehodo = true;
+  //if(option_lower.Contains("n")) _nonchamber = true;
 
   ///Dump the vector into a list and do the reduction
-  std::list<Hit> hitlist_temp;
-  hitlist_temp.clear();
+  std::list<Hit> hitlist_temp, hitlist_trig;
+  hitlist_temp.clear(); hitlist_trig.clear();
   for(std::vector<Hit>::iterator iter = fAllHits.begin(); iter != fAllHits.end(); ++iter)
     {
       if(_outoftime && iter->inTime == 0) continue;
-      if(_hodomask && iter->hodoMask == 0) continue;
-      if(_nonchamber && iter->detectorID > 24) continue;
+      //if(_hodomask && iter->hodoMask == 0) continue;
+      //if(_nonchamber && iter->detectorID > 24) continue;
       if(_triggermask && iter->detectorID >= 24 && iter->detectorID <= 40 && iter->inTime != 2) continue;
 
       hitlist_temp.push_back(*iter);
+      if(_triggermask && iter->detectorID >= 24 && iter->detectorID <= 40) hitlist_trig.push_back(*iter); 
     }
 
+  /*
   if(_mergehodo)
     {
       for(std::vector<Hit>::iterator iter = fTriggerHits.begin(); iter != fTriggerHits.end(); ++iter) hitlist_temp.push_back(*iter);
     }
+  */
 
   ///Remove after hits
   hitlist_temp.sort();
@@ -520,7 +524,35 @@ void SRawEvent::reIndex(std::string option)
     {
       hitlist_temp.unique();
     }
- 
+
+  if(_hodomask)
+    {
+      GeomSvc* p_geomSvc = GeomSvc::instance();
+      for(std::list<Hit>::iterator iter = hitlist_temp.begin(); iter != hitlist_temp.end(); )
+	{
+	  if(iter->detectorID > 24) break;
+
+	  bool isMasked = false;
+	  for(std::list<Hit>::iterator jter = hitlist_trig.begin(); jter != hitlist_trig.end(); ++jter)
+	    {
+	      if(p_geomSvc->isHodoMasked(iter->detectorID, iter->elementID, jter->detectorID, jter->elementID))
+		{
+		  isMasked = true;
+		  break;
+		}
+	    }
+
+	  if(isMasked)
+	    {
+	      ++iter;
+	    } 
+	  else
+	    {
+	      iter = hitlist_temp.erase(iter);
+	    }
+	}
+    }
+
   if(_decluster)
     {
       deClusterize(hitlist_temp);
