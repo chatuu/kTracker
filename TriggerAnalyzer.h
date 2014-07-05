@@ -56,6 +56,9 @@ public:
   //Trim a event's hodoscope hits
   void trimEvent(SRawEvent* rawEvent);
 
+  //Check if the road is found
+  bool isRoadFound(int charge, TriggerRoad& road);
+
   //Get the road list of +/-
   std::list<TriggerRoad>& getRoadsAll(int charge) { return roads[(-charge+1)/2]; }
   std::list<TriggerRoad>& getRoadsFound(int charge) { return roads_found[(-charge+1)/2]; }

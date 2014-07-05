@@ -72,7 +72,10 @@ int main(int argc, char *argv[])
 
 #ifdef TRIGGER_TRIMING
   TriggerAnalyzer* triggerAna = TriggerAnalyzer::instance();
-  triggerAna->init();
+  if(!triggerAna->init())
+    {
+      exit(EXIT_FAILURE);
+    }
   triggerAna->buildTriggerTree();
 #endif
 
@@ -152,5 +155,5 @@ int main(int argc, char *argv[])
   delete triggerAna;
 #endif
 
-  return 1;
+  return EXIT_SUCCESS;
 }

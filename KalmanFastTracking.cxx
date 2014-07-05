@@ -18,6 +18,7 @@ Created: 05-28-2013
 
 #include "KalmanFitter.h"
 #include "KalmanFastTracking.h"
+#include "TriggerRoad.h"
 
 KalmanFastTracking::KalmanFastTracking(bool flag) : enable_KF(flag)
 {
@@ -61,6 +62,9 @@ KalmanFastTracking::KalmanFastTracking(bool flag) : enable_KF(flag)
 
   //Initialize geometry service
   p_geomSvc = GeomSvc::instance();
+
+  //Initialize trigger analyzer
+  p_triggerAna = TriggerAnalyzer::instance();
 
   //Initialize plane angles for all planes
   for(int i = 1; i <= 24; i++)
@@ -1011,6 +1015,15 @@ bool KalmanFastTracking::acceptTracklet(Tracklet& tracklet)
       if(!p_geomSvc->isInKMAG(tracklet.getExpPositionX(Z_KMAG_BEND), tracklet.getExpPositionY(Z_KMAG_BEND))) return false;
       if(!muonID(tracklet)) return false;
     }
+
+#ifdef TRIGGER_TRIMING
+  //For global tracks, require the hodoscope hit agrees with road fired
+  if(tracklet.stationID == 6)
+    {
+      TriggerRoad road(tracklet);
+      if(!p_triggerAna->isRoadFound(tracklet.getCharge(), road)) return false;
+    }
+#endif
 
   //If everything is fine ...
   return true;

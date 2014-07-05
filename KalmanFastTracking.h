@@ -24,6 +24,7 @@ Created: 05-24-2013
 #include "KalmanTrack.h"
 #include "KalmanFitter.h"
 #include "FastTracklet.h"
+#include "TriggerAnalyzer.h"
 
 class KalmanFastTracking
 {
@@ -167,6 +168,9 @@ private:
 
   //Geometry service
   GeomSvc* p_geomSvc;
+
+  //TriggerAnalyzer
+  TriggerAnalyzer* p_triggerAna;
 
   //Flag for enable Kalman fitting
   const bool enable_KF;

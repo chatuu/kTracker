@@ -106,6 +106,10 @@ bool TriggerAnalyzer::init()
   for(int i = 0; i < 4; ++i)
     {
       fstream fin(fileNames[i].c_str(), ios::in);
+      if(!fin)
+	{
+	  std::cout << "TriggerAnalyzer: " << fileNames[i] << " cannot be found." << std::endl;
+	}
 
       while(fin.getline(buffer, 300))
 	{
@@ -151,7 +155,12 @@ bool TriggerAnalyzer::init()
   makeRoadPairs();
 
   std::cout << "TriggerAnalyzer: " << roads_enabled[0].size() << " positive roads and " << roads_enabled[1].size() << " negative roads are activated." << std::endl;
-  return roads_enabled[0].size() > 0 && roads_enabled[1].size();
+  if(roads_enabled[0].empty() || roads_enabled[1].empty())
+    {
+      std::cout << "TriggerAnalyzer: road list is somehow empty. Initialization failed." << std::endl;
+      return false; 
+    }
+  return true;
 }
 
 bool TriggerAnalyzer::init(std::string fileName, double cut_td, double cut_gun)
@@ -581,4 +590,12 @@ void TriggerAnalyzer::trimEvent(SRawEvent* rawEvent)
 	    }
 	}
     }
+}
+
+bool TriggerAnalyzer::isRoadFound(int charge, TriggerRoad& road)
+{
+  int idx = (-charge+1)/2;
+  std::list<TriggerRoad>::iterator iter = std::find(roads_found[idx].begin(), roads_found[idx].end(), road);
+
+  return iter != roads_found[idx].end();
 }

@@ -7,7 +7,7 @@
 
 ClassImp(TriggerRoad)
 
-TriggerRoad::TriggerRoad() : detectorIDs(4), elementIDs(4) 
+TriggerRoad::TriggerRoad()  
 {
   targetWeight = 0.;
   dumpWeight = 0.;
@@ -28,9 +28,28 @@ TriggerRoad::TriggerRoad() : detectorIDs(4), elementIDs(4)
 
 TriggerRoad::TriggerRoad(Tracklet& tracklet) : detectorIDs(4), elementIDs(4) 
 {
+  GeomSvc* p_geomSvc = GeomSvc::instance();
+  const int hodoIDs[2][4] = {{26, 32, 34, 40}, {25, 31, 33, 39}};
+  
+  int tb = 0;
+  for(int i = 0; i < 4; ++i)
+    {
+      tb += (p_geomSvc->isInPlane(hodoIDs[0][i], 0., tracklet.getExpPositionY(p_geomSvc->getPlanePosition(hodoIDs[0][i]))) ? 1 : -1);
+      //std::cout << i << "  " << tb << "  " << p_geomSvc->getPlanePosition(hodoIDs[0][i]) << "  " << tracklet.getExpPositionY(p_geomSvc->getPlanePosition(hodoIDs[0][i])) << std::endl;
+    }
 
+  if(tb == 0) return;
+  tb = tb > 0 ? 0 : 1;
+
+  //std::cout << tb << std::endl;
+  for(int i = 0; i < 4; ++i)
+    {
+      //std::cout << i << "  " << hodoIDs[tb][i] << "   " << tracklet.getExpPositionX(p_geomSvc->getPlanePosition(hodoIDs[tb][i])) << std::endl; 
+      detectorIDs[i] = hodoIDs[tb][i];
+      elementIDs[i] = p_geomSvc->getExpElementID(hodoIDs[tb][i], tracklet.getExpPositionX(p_geomSvc->getPlanePosition(hodoIDs[tb][i])));
+      //std::cout << i << "  " << detectorIDs[i] << "  " << elementIDs[i] << std::endl;
+    }
 }
-
 
 TriggerRoad::TriggerRoad(std::list<int> uniqueIDs)
 {

@@ -72,5 +72,5 @@ int main(int argc, char *argv[])
 
   delete vtxfit;
 
-  return 1;
+  return EXIT_SUCCESS;
 }
