@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef TRIGGER_TRIMING
-  TriggerAnalyzer* triggerAna = new TriggerAnalyzer();
+  TriggerAnalyzer* triggerAna = TriggerAnalyzer::instance();
   triggerAna->init();
   triggerAna->buildTriggerTree();
 #endif

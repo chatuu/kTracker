@@ -22,18 +22,21 @@ void TNode::add(TNode* child)
   children.push_back(child);
 }
 
+TriggerAnalyzer* TriggerAnalyzer::p_triggerAna = NULL; 
+
+TriggerAnalyzer* TriggerAnalyzer::instance()
+{
+  if(p_triggerAna == NULL)
+    {
+      p_triggerAna = new TriggerAnalyzer;
+    }
+
+  return p_triggerAna;
+}
+
 TriggerAnalyzer::TriggerAnalyzer()
 {
-  GeomSvc* p_geomSvc = GeomSvc::instance();
-
-  detectorIDs_trigger = p_geomSvc->getDetectorIDs("H1[TB]");
-  std::vector<int> H2X_trigger = p_geomSvc->getDetectorIDs("H2[TB]");
-  std::vector<int> H3X_trigger = p_geomSvc->getDetectorIDs("H3[TB]");
-  std::vector<int> H4X_trigger = p_geomSvc->getDetectorIDs("H4[TB]");
-
-  detectorIDs_trigger.insert(detectorIDs_trigger.end(), H2X_trigger.begin(), H2X_trigger.end());
-  detectorIDs_trigger.insert(detectorIDs_trigger.end(), H3X_trigger.begin(), H3X_trigger.end());
-  detectorIDs_trigger.insert(detectorIDs_trigger.end(), H4X_trigger.begin(), H4X_trigger.end());
+  p_geomSvc = GeomSvc::instance();
 
   root[0] = NULL;
   root[1] = NULL;
@@ -46,8 +49,6 @@ TriggerAnalyzer::~TriggerAnalyzer()
 
 bool TriggerAnalyzer::init(std::string schemaName)
 {
-  GeomSvc* p_geomSvc = GeomSvc::instance();
-
   char query[300];
   sprintf(query, "SELECT charge,St1DetectorName,St1ElementID,St2DetectorName,St2ElementID,"
 	  "St3DetectorName,St3ElementID,St4DetectorName,St4ElementID FROM %s.TriggerRoads", schemaName.c_str());
@@ -96,9 +97,12 @@ bool TriggerAnalyzer::init()
   using namespace std;
 
   std::string fileNames[4] = {"roads_plus_top.txt", "roads_plus_bottom.txt", "roads_minus_top.txt", "roads_minus_bottom.txt"};
+
   char buffer[300];
   int pRoads = 0;
   int mRoads = 0;
+  roads_enabled[0].clear();
+  roads_enabled[1].clear();
   for(int i = 0; i < 4; ++i)
     {
       fstream fin(fileNames[i].c_str(), ios::in);
@@ -271,7 +275,6 @@ bool TriggerAnalyzer::acceptEvent(TriggerRoad& p_road, TriggerRoad& m_road)
 
 bool TriggerAnalyzer::buildData(int nHits, int detectorIDs[], int elementIDs[])
 {
-  GeomSvc* p_geomSvc = GeomSvc::instance();
   data.clear();
 
   //Form data matrix

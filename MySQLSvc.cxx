@@ -42,7 +42,7 @@ MySQLSvc::MySQLSvc()
   readTargetPos = true;
 
   //Initialize trigger analyzer
-  p_triggerAna = new TriggerAnalyzer();
+  p_triggerAna = TriggerAnalyzer::instance();
   setTriggerEmu = p_triggerAna->init();
   if(setTriggerEmu)
     {

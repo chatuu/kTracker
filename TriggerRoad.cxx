@@ -7,15 +7,12 @@
 
 ClassImp(TriggerRoad)
 
-TriggerRoad::TriggerRoad()
+TriggerRoad::TriggerRoad() : detectorIDs(4), elementIDs(4) 
 {
   targetWeight = 0.;
   dumpWeight = 0.;
   lowMWeight = 0.;
   highMWeight = 0.;
-
-  detectorIDs.clear();
-  elementIDs.clear();
 
   px_min = 0.;
   px_max = 0.;
@@ -28,6 +25,12 @@ TriggerRoad::TriggerRoad()
 
   enabled = true;
 }
+
+TriggerRoad::TriggerRoad(Tracklet& tracklet) : detectorIDs(4), elementIDs(4) 
+{
+
+}
+
 
 TriggerRoad::TriggerRoad(std::list<int> uniqueIDs)
 {
@@ -111,6 +114,9 @@ bool TriggerRoad::operator==(const TriggerRoad& elem) const
   int nElements = detectorIDs.size();
   for(int i = 0; i < nElements; i++)
     {
+      //so that it's capable of comparing partial roads
+      if(detectorIDs[i] < 0 || elem.detectorIDs[i] < 0) continue;
+
       if(detectorIDs[i] != elem.detectorIDs[i]) return false;
       if(elementIDs[i] != elem.elementIDs[i]) return false;
     }

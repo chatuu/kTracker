@@ -37,6 +37,9 @@ public:
   TriggerAnalyzer();
   ~TriggerAnalyzer();
 
+  //singleton instance
+  static TriggerAnalyzer* instance();
+
   //initialization
   bool init(std::list<TriggerRoad> p_roads, std::list<TriggerRoad> m_roads, double cut_td = 0., double cut_gun = 1E8); //init by road lists
   bool init(std::string fileName, double cut_td = 0., double cut_gun = 1E8); //init by root files
@@ -110,8 +113,11 @@ private:
   //temporary container of uniqueIDs found
   std::list<int> roads_temp;
 
-  //Trigger hodos  --- hodo station that are used in trigger
-  std::vector<int> detectorIDs_trigger;
+  //pointer to geometry service
+  GeomSvc* p_geomSvc;
+
+  //singleton pointer
+  static TriggerAnalyzer* p_triggerAna;
 };
 
 #endif
