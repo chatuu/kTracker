@@ -105,10 +105,6 @@ Int_t SRawEvent::findHit(Int_t detectorID, Int_t elementID)
   if(detectorID < 1 || detectorID > 48) return -1;
   if(elementID < 0) return -1;
 
-  Hit h_dummy;
-  h_dummy.detectorID = detectorID;
-  h_dummy.elementID = elementID;
-
   /*
   This method produces problems in case of duplicate channels and thus people need to be cautious;
   It's okay here for two reasons:
@@ -117,16 +113,18 @@ Int_t SRawEvent::findHit(Int_t detectorID, Int_t elementID)
   
   Please also note that this is valid only when the hit list is sorted.
   */
-  Int_t idx_start = getNChamberHitsAll();
-  Int_t idx_end = idx_start + getNHodoHitsAll();
+  
+  Int_t idx_start = 0;
+  for(int i = 1; i < detectorID; ++i) idx_start += fNHits[i];
+  Int_t idx_end = idx_start + fNHits[detectorID];
   while(idx_start <= idx_end)
     {
       Int_t idx_mid = Int_t((idx_start + idx_end)/2);
-      if(fAllHits[idx_mid] == h_dummy)
+      if(fAllHits[idx_mid].elementID == elementID)
 	{
 	  return idx_mid;
 	}
-      else if(fAllHits[idx_mid] < h_dummy)
+      else if(fAllHits[idx_mid].elementID < elementID)
 	{
 	  idx_start = idx_mid + 1;
 	}
