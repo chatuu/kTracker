@@ -597,23 +597,14 @@ bool TriggerAnalyzer::isRoadFound(int charge, TriggerRoad& road)
   int idx = (-charge+1)/2;
   for(std::list<TriggerRoad>::iterator iter = roads_found[idx].begin(); iter != roads_found[idx].end(); ++iter)
     {
-      bool match = true;
+      int nMatched = 0;
       for(int i = 0; i < 4; ++i)
 	{
-	  if(road.detectorIDs[i] != iter->detectorIDs[i])
-	    {
-	      match = false;
-	      break;
-	    }
-
-	  if(abs(road.elementIDs[i] - iter->elementIDs[i]) > 1)
-	    {
-	      match = false;
-	      break;
-	    }
+	  if(road.detectorIDs[i] != iter->detectorIDs[i]) break;
+	  nMatched += abs(road.elementIDs[i] - iter->elementIDs[i]);
 	}
 
-      if(match) return true;
+      if(nMatched <= 1) return true;
     }
 
   return false;
