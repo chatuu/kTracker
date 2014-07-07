@@ -595,7 +595,26 @@ void TriggerAnalyzer::trimEvent(SRawEvent* rawEvent)
 bool TriggerAnalyzer::isRoadFound(int charge, TriggerRoad& road)
 {
   int idx = (-charge+1)/2;
-  std::list<TriggerRoad>::iterator iter = std::find(roads_found[idx].begin(), roads_found[idx].end(), road);
+  for(std::list<TriggerRoad>::iterator iter = roads_found[idx].begin(); iter != roads_found[idx].end(); ++iter)
+    {
+      bool match = true;
+      for(int i = 0; i < 4; ++i)
+	{
+	  if(road.detectorIDs[i] != iter->detectorIDs[i])
+	    {
+	      match = false;
+	      break;
+	    }
 
-  return iter != roads_found[idx].end();
+	  if(abs(road.elementIDs[i] - iter->elementIDs[i]) > 1)
+	    {
+	      match = false;
+	      break;
+	    }
+	}
+
+      if(match) return true;
+    }
+
+  return false;
 }
