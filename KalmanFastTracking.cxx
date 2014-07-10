@@ -987,7 +987,7 @@ bool KalmanFastTracking::acceptTracklet(Tracklet& tracklet)
 #ifdef _DEBUG_ON
 	  LogInfo(*iter);
 	  hitAll[*iter].print();
-	  LogInfo(nHodoHits << "/" << nMinimum << ":  " << z_hodo << "  " << x_hodo << " +/- " << err_x << "  " << y_hodo << " +/-" << err_y << " : " << x_min << "  " << x_max << "  " << y_min << "  " << y_max);
+	  LogInfo(nHodoHits << "/" << stationIDs_mask[tracklet.stationID-1].size() << ":  " << z_hodo << "  " << x_hodo << " +/- " << err_x << "  " << y_hodo << " +/-" << err_y << " : " << x_min << "  " << x_max << "  " << y_min << "  " << y_max);
 #endif
 	  if(x_hodo > x_min && x_hodo < x_max && y_hodo > y_min && y_hodo < y_max)
     	    {
@@ -1009,7 +1009,9 @@ bool KalmanFastTracking::acceptTracklet(Tracklet& tracklet)
   if(tracklet.stationID > 4)
     {
       if(!p_geomSvc->isInKMAG(tracklet.getExpPositionX(Z_KMAG_BEND), tracklet.getExpPositionY(Z_KMAG_BEND))) return false;
+#ifndef ALIGNMENT_MODE
       if(!muonID(tracklet)) return false;
+#endif
     }
 
   //If everything is fine ...
@@ -1021,10 +1023,19 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
   //Set the cut value on multiple scattering
   double cut = tracklet.stationID == 6 ? MUID_REJECT*(MUID_P0 + MUID_P1/tracklet.invP + MUID_P2/tracklet.invP/tracklet.invP) : 0.03; 
 
+#ifdef _DEBUG_ON
+  LogInfo("Muon ID cut is: " << cut << " rad.");
+#endif
+
   double slope[2] = {tracklet.tx, tracklet.ty};
   PropSegment* segs[2] = {&(tracklet.seg_x), &(tracklet.seg_y)};
   for(int i = 0; i < 2; ++i)
     {
+#ifdef _DEBUG_ON
+      if(i == 0) LogInfo("Working in X-Z:");
+      if(i == 1) LogInfo("Working in Y-Z:");
+#endif
+
       segs[i]->init();
       for(int j = 0; j < 4; ++j)
 	{
@@ -1033,12 +1044,18 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
 	  double y_exp = tracklet.getExpPositionY(z_mask[index]);
 	  double pos_exp = p_geomSvc->getInterceptionFast(detectorIDs_muid[i][j], x_exp, y_exp);
 
+#ifdef _DEBUG_ON
+	  LogInfo("searching on plane " << p_geomSvc->getDetectorName(detectorIDs_muid[i][j]) << ", expected (" << x_exp << ", " << y_exp << ") = " << pos_exp);
+#endif
 	  if(!p_geomSvc->isInPlane(detectorIDs_muid[i][j], x_exp, y_exp)) continue;
 
 	  double dist_min = 1E6;
 	  for(std::list<int>::iterator iter = hitIDs_muid[i][j].begin(); iter != hitIDs_muid[i][j].end(); ++iter)
 	    {
 	      double pos = hitAll[*iter].pos;
+#ifdef _DEBUG_ON
+	      LogInfo(" ... trying this hit: "); hitAll[*iter].print();
+#endif
 	      if(fabs(pos - pos_exp) > 5.08) continue;
 
 	      double dist_l = fabs(pos - hitAll[*iter].driftDistance - pos_exp);
@@ -1051,12 +1068,18 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
 		    {
 		      segs[i]->hits[j].hit = hitAll[*iter];
 		      segs[i]->hits[j].sign = fabs(pos - hitAll[*iter].driftDistance - pos_exp) < fabs(pos + hitAll[*iter].driftDistance - pos_exp) ? -1 : 1;
+#ifdef _DEBUG_ON
+		      LogInfo("Accepted this prop tube hit!");
+#endif
 		    }
 		}
 	    }
 	}
       
       segs[i]->fit();
+#ifdef _DEBUG_ON
+      LogInfo("Prop tube segment has " << segs[i]->getNHits() << " hits with a = " << segs[i]->a);
+#endif
       if(!(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut)) return false;
     }
 

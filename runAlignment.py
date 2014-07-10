@@ -12,6 +12,9 @@ def runCmd(cmd):
 def prepareConf(log_prev, conf):
     print 'Generating configuration file for millepede according to '+log_prev
 
+    if os.path.isfile(conf):
+    	return
+
     # read previous log and decide whether to turn on/off a detector alignment
     sigma = [[0.1, 0.005, 0.05] for i in range(24)]
     if os.path.isfile(log_prev):

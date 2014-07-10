@@ -122,10 +122,17 @@ void MySQLSvc::setWorkingSchema(std::string schema)
   if(!indexEnabled) 
     {
       std::cout << "MySQLSvc: Index is not enabled for this schema, enable it now." << std::endl;
+      
+      //Temporarily connect as production user
+      char address[200];
+      sprintf(address, "mysql://%s:%d", server->GetHost(), server->GetPort()); 
+      TSQLServer* server_temp = TSQLServer::Connect(address, "production", "qqbar2mu+mu-");
 
-      sprintf(query, "ALTER TABLE Hit ENABLE KEYS"); server->Exec(query);
-      if(readTriggerHits) sprintf(query, "ALTER TABLE TriggerHit ENABLE KEYS"); server->Exec(query);
-      sprintf(query, "OPTIMIZE LOCAL TABLE `Run`, `Spill`, `Event`, `Hit`, `TriggerHit`, `Scaler`"); server->Exec(query);
+      sprintf(query, "ALTER TABLE Hit ENABLE KEYS"); server_temp->Exec(query);
+      if(readTriggerHits) sprintf(query, "ALTER TABLE TriggerHit ENABLE KEYS"); server_temp->Exec(query);
+      sprintf(query, "OPTIMIZE LOCAL TABLE `Run`, `Spill`, `Event`, `Hit`, `TriggerHit`, `Scaler`"); server_temp->Exec(query);
+
+      server_temp->Close();
     }
 }
 
