@@ -502,7 +502,7 @@ void SRawEvent::reIndex(std::string option)
       if(_outoftime && iter->inTime == 0) continue;
       if(_hodomask && iter->hodoMask == 0) continue;
       if(_nonchamber && iter->detectorID > 24) continue;
-      if(_triggermask && iter->detectorID >= 24 && iter->detectorID <= 40 && iter->inTime != 2) continue;
+      if(_triggermask && iter->detectorID > 24 && iter->detectorID <= 40 && iter->inTime != 2) continue;
 
       hitlist_temp.push_back(*iter);
     }
