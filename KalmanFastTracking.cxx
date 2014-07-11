@@ -1044,6 +1044,10 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
 	  double y_exp = tracklet.getExpPositionY(z_mask[index]);
 	  double pos_exp = p_geomSvc->getInterceptionFast(detectorIDs_muid[i][j], x_exp, y_exp);
 
+	  double win_tight = cut*(z_mask[index] - MUID_Z_REF);
+	  win_tight = win_tight > 2.54 ? win_tight : 2.54;
+	  double win_loose = win_tight*2;
+
 #ifdef _DEBUG_ON
 	  LogInfo("searching on plane " << p_geomSvc->getDetectorName(detectorIDs_muid[i][j]) << ", expected (" << x_exp << ", " << y_exp << ") = " << pos_exp);
 #endif
@@ -1056,7 +1060,7 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
 #ifdef _DEBUG_ON
 	      LogInfo(" ... trying this hit: "); hitAll[*iter].print();
 #endif
-	      if(fabs(pos - pos_exp) > 5.08) continue;
+	      if(fabs(pos - pos_exp) > win_loose) continue;
 
 	      double dist_l = fabs(pos - hitAll[*iter].driftDistance - pos_exp);
 	      double dist_r = fabs(pos + hitAll[*iter].driftDistance - pos_exp);
@@ -1064,7 +1068,7 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
 	      if(dist < dist_min)
 		{
 		  dist_min = dist;
-		  if(dist < 2.54)
+		  if(dist < win_tight)
 		    {
 		      segs[i]->hits[j].hit = hitAll[*iter];
 		      segs[i]->hits[j].sign = fabs(pos - hitAll[*iter].driftDistance - pos_exp) < fabs(pos + hitAll[*iter].driftDistance - pos_exp) ? -1 : 1;
@@ -1078,7 +1082,7 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
       
       segs[i]->fit();
 #ifdef _DEBUG_ON
-      LogInfo("Prop tube segment has " << segs[i]->getNHits() << " hits with a = " << segs[i]->a);
+      LogInfo("Prop tube segment has " << segs[i]->getNHits() << " hits with a = " << segs[i]->a << ", comparing with a = " << slope[i]);
 #endif
       if(!(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut)) return false;
     }
