@@ -110,6 +110,17 @@ KalmanFastTracking::KalmanFastTracking(bool flag) : enable_KF(flag)
   detectorIDs_muid[1][2] = 47;
   detectorIDs_muid[1][3] = 48;
 
+  //Reference z_ref for mu id
+  z_ref_muid[0][0] = MUID_Z_REF;
+  z_ref_muid[0][1] = MUID_Z_REF;
+  z_ref_muid[0][2] = 0.5*(p_geomSvc->getPlanePosition(detectorIDs_muid[0][0]) + p_geomSvc->getPlanePosition(detectorIDs_muid[0][1]));
+  z_ref_muid[0][3] = z_ref_muid[0][2];
+
+  z_ref_muid[1][0] = MUID_Z_REF;
+  z_ref_muid[1][1] = MUID_Z_REF;
+  z_ref_muid[1][2] = 0.5*(p_geomSvc->getPlanePosition(detectorIDs_muid[1][0]) + p_geomSvc->getPlanePosition(detectorIDs_muid[1][1]));
+  z_ref_muid[1][3] = z_ref_muid[1][2];
+
   //Initialize masking window sizes, with 15% contingency, for station-2, increase that to 20%
   for(int i = 25; i <= 48; i++)
     {
@@ -1028,6 +1039,7 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
 #endif
 
   double slope[2] = {tracklet.tx, tracklet.ty};
+  double pos_absorb[2] = {tracklet.getExpPositionX(MUID_Z_REF), tracklet.getExpPositionY(MUID_Z_REF)};
   PropSegment* segs[2] = {&(tracklet.seg_x), &(tracklet.seg_y)};
   for(int i = 0; i < 2; ++i)
     {
@@ -1040,18 +1052,18 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
       for(int j = 0; j < 4; ++j)
 	{
 	  int index = detectorIDs_muid[i][j] - 25;
-	  double x_exp = tracklet.getExpPositionX(z_mask[index]);
-	  double y_exp = tracklet.getExpPositionY(z_mask[index]);
-	  double pos_exp = p_geomSvc->getInterceptionFast(detectorIDs_muid[i][j], x_exp, y_exp);
+	  double pos_ref = j < 2 ? pos_absorb[i] : segs[i]->getPosRef(); 
+	  double pos_exp = slope[i]*(z_mask[index] - z_ref_muid[i][j]) + pos_ref;
 
-	  double win_tight = cut*(z_mask[index] - MUID_Z_REF);
+	  double win_tight = cut*(z_mask[index] - z_ref_muid[i][j]);
 	  win_tight = win_tight > 2.54 ? win_tight : 2.54;
 	  double win_loose = win_tight*2;
 
 #ifdef _DEBUG_ON
-	  LogInfo("searching on plane " << p_geomSvc->getDetectorName(detectorIDs_muid[i][j]) << ", expected (" << x_exp << ", " << y_exp << ") = " << pos_exp);
+	  LogInfo("Step " << j << ", z_ref = " <<  z_ref_muid[i][j] << ", pos_ref = " << pos_ref << ", window = " << win_tight);
+	  LogInfo("searching on plane " << p_geomSvc->getDetectorName(detectorIDs_muid[i][j]) << ", expected pos : " << pos_exp - win_tight << " --- " << pos_exp + win_tight);
 #endif
-	  if(!p_geomSvc->isInPlane(detectorIDs_muid[i][j], x_exp, y_exp)) continue;
+	  if(!p_geomSvc->isInPlane(detectorIDs_muid[i][j], tracklet.getExpPositionX(z_mask[index]), tracklet.getExpPositionY(z_mask[index]))) continue;
 
 	  double dist_min = 1E6;
 	  for(std::list<int>::iterator iter = hitIDs_muid[i][j].begin(); iter != hitIDs_muid[i][j].end(); ++iter)
@@ -1073,7 +1085,7 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
 		      segs[i]->hits[j].hit = hitAll[*iter];
 		      segs[i]->hits[j].sign = fabs(pos - hitAll[*iter].driftDistance - pos_exp) < fabs(pos + hitAll[*iter].driftDistance - pos_exp) ? -1 : 1;
 #ifdef _DEBUG_ON
-		      LogInfo("Accepted this prop tube hit!");
+		      LogInfo(" ... Accepted this prop tube hit!");
 #endif
 		    }
 		}

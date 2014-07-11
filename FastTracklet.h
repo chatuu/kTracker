@@ -73,6 +73,9 @@ public:
   //Hit list -- only 4 hits at most
   SignedHit hits[4];
 
+  //Get reference pos at first two planes
+  double getPosRef();
+
   //static pointer to geometry
   static const GeomSvc* p_geomSvc;
 
