@@ -1094,7 +1094,7 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
       
       segs[i]->fit();
 #ifdef _DEBUG_ON
-      LogInfo("Prop tube segment has " << segs[i]->getNHits() << " hits with a = " << segs[i]->a << ", comparing with a = " << slope[i]);
+      LogInfo("Prop tube segment has " << segs[i]->getNHits() << " hits with a = " << segs[i]->a << " chisq = " << segs[i]->chisq << ", comparing with a = " << slope[i]);
 #endif
       if(!(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut)) return false;
     }
