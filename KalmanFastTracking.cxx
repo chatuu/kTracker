@@ -983,12 +983,13 @@ bool KalmanFastTracking::acceptTracklet(Tracklet& tracklet)
 		  
 	  int idx1 = detectorID - 25;
 	  int idx2 = elementID - 1;
-  
+ 
+	  double factor = tracklet.stationID == 2 ? 5. : 3.;
 	  double z_hodo = z_mask[idx1];
     	  double x_hodo = tracklet.getExpPositionX(z_hodo);
 	  double y_hodo = tracklet.getExpPositionY(z_hodo);
-    	  double err_x = 3.*tracklet.getExpPosErrorX(z_hodo);
-	  double err_y = 3.*tracklet.getExpPosErrorY(z_hodo);
+    	  double err_x = factor*tracklet.getExpPosErrorX(z_hodo);
+	  double err_y = factor*tracklet.getExpPosErrorY(z_hodo);
 
 	  double x_min = x_mask_min[idx1][idx2] - err_x;
 	  double x_max = x_mask_max[idx1][idx2] + err_x;
