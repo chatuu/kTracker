@@ -188,6 +188,10 @@ void PropSegment::fit()
 
       //fit again
       linearFit();
+
+#ifdef _DEBUG_ON
+      LogInfo("After removing a = " << a << ", b = " << b << ", chisq = " << chisq);
+#endif
     }
 }
 
