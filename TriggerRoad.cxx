@@ -29,7 +29,7 @@ TriggerRoad::TriggerRoad()
   enabled = true;
 }
 
-TriggerRoad::TriggerRoad(std::list<int> uniqueIDs) : detectorIDs(4), elementIDs(4) 
+TriggerRoad::TriggerRoad(std::list<int> uniqueIDs) 
 {
   for(std::list<int>::iterator iter = uniqueIDs.begin(); iter != uniqueIDs.end(); ++iter)
     {
@@ -65,7 +65,7 @@ TriggerRoad::TriggerRoad(Tracklet& tracklet) : detectorIDs(4), elementIDs(4)
     }
 }
 
-TriggerRoad::TriggerRoad(SRecTrack& track)
+TriggerRoad::TriggerRoad(SRecTrack& track) : detectorIDs(4), elementIDs(4)
 {
   GeomSvc* p_geomSvc = GeomSvc::instance();
   const int hodoIDs[2][4] = {{26, 32, 34, 40}, {25, 31, 33, 39}};
