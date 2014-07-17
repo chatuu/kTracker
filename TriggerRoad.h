@@ -11,6 +11,7 @@
 #include <TH1D.h>
 
 #include "FastTracklet.h"
+#include "SRecEvent.h"
 
 class TriggerRoad : public TObject
 {
@@ -18,6 +19,7 @@ public:
   TriggerRoad();
   TriggerRoad(std::list<int> uniqueIDs);
   TriggerRoad(Tracklet& track);
+  TriggerRoad(SRecTrack& track);
 
   //Flag
   bool isValid();
