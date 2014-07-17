@@ -10,11 +10,14 @@
 #include <TROOT.h>
 #include <TH1D.h>
 
+#include "FastTracklet.h"
+
 class TriggerRoad : public TObject
 {
 public:
   TriggerRoad();
   TriggerRoad(std::list<int> uniqueIDs);
+  TriggerRoad(Tracklet& track);
 
   //Flag
   bool isValid();
