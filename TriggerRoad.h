@@ -42,6 +42,8 @@ public:
   int getElementID(int i) { return elementIDs[i]; }
   int getUniqueID(int i) { return detectorIDs[i]*100 + elementIDs[i]; }
 
+  int getRoadID();
+
   //The total weight and ratio of target weight
   double weight() const { return targetWeight + dumpWeight; }
   double ratio() const { return targetWeight/(targetWeight + dumpWeight); }

@@ -224,6 +224,13 @@ double TriggerRoad::getpXMean() const
   return sum/pXs.size();
 }
 
+int TriggerRoad::getRoadID()
+{
+  if(detectorIDs.size() != 4) return 0;
+
+  return getTB()*((elementIDs[0]-1)*16*16*16 + (elementIDs[1]-1)*16*16 + (elementIDs[2]-1)*16 + elementIDs[3]);
+}
+
 double TriggerRoad::getpXWidth() const
 {
   double sigma = 0.;
