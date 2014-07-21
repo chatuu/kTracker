@@ -100,7 +100,7 @@ void SRawEvent::insertHit(Hit h)
   fNHits[h.detectorID]++;
 }
 
-Int_t SRawEvent::findHit(Int_t detectorID, Int_t elementID)
+Int_t SRawEvent::findHit(Short_t detectorID, Short_t elementID)
 {
   if(detectorID < 1 || detectorID > 48) return -1;
   if(elementID < 0) return -1;
@@ -137,7 +137,7 @@ Int_t SRawEvent::findHit(Int_t detectorID, Int_t elementID)
   return -1;
 }
 
-Hit SRawEvent::getHit(Int_t detectorID, Int_t elementID)
+Hit SRawEvent::getHit(Short_t detectorID, Short_t elementID)
 {
   Int_t hitID = findHit(detectorID, elementID);
   if(hitID >= 0) return getHit(hitID);
@@ -149,7 +149,7 @@ Hit SRawEvent::getHit(Int_t detectorID, Int_t elementID)
   return dummy;
 }
 
-std::list<Int_t> SRawEvent::getHitsIndexInDetector(Int_t detectorID)
+std::list<Int_t> SRawEvent::getHitsIndexInDetector(Short_t detectorID)
 {
   std::list<Int_t> hit_list;
   hit_list.clear();
@@ -165,7 +165,7 @@ std::list<Int_t> SRawEvent::getHitsIndexInDetector(Int_t detectorID)
 }
 
 
-std::list<Int_t> SRawEvent::getHitsIndexInDetector(Int_t detectorID, Double_t x_exp, Double_t win)
+std::list<Int_t> SRawEvent::getHitsIndexInDetector(Short_t detectorID, Double_t x_exp, Double_t win)
 {
   std::list<Int_t> hit_list;
   hit_list.clear();
@@ -181,7 +181,7 @@ std::list<Int_t> SRawEvent::getHitsIndexInDetector(Int_t detectorID, Double_t x_
   return hit_list;
 }
 
-std::list<Int_t> SRawEvent::getHitsIndexInSuperDetector(Int_t detectorID)
+std::list<Int_t> SRawEvent::getHitsIndexInSuperDetector(Short_t detectorID)
 {
   std::list<Int_t> hit_list;
   hit_list.clear();
@@ -217,7 +217,7 @@ std::list<Int_t> SRawEvent::getHitsIndexInDetectors(std::vector<Int_t>& detector
   return hit_list;
 }
 
-std::list<SRawEvent::hit_pair> SRawEvent::getHitPairsInSuperDetector(Int_t detectorID)
+std::list<SRawEvent::hit_pair> SRawEvent::getHitPairsInSuperDetector(Short_t detectorID)
 {
   std::list<SRawEvent::hit_pair> _hitpairs;
   std::list<int> _hitlist1 = getHitsIndexInDetector(2*detectorID);
@@ -236,7 +236,7 @@ std::list<SRawEvent::hit_pair> SRawEvent::getHitPairsInSuperDetector(Int_t detec
   return _hitpairs;
 }
 
-std::list<SRawEvent::hit_pair> SRawEvent::getPartialHitPairsInSuperDetector(Int_t detectorID)
+std::list<SRawEvent::hit_pair> SRawEvent::getPartialHitPairsInSuperDetector(Short_t detectorID)
 {
   std::list<SRawEvent::hit_pair> _hitpairs;
   std::list<int> _hitlist1 = getHitsIndexInDetector(2*detectorID);
@@ -282,7 +282,7 @@ std::list<SRawEvent::hit_pair> SRawEvent::getPartialHitPairsInSuperDetector(Int_
   return _hitpairs;
 }
 
-std::list<SRawEvent::hit_pair> SRawEvent::getPartialHitPairsInSuperDetector(Int_t detectorID, Double_t x_exp, Double_t win)
+std::list<SRawEvent::hit_pair> SRawEvent::getPartialHitPairsInSuperDetector(Short_t detectorID, Double_t x_exp, Double_t win)
 {
   std::list<SRawEvent::hit_pair> _hitpairs;
   std::list<int> _hitlist1 = getHitsIndexInDetector(2*detectorID, x_exp, win);
@@ -328,7 +328,7 @@ std::list<SRawEvent::hit_pair> SRawEvent::getPartialHitPairsInSuperDetector(Int_
   return _hitpairs;
 }
 
-std::list<SRawEvent::hit_pair> SRawEvent::getHitPairsInSuperDetector(Int_t detectorID, Double_t x_exp, Double_t win)
+std::list<SRawEvent::hit_pair> SRawEvent::getHitPairsInSuperDetector(Short_t detectorID, Double_t x_exp, Double_t win)
 {
   std::list<SRawEvent::hit_pair> _hitpairs;
   std::list<int> _hitlist1 = getHitsIndexInDetector(2*detectorID, x_exp, win);
@@ -354,8 +354,8 @@ std::list<Int_t> SRawEvent::getAdjacentHitsIndex(Hit& _hit)
   std::list<Int_t> hit_list;
   hit_list.clear();
 
-  Int_t detectorID = _hit.detectorID;
-  Int_t detectorID_adj;
+  Short_t detectorID = _hit.detectorID;
+  Short_t detectorID_adj;
   if((detectorID/2)*2 == detectorID)
     {
       detectorID_adj = detectorID - 1;
@@ -616,55 +616,6 @@ void SRawEvent::processCluster(std::list<Hit>& hits, std::vector<std::list<Hit>:
     }
 
   cluster.clear();
-}
-
-void SRawEvent::mixEvent(SRawEvent *event, int nBkgHits)
-{
-  event->reIndex("oah");
-
-  for(Int_t i = 0; i < nChamberPlanes+nHodoPlanes+nPropPlanes+1; i++)
-    {
-      fNHits[i] = 0;
-    }
-
-  std::vector<Hit> hits_mix = event->getAllHits();
-  for(std::vector<Hit>::iterator iter = fAllHits.begin(); iter != fAllHits.end(); ++iter)
-    {
-      for(std::vector<Hit>::iterator jter = hits_mix.begin(); jter != hits_mix.end(); ++jter)
-	{
-	  if(*iter == *jter)
-	    {
-	      hits_mix.erase(jter);
-	      break;
-	    }
-	}
-    }
-
-  if(nBkgHits > 0)
-    {
-      TRandom rdn;
-      double ratio = double(nBkgHits)/event->getNChamberHitsAll();
-      for(std::vector<Hit>::iterator iter = hits_mix.begin(); iter != hits_mix.end(); )
-	{
-	  if(rdn.Rndm() > ratio)
-	    {
-	      iter = hits_mix.erase(iter);
-	    }
-	  else
-	    {
-	      ++iter;
-	    }
-	}
-    }
-
-  fAllHits.insert(fAllHits.end(), hits_mix.begin(), hits_mix.end());
-  for(UInt_t i = 0; i < fAllHits.size(); i++)
-    {
-      fAllHits[i].index = i;
-      fNHits[fAllHits[i].detectorID]++;
-    }
-
-  fNHits[0] = fAllHits.size();
 }
 
 void SRawEvent::setEventInfo(SRawEvent* event)
