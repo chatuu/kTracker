@@ -260,8 +260,8 @@ bool MySQLSvc::getEvent(SRawEvent* rawEvent, int eventID)
       h.index = getInt(0);
       h.detectorID = p_geomSvc->getDetectorID(detectorName);
       h.elementID = elementID;
-      h.tdcTime = getDouble(2);
-      h.driftDistance = getDouble(3); 
+      h.tdcTime = getFloat(2);
+      h.driftDistance = getFloat(3); 
       h.pos = p_geomSvc->getMeasurement(h.detectorID, h.elementID);
       if(getInt(5, 0) > 0) h.setInTime();
       if(getInt(6, 0) > 0) h.setHodoMask();
@@ -386,7 +386,7 @@ bool MySQLSvc::getEventHeader(SRawEvent* rawEvent, int eventID)
 	  Hit h;
 	  h.index = getInt(0);
 	  h.elementID = getInt(2);
-	  h.tdcTime = getDouble(3);
+	  h.tdcTime = getFloat(3);
       	  h.driftDistance = 0.;
 	  if(getInt(4, 0) > 0) h.setInTime();
       
@@ -746,6 +746,17 @@ int MySQLSvc::getInt(int id, int default_val)
 
   return boost::lexical_cast<int>(row->GetField(id));
 }
+
+float MySQLSvc::getFloat(int id, float default_val)
+{
+  if(row->GetField(id) == NULL)
+    {
+      return default_val;
+    }
+
+  return boost::lexical_cast<float>(row->GetField(id));
+}
+
 
 double MySQLSvc::getDouble(int id, double default_val)
 {
