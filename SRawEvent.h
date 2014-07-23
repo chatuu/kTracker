@@ -24,33 +24,55 @@ Created: 07-02-2012
 #include <TVector3.h>
 
 #define triggerBit(n) (1 << (n))
+#define hitFlagBit(n) (1 << (n))
 
 ///Definition of hit structure
 class Hit: public TObject
 {
 public:
-  Int_t index;         //unique index for identification
-  Short_t detectorID;    //assigned for each detector plane
-  Short_t elementID;     
-  Float_t tdcTime;    //raw TDC time
-  Float_t driftTime;
-  Float_t driftDistance; 
-  Float_t pos;        //actual measurement in either X, Y, U or V direction
+  //Constructor
+  Hit();
+ 
+  //Decompose the data quality flag
+  bool isInTime() { return (flag & Hit::inTime) != 0; } 
+  bool isHodoMask() { return (flag & Hit::hodoMask) != 0; } 
+  bool isTriggerMask() { return (flag & Hit::triggerMask) != 0; } 
 
-  Short_t inTime;        //In-time flag
-  Short_t hodoMask;      //Hodo-mask flag
-
+  //Set the flag
+  void setFlag(UShort_t flag_input) { flag |= flag_input; }
+  void resetFlag(UShort_t flag_input) { flag &= ~flag_input; }
+  void setInTime(bool f = true) { f ? (flag |= inTime) : (flag &= ~inTime); }
+  void setHodoMask(bool f = true) { f ? (flag |= hodoMask) : (f &= ~hodoMask); }
+  void setTriggerMask(bool f = true) { f ? (flag |= triggerMask) : (flag &= ~triggerMask); }
+  
   //Sign of this hit
-  int getSign() { return driftDistance > 0 ? 1 : -1; }
+  Int_t getSign() { return driftDistance > 0 ? 1 : -1; }
 
   //overiden comparison operator for track seeding 
   bool operator<(const Hit& elem) const;
   bool operator==(const Hit& elem) const;
 
   //Debugging output
-  void print() { std::cout << index << " : " << detectorID << " : " << elementID << " : " << pos << " : " << driftDistance << " : " << inTime << " : " << hodoMask << std::endl; }
+  void print() { std::cout << index << " : " << detectorID << " : " << elementID << " : " << pos << " : " << driftDistance << " : " << isInTime() << " : " << isHodoMask() << " : " << isTriggerMask() << std::endl; }
+ 
+  //Data members
+  Int_t index;             //unique index for identification
+  Short_t detectorID;      //assigned for each detector plane
+  Short_t elementID;     
+  Float_t tdcTime;         //raw TDC time
+  Float_t driftDistance;
+  Float_t pos;             //actual measurement in either X, Y, U or V direction
 
-  ClassDef(Hit, 2)
+  //hit quality flag
+  enum hitQuality
+    {
+      inTime = hitFlagBit(1),
+      hodoMask = hitFlagBit(2),
+      triggerMask = hitFlagBit(3)
+    };
+  UShort_t flag;
+
+  ClassDef(Hit, 3)
 };
 
 class SRawEvent: public TObject
@@ -60,6 +82,7 @@ public:
   ~SRawEvent();
 
   ///Gets
+  //Hit lists
   std::list<Int_t> getHitsIndexInDetector(Short_t detectorID);
   std::list<Int_t> getHitsIndexInDetector(Short_t detectorID, Double_t x_exp, Double_t win);
   std::list<Int_t> getHitsIndexInSuperDetector(Short_t detectorID);
@@ -85,9 +108,7 @@ public:
   Hit getTriggerHit(Int_t index) { return fTriggerHits[index]; } 
   Hit getHit(Int_t index) { return fAllHits[index]; } 
   Hit getHit(Short_t detectorID, Short_t elementID); 
-  void setHit(Int_t index, Hit hit) { fAllHits[index] = hit; }
-  void setTriggerHit(Int_t index, Hit hit) { fTriggerHits[index] = hit; }
-  void setHitFlag(Int_t index, Short_t flag) { if(index < 0) return; fAllHits[index].inTime = flag; }
+  void setHitFlag(Int_t index, Short_t flag) { if(index < 0) return; fAllHits[index].setFlag(flag); }
   void setHitFlag(Short_t detectorID, Short_t elementID, Short_t flag) { setHitFlag(findHit(detectorID, elementID), flag); }
 
   Int_t getRunID() { return fRunID; }
@@ -110,7 +131,7 @@ public:
   void processCluster(std::list<Hit>& hits, std::vector<std::list<Hit>::iterator>& cluster);
 
   ///Type of pair with two adjacent wires
-  typedef std::pair<Short_t, Short_t> hit_pair;
+  typedef std::pair<Int_t, Int_t> hit_pair;
   std::list<SRawEvent::hit_pair> getHitPairsInSuperDetector(Short_t detectorID);
   std::list<SRawEvent::hit_pair> getPartialHitPairsInSuperDetector(Short_t detectorID);  
   std::list<SRawEvent::hit_pair> getHitPairsInSuperDetector(Short_t detectorID, Double_t x_exp, Double_t wind);
@@ -130,8 +151,9 @@ public:
   Int_t getNRoadsPosBot() { return fNRoads[1]; } 
   Int_t getNRoadsNegTop() { return fNRoads[2]; } 
   Int_t getNRoadsNegBot() { return fNRoads[3]; } 
-  Int_t* getNRoads() { return fNRoads; }
+  Short_t* getNRoads() { return fNRoads; }
   void setTriggerEmu(bool flag) { fTriggerEmu = flag ? 1 : -1; }
+  void setNRoads(Short_t nRoads[]) { for(Int_t i = 0; i < 4; ++i) fNRoads[i] = nRoads[i]; }
   void setNRoads(Int_t nRoads[]) { for(Int_t i = 0; i < 4; ++i) fNRoads[i] = nRoads[i]; }
 
   //Set/get the target position
@@ -196,15 +218,15 @@ private:
   Int_t fIntensity[33];   //16 before, one onset, and 16 after
 
   //Offline trigger simulation res
-  Int_t fTriggerEmu;
-  Int_t fNRoads[4];       //0, positive top; 1, positive bottom; 2, negative top; 3, negative bottom
+  Short_t fTriggerEmu;
+  Short_t fNRoads[4];       //0, positive top; 1, positive bottom; 2, negative top; 3, negative bottom
 
   ///Hits of this event
   Int_t fNHits[nChamberPlanes+nHodoPlanes+nPropPlanes+1];  //0 for all hits, 1, 2, ..., 24 for number of hits in plane 1, 2, ..., 24
   std::vector<Hit> fAllHits;
   std::vector<Hit> fTriggerHits;
 
-  ClassDef(SRawEvent, 7)
+  ClassDef(SRawEvent, 8)
 };
 
 class SRawMCEvent: public SRawEvent

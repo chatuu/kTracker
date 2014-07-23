@@ -20,6 +20,10 @@ ClassImp(Hit)
 ClassImp(SRawEvent)
 ClassImp(SRawMCEvent)
 
+Hit::Hit() : index(-1), detectorID(-1), flag(0)
+{
+}
+
 bool Hit::operator<(const Hit& elem) const
 {
   if(detectorID < elem.detectorID)
@@ -65,20 +69,14 @@ bool Hit::operator==(const Hit& elem) const
   return false;
 }
 
-SRawEvent::SRawEvent()
+SRawEvent::SRawEvent() : fRunID(-1), fEventID(-1), fSpillID(-1), fTriggerBits(-1), fTriggerEmu(-1)
 {
   fAllHits.clear();
+  fTriggerHits.clear();
   for(Int_t i = 0; i < nChamberPlanes+nHodoPlanes+nPropPlanes+1; i++)
     {
       fNHits[i] = 0;
     }
-
-  fRunID = -1;
-  fEventID = -1;
-  fSpillID = -1;
-
-  fTriggerBits = 0;
-  fTriggerHits.clear();
 }
 
 SRawEvent::~SRawEvent()
@@ -143,9 +141,6 @@ Hit SRawEvent::getHit(Short_t detectorID, Short_t elementID)
   if(hitID >= 0) return getHit(hitID);
 
   Hit dummy;
-  dummy.index = -1;
-  dummy.detectorID = -1;
-  dummy.elementID = -1;
   return dummy;
 }
 
@@ -499,10 +494,10 @@ void SRawEvent::reIndex(std::string option)
   hitlist_temp.clear();
   for(std::vector<Hit>::iterator iter = fAllHits.begin(); iter != fAllHits.end(); ++iter)
     {
-      if(_outoftime && iter->inTime == 0) continue;
-      if(_hodomask && iter->hodoMask == 0) continue;
+      if(_outoftime && (!iter->isInTime())) continue;
+      if(_hodomask && (!iter->isHodoMask())) continue;
       if(_nonchamber && iter->detectorID > 24) continue;
-      if(_triggermask && iter->detectorID > 24 && iter->detectorID <= 40 && iter->inTime != 2) continue;
+      if(_triggermask && iter->detectorID > 24 && iter->detectorID <= 40 && (!iter->isTriggerMask())) continue;
 
       hitlist_temp.push_back(*iter);
     }
