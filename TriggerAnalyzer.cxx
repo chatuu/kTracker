@@ -334,7 +334,7 @@ bool TriggerAnalyzer::acceptEvent(SRawEvent* rawEvent, int mode)
   for(std::vector<Hit>::iterator iter = triggerHits.begin(); iter != triggerHits.end(); ++iter)
     {
       if(iter->detectorID < 25 || iter->detectorID > 40) continue;
-      if(iter->isInTime()) continue;
+      if(!iter->isInTime()) continue;
 
       detectorIDs[nHits] = iter->detectorID;
       elementIDs[nHits] = iter->elementID;
