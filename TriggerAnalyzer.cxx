@@ -574,7 +574,8 @@ void TriggerAnalyzer::trimEvent(SRawEvent* rawEvent)
 	{
 	  for(int j = 0; j < 4; ++j)
 	    {
-	      rawEvent->setHitFlag(iter->detectorIDs[j], iter->elementIDs[j], Hit::triggerMask);
+	      //temporary fix, if a hodo paddle is on the road, it must be inTime, since the inTime flag is required at acceptEvent level
+	      rawEvent->setHitFlag(iter->detectorIDs[j], iter->elementIDs[j], Hit::triggerMask | Hit::inTime);
 	    }
 	}
     }
