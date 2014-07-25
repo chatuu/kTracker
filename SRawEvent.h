@@ -117,6 +117,8 @@ public:
 
   ///Sets
   void setEventInfo(Int_t runID, Int_t spillID, Int_t eventID);
+  void setHit(Int_t index, Hit h) { fAllHits[index] = h; }
+  void setTriggerHit(Int_t index, Hit h) { fTriggerHits[index] = h; }
 
   ///Insert a new hit
   void insertHit(Hit h);
