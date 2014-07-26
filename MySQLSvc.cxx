@@ -314,7 +314,12 @@ bool MySQLSvc::getEvent(SRawEvent* rawEvent, int eventID)
 
 int MySQLSvc::getNEvents()
 {
+#ifndef MC_MODE
+  //More cuts should apply, say spill quality cuts, event quality cuts, etc.
   sprintf(query, "SELECT eventID FROM Event");
+#else
+  sprintf(query, "SELECT eventID FROM mDimuon WHERE acceptHodoAll=1 AND acceptDriftAll=1");
+#endif
   int nTotal = makeQuery();
   if(nTotal == 1) return 0;
 
