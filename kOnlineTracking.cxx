@@ -37,7 +37,8 @@ int main(int argc, char *argv[])
   p_mysqlSvc->setUserPasswd("production", "qqbar2mu+mu-");
   p_mysqlSvc->connect(argv[2], atoi(argv[3]));
   p_mysqlSvc->setWorkingSchema(argv[1]);
-  p_mysqlSvc->bookOutputTables();
+  p_mysqlSvc->initReader();
+  p_mysqlSvc->initWriter();
 
   //Data output definition
   int nTracklets;

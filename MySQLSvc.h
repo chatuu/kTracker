@@ -58,14 +58,17 @@ public:
   bool getNextEvent(SRawMCEvent* rawEvent);
 
   //Check if the event has been loaded
-  bool isEventLoaded(int eventID) { return std::find(eventIDs.begin(), eventIDs.end(), eventID) != eventIDs.end(); } 
+  bool isEventLoaded(int eventID) { return std::find(eventIDs_loaded.begin(), eventIDs_loaded.end(), eventID) != eventIDs_loaded.end(); } 
 
   //Get the event header
   bool getEventHeader(SRawEvent* rawEvent, int eventID);
   bool getMCGenInfo(SRawMCEvent* mcEvent, int eventID);
 
+  //initialize reader -- check the indexing, table existence
+  void initReader();
+
   //Output to database/txt file/screen
-  void bookOutputTables();
+  void initWriter();  
   void writeTrackingRes(SRecEvent* recEvent, TClonesArray* tracklets);
   void writeTrackTable(int trackID, SRecTrack* recTrack);
   void writeTrackHitTable(int trackID, Tracklet* tracklet);
@@ -118,7 +121,11 @@ private:
   int runID;
   int spillID;
   int nEvents;
-  std::list<int> eventIDs;
+  
+  //event list
+  std::vector<int> eventIDs;
+  std::vector<int> eventIDs_loaded;
+  int index_eventID;
 
   //Query string used in all clause
   char query[2000];
