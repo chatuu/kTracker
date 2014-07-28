@@ -210,6 +210,9 @@ TLorentzVector SRecTrack::getMomentumVertex()
 
 bool SRecTrack::isValid()
 {
+  //Dump cut
+  if(fTargetPos.Perp() > fDumpPos.Perp()) return false;
+
   //Vertex valid
   if(!isVertexValid()) return false;
 

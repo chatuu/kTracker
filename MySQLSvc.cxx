@@ -315,7 +315,7 @@ int MySQLSvc::getNEvents()
 {
 #ifndef MC_MODE
   //More cuts should apply, say spill quality cuts, event quality cuts, etc.
-  sprintf(query, "SELECT eventID FROM Event");
+  sprintf(query, "SELECT eventID FROM Event,Spill WHERE Event.spillID=Spill.spillID AND Spill.targetPos!=0 AND Spill.spillID!=0");
 #else
   sprintf(query, "SELECT eventID FROM mDimuon WHERE acceptHodoAll=1 AND acceptDriftAll=1");
 #endif
