@@ -62,20 +62,24 @@ int main(int argc, char *argv[])
   rnd.SetSeed(atoi(argv[4]));
  
   int nEvtMax = dataTree->GetEntries();
-  double lo = atof(argv[5]);
-  double hi = atof(argv[6]);
+  //double lo = atof(argv[5]);
+  //double hi = atof(argv[6]);
   for(int i = 0; i < nEvtMax; i++)
     {
       dataTree->GetEntry(i);
+      if(!rawEvent->isTriggeredBy(SRawEvent::MATRIX4)) continue;
       if(i % 1000 == 0) cout << "  " << i << "/" << nEvtMax << endl;
 
       //intensity selection
-      if(rawEvent->getIntensity() < lo || rawEvent->getIntensity() > hi) continue;
+      //if(rawEvent->getIntensity() < lo || rawEvent->getIntensity() > hi) continue;
 
       int nTracks = recEvent->getNTracks();
       for(int j = 0; j < nTracks; j++)
 	{
 	  SRecTrack track = recEvent->getTrack(j);
+	  track.setZVertex(track.getZVertex());
+	  if(!track.isValid()) continue;
+
 	  if(track.getCharge() > 0)
     	    {
 	      ptracks.push_back(track);
