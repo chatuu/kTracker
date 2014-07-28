@@ -88,6 +88,12 @@ bool MySQLSvc::setWorkingSchema(std::string schema)
       std::cout << "MySQLSvc: working schema does not exist! Will exit..." << std::endl;
       return false;
     }
+
+  if(!(server->HasTable("Hit") && server->HasTable("Spill")))
+    {
+      std::cout << "MySQLSvc: essential information is missing in this schema. Will exit..." << std::endl;
+      return false;
+    }
   eventIDs.clear();
 
   index_eventID = 0;
