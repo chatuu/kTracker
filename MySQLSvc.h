@@ -75,7 +75,7 @@ public:
   void writeDimuonTable(int dimuonID, SRecDimuon dimuon);
 
   //Set the data schema
-  void setWorkingSchema(std::string schema);
+  bool setWorkingSchema(std::string schema);
   void setLoggingSchema(std::string schema) { logSchema = schema; } 
   void enableQIE(bool opt) { readQIE = opt; }
   void enableTargetPos(bool opt) { readTargetPos = opt; }

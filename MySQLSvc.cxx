@@ -78,15 +78,20 @@ bool MySQLSvc::connect(std::string sqlServer, int serverPort)
   return true;
 }
 
-void MySQLSvc::setWorkingSchema(std::string schema)
+bool MySQLSvc::setWorkingSchema(std::string schema)
 {
   dataSchema = schema;
   sprintf(query, "USE %s", dataSchema.c_str());
 
-  server->Exec(query);
+  if(!server->Exec(query))
+    {
+      std::cout << "MySQLSvc: working schema does not exist! Will exit..." << std::endl;
+      return false;
+    }
   eventIDs.clear();
 
   index_eventID = 0;
+  return true;
 }
 
 void MySQLSvc::initReader()
