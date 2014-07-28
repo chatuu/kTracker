@@ -21,41 +21,26 @@ ClassImp(PropSegment)
 ClassImp(Tracklet)
 
 //Signed hit definition
-SignedHit::SignedHit()
+SignedHit::SignedHit() : sign(0)
 {
-  hit.index = -1;
-  hit.detectorID = -1;
-  hit.elementID = -1;
-  sign = 0;
 }
 
-SignedHit::SignedHit(int detectorID)
+SignedHit::SignedHit(int detectorID) : sign(0)
 {
   hit.index = -1;
   hit.detectorID = detectorID;
-  hit.elementID = -1;
-  sign = 0;
 }
 
-SignedHit::SignedHit(Hit hit_input, int sign_input)
+SignedHit::SignedHit(Hit hit_input, int sign_input) : hit(hit_input), sign(sign_input)
 {
-  hit = hit_input;
-  sign = sign_input;
 }
 
 //Proptube segment definition
 const GeomSvc* PropSegment::p_geomSvc = GeomSvc::instance();
 
-PropSegment::PropSegment()
+PropSegment::PropSegment() : a(-999.), b(-999.), err_a(100.), err_b(100.), chisq(1.E6)
 {
-  a = -999.;
-  b = -999.;
-  err_a = 100;
-  err_b = 100;
-  
   for(int i = 0; i < 4; ++i) hits[i].hit.index = -1;
-
-  chisq = 1E6;
 }
 
 void PropSegment::init()
@@ -239,27 +224,8 @@ void PropSegment::linearFit()
 //General tracklet part
 const GeomSvc* Tracklet::p_geomSvc = GeomSvc::instance();
 
-Tracklet::Tracklet()
+Tracklet::Tracklet() : stationID(-1), nXHits(0), nUHits(0), nVHits(0), chisq(9999.), tx(0.), ty(0.), x0(0.), y0(0.), invP(0.02), err_tx(-1.), err_ty(-1.), err_x0(-1.), err_y0(-1.), err_invP(-1.)
 {
-  nXHits = 0;
-  nUHits = 0;
-  nVHits = 0;
-  chisq = 9999.;
-
-  tx = 0.;
-  ty = 0.;
-  x0 = 0.;
-  y0 = 0.;
-  invP = 0.02;
-
-  err_tx = -1.;
-  err_ty = -1.;
-  err_x0 = -1.;
-  err_y0 = -1.;
-  err_invP = -1.;
-
-  stationID = -1;
-
   for(int i = 0; i < 24; i++) residual[i] = 999.;
 }
 

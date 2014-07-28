@@ -246,10 +246,10 @@ bool MySQLSvc::getEvent(SRawEvent* rawEvent, int eventID)
 #endif
   */
 #ifdef USE_M_TABLES
-  sprintf(query, "SELECT hitID,elementID,tdcTime,driftTime,driftDistance,detectorName,inTime,masked FROM mHit WHERE (detectorName LIKE 'D%%' "
+  sprintf(query, "SELECT hitID,elementID,tdcTime,driftDistance,detectorName,inTime,masked FROM mHit WHERE (detectorName LIKE 'D%%' "
 	  "OR detectorName LIKE 'H%%' OR detectorName LIKE 'P%%') AND eventID=%d", eventID);
 #else
-  sprintf(query, "SELECT hitID,elementID,tdcTime,driftTime,driftDistance,detectorName,inTime,masked FROM Hit WHERE (detectorName LIKE 'D%%' "
+  sprintf(query, "SELECT hitID,elementID,tdcTime,driftDistance,detectorName,inTime,masked FROM Hit WHERE (detectorName LIKE 'D%%' "
 	  "OR detectorName LIKE 'H%%' OR detectorName LIKE 'P%%') AND eventID=%d", eventID);
 #endif
   int nHits = makeQuery();
@@ -259,7 +259,7 @@ bool MySQLSvc::getEvent(SRawEvent* rawEvent, int eventID)
     {
       nextEntry();
 
-      std::string detectorName(row->GetField(5));
+      std::string detectorName(row->GetField(4));
       int elementID = getInt(1);
       p_geomSvc->toLocalDetectorName(detectorName, elementID);
        
@@ -267,19 +267,18 @@ bool MySQLSvc::getEvent(SRawEvent* rawEvent, int eventID)
       h.index = getInt(0);
       h.detectorID = p_geomSvc->getDetectorID(detectorName);
       h.elementID = elementID;
-      h.tdcTime = getDouble(2);
-      h.inTime = getInt(6, 1);
+      h.tdcTime = getFloat(2);
+      h.driftDistance = getFloat(3); 
       h.pos = p_geomSvc->getMeasurement(h.detectorID, h.elementID);
-      h.driftTime = getDouble(3);
-      h.driftDistance = getDouble(4);
-      h.hodoMask = getInt(7, 1);
-      
+      if(getInt(5, 0) > 0) h.setInTime();
+      if(getInt(6, 0) > 0) h.setHodoMask();
+     
       if(p_geomSvc->isCalibrationLoaded())
 	{
 	  if((h.detectorID >= 1 && h.detectorID <= 24) || (h.detectorID >= 41))
 	    {
-	      h.inTime = p_geomSvc->isInTime(h.detectorID, h.tdcTime) ? 1 : 0;
-	      if(h.inTime > 0) h.driftDistance = p_geomSvc->getDriftDistance(h.detectorID, h.tdcTime);
+	      h.setInTime(p_geomSvc->isInTime(h.detectorID, h.tdcTime));
+	      if(h.isInTime()) h.driftDistance = p_geomSvc->getDriftDistance(h.detectorID, h.tdcTime);
 	    }	  
 	}
       rawEvent->insertHit(h);
@@ -408,11 +407,9 @@ bool MySQLSvc::getEventHeader(SRawEvent* rawEvent, int eventID)
 	  Hit h;
 	  h.index = getInt(0);
 	  h.elementID = getInt(2);
-	  h.tdcTime = getDouble(3);
-	  h.inTime = getInt(4);
-       	  h.driftTime = 0.;
+	  h.tdcTime = getFloat(3);
       	  h.driftDistance = 0.;
-	  h.hodoMask = 0;
+	  if(getInt(4, 0) > 0) h.setInTime();
       
 	  std::string detectorName(row->GetField(1));
 	  if(detectorName.find("H4T") != std::string::npos || detectorName.find("H4B") != std::string::npos)
@@ -770,6 +767,17 @@ int MySQLSvc::getInt(int id, int default_val)
 
   return boost::lexical_cast<int>(row->GetField(id));
 }
+
+float MySQLSvc::getFloat(int id, float default_val)
+{
+  if(row->GetField(id) == NULL)
+    {
+      return default_val;
+    }
+
+  return boost::lexical_cast<float>(row->GetField(id));
+}
+
 
 double MySQLSvc::getDouble(int id, double default_val)
 {

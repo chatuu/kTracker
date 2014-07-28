@@ -334,7 +334,7 @@ bool TriggerAnalyzer::acceptEvent(SRawEvent* rawEvent, int mode)
   for(std::vector<Hit>::iterator iter = triggerHits.begin(); iter != triggerHits.end(); ++iter)
     {
       if(iter->detectorID < 25 || iter->detectorID > 40) continue;
-      if(iter->inTime != 1) continue;
+      if(!iter->isInTime()) continue;
 
       detectorIDs[nHits] = iter->detectorID;
       elementIDs[nHits] = iter->elementID;
@@ -574,7 +574,8 @@ void TriggerAnalyzer::trimEvent(SRawEvent* rawEvent)
 	{
 	  for(int j = 0; j < 4; ++j)
 	    {
-	      rawEvent->setHitFlag(iter->detectorIDs[j], iter->elementIDs[j], 2);
+	      //temporary fix, if a hodo paddle is on the road, it must be inTime, since the inTime flag is required at acceptEvent level
+	      rawEvent->setHitFlag(iter->detectorIDs[j], iter->elementIDs[j], Hit::triggerMask | Hit::inTime);
 	    }
 	}
     }
