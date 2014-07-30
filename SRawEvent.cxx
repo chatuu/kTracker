@@ -495,7 +495,7 @@ void SRawEvent::reIndex(std::string option)
   for(std::vector<Hit>::iterator iter = fAllHits.begin(); iter != fAllHits.end(); ++iter)
     {
       if(_outoftime && (!iter->isInTime())) continue;
-      if(_hodomask && (!iter->isHodoMask())) continue;
+      if(_hodomask && iter->detectorID <= 24 && (!iter->isHodoMask())) continue;
       if(_nonchamber && iter->detectorID > 24) continue;
       if(_triggermask && iter->detectorID > 24 && iter->detectorID <= 40 && (!iter->isTriggerMask())) continue;
 
