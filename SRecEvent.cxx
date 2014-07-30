@@ -210,14 +210,11 @@ TLorentzVector SRecTrack::getMomentumVertex()
 
 bool SRecTrack::isValid()
 {
-  //Dump cut
-  if(fTargetPos.Perp() > fDumpPos.Perp()) return false;
-
   //Vertex valid
   if(!isVertexValid()) return false;
 
   //Number of hits cut
-  if(getNHits() < 14) return false;
+  if(getNHits() < 15) return false;
 
   //Total chisq, may change to cut on prob
   if(getChisq() > 20.) return false;
@@ -424,7 +421,7 @@ void SRecDimuon::calcVariables()
 bool SRecDimuon::isValid()
 {
   //Chisq of vertex fit
-  if(chisq_kf > 5.) return false;
+  if(chisq_kf > 10.) return false;
 
   //Kinematic cuts
   if(p_pos.Px() < p_neg.Px()) return false;
@@ -435,9 +432,33 @@ bool SRecDimuon::isValid()
   if(p_pos.Pz() + p_neg.Pz() > 120.) return false;
 
   //Track separation cuts
-  if(fabs(vtx_pos.Z() - vtx_neg.Z()) > 150.) return false;
+  if(fabs(vtx_pos.Z() - vtx_neg.Z()) > 100.) return false;
 
   //Everything is fine
+  return true;
+}
+
+bool SRecDimuon::isTarget()
+{
+  //Vertex position cut
+  if(vtx.Z() > -80.) return false;
+
+  //Track projection comparison
+  if(proj_target_pos.Perp() > proj_dump_pos.Perp()) return false;
+  if(proj_target_neg.Perp() > proj_dump_neg.Perp()) return false;
+
+  return true;
+}
+
+bool SRecDimuon::isDump()
+{
+  //Vertex position cut
+  if(vtx.Z() < 0.) return false;
+
+  //Track projection comparison
+  if(proj_target_pos.Perp() < proj_dump_pos.Perp()) return false;
+  if(proj_target_neg.Perp() < proj_dump_neg.Perp()) return false;
+
   return true;
 }
 

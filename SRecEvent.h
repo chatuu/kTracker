@@ -122,7 +122,18 @@ public:
   void setDumpMom(TVector3 mom) { fDumpMom = mom; } 
   void setDumpFaceMom(TVector3 mom) { fDumpFaceMom = mom; } 
   void setTargetMom(TVector3 mom) { fTargetMom = mom; } 
-  
+ 
+  //Trigger road info
+  void setTriggerRoad(Int_t roadID) { fTriggerID = roadID; }
+  Int_t getTriggerRoad() { return fTriggerID; }
+
+  //Prop. tube muon ID info
+  void setPTSlope(Double_t slopeX, Double_t slopeY) { fPropSlopeX = slopeX; fPropSlopeY = slopeY; }
+  Double_t getPTSlopeX() { return fPropSlopeX; }
+  Double_t getPTSlopeY() { return fPropSlopeY; }
+  Double_t getDeflectionX() { return fState.back()[1][0] - fPropSlopeX; }
+  Double_t getDeflectionY() { return fState.back()[2][0] - fPropSlopeY; }
+
   //Overall track quality cut
   bool isValid();
 
@@ -156,7 +167,14 @@ private:
   TMatrixD fStateVertex;
   TMatrixD fCovarVertex;
 
-  ClassDef(SRecTrack, 6)
+  ///Corresponding trigger road
+  Int_t fTriggerID;
+
+  ///Prop. tube. slope
+  Double_t fPropSlopeX;
+  Double_t fPropSlopeY;
+
+  ClassDef(SRecTrack, 7)
 };
 
 class SRecDimuon: public TObject
@@ -170,6 +188,12 @@ public:
 
   //Dimuon quality cut
   bool isValid();
+
+  //Target dimuon
+  bool isTarget();
+
+  //Dump dimuon
+  bool isDump();
 
   //Index of muon track used in host SRecEvent
   Int_t trackID_pos;
@@ -188,6 +212,12 @@ public:
   TVector3 vtx_pos;
   TVector3 vtx_neg;
 
+  //Track projections at different location
+  TVector3 proj_target_pos;
+  TVector3 proj_dump_pos;
+  TVector3 proj_target_neg;
+  TVector3 proj_dump_neg;
+
   //Kinematic variables
   Double_t mass;
   Double_t pT;
@@ -202,7 +232,7 @@ public:
   Double_t chisq_kf;
   Double_t chisq_vx;
 
-  ClassDef(SRecDimuon, 3)
+  ClassDef(SRecDimuon, 4)
 };
 
 class SRecEvent: public TObject
@@ -213,6 +243,7 @@ public:
   ///Set/Get event info
   void setEventInfo(SRawEvent* rawEvent);
   void setRawEvent(SRawEvent* rawEvent);
+
   Int_t getRunID() { return fRunID; }
   Int_t getSpillID() { return fSpillID; }
   Int_t getEventID() { return fEventID; }
