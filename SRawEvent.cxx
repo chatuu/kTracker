@@ -571,7 +571,7 @@ void SRawEvent::deClusterize(std::list<Hit>& hits)
 
 void SRawEvent::processCluster(std::list<Hit>& hits, std::vector<std::list<Hit>::iterator>& cluster)
 {
-  int clusterSize = cluster.size();
+  unsigned int clusterSize = cluster.size();
 
   //size-2 clusters, retain the hit with smaller driftDistance
   if(clusterSize == 2)
