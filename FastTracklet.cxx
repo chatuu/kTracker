@@ -682,6 +682,7 @@ SRecTrack Tracklet::getSRecTrack()
   strack.setTriggerRoad(road.getRoadID());
 
   //Set prop tube slopes
+  strack.setNHitsInPT(seg_x.getNHits(), seg_y.getNHits());
   strack.setPTSlope(seg_x.a, seg_y.a);
 
   return strack;
