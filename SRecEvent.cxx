@@ -41,6 +41,20 @@ bool SRecTrack::operator<(const SRecTrack& elem) const
   return getNHits() == elem.getNHits() ? fChisq < elem.fChisq : getProb() > elem.getProb();
 }
 
+Int_t SRecTrack::getNHitsInStation(Int_t stationID)
+{
+  if(stationID != 1 && stationID != 2 && stationID != 3) return 0;
+
+  Double_t z_ref[4] = {0., 700., 1600., 2500.};
+  Int_t nHits = 0;
+  for(std::vector<Double_t>::iterator iter = fZ.begin(); iter != fZ.end(); ++iter)
+    {
+      if(*iter > z_ref[stationID-1] && *iter < z_ref[stationID]) ++nHits;
+    }
+  
+  return nHits;
+}
+
 void SRecTrack::setZVertex(Double_t z)
 {
   Node _node_vertex;

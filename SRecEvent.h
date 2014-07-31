@@ -40,6 +40,7 @@ public:
   ///Gets
   Int_t getCharge() const { return (fState[0])[0][0] > 0 ? 1 : -1; }
   Int_t getNHits() const { return fHitIndex.size(); }
+  Int_t getNHitsInStation(Int_t stationID);
   Double_t getChisq() const { return fChisq; }
   Double_t getProb() const { return KMAG_ON == 1 ? TMath::Prob(fChisq, getNHits() - 5) : TMath::Prob(fChisq, getNHits() - 4); }
   Double_t getQuality() const { return (Double_t)getNHits() - 0.4*getChisq(); }
@@ -74,6 +75,7 @@ public:
 
   Double_t getMomentum(TMatrixD& state, Double_t& px, Double_t& py, Double_t& pz);
   Double_t getPosition(TMatrixD& state, Double_t& x, Double_t& y);
+
 
   ///Comparitor
   bool operator<(const SRecTrack& elem) const;
@@ -129,10 +131,13 @@ public:
 
   //Prop. tube muon ID info
   void setPTSlope(Double_t slopeX, Double_t slopeY) { fPropSlopeX = slopeX; fPropSlopeY = slopeY; }
+  void setNHitsInPT(Int_t nHitsX, Int_t nHitsY) { fNPropHitsX = nHitsX; fNPropHitsY = nHitsY; }
   Double_t getPTSlopeX() { return fPropSlopeX; }
   Double_t getPTSlopeY() { return fPropSlopeY; }
   Double_t getDeflectionX() { return fState.back()[1][0] - fPropSlopeX; }
   Double_t getDeflectionY() { return fState.back()[2][0] - fPropSlopeY; }
+  Int_t getNHitsInPTX() { return fNPropHitsX; }
+  Int_t getNHitsInPTY() { return fNPropHitsY; }
 
   //Overall track quality cut
   bool isValid();
@@ -171,6 +176,8 @@ private:
   Int_t fTriggerID;
 
   ///Prop. tube. slope
+  Int_t fNPropHitsX;
+  Int_t fNPropHitsY; 
   Double_t fPropSlopeX;
   Double_t fPropSlopeY;
 

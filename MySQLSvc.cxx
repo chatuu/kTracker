@@ -546,11 +546,22 @@ void MySQLSvc::initWriter()
 	  "spillID     INTEGER,"
 	  "eventID     INTEGER,"
 	  "charge      INTEGER,"
+	  "roadID      INTEGER,"
 	  "numHits     INTEGER,"
+	  "numHitsSt1  INTEGER,"
+	  "numHitsSt2  INTEGER,"
+	  "numHitsSt3  INTEGER,"
+	  "numHitsSt4H INTEGER,"
+	  "numHitsSt4V INTEGER,"
 	  "chisq       DOUBLE, "
 	  "x0          DOUBLE, "
 	  "y0          DOUBLE, "
 	  "z0          DOUBLE, "
+	  "x_target    DOUBLE, "
+	  "y_target    DOUBLE, "
+	  "z_target    DOUBLE, "
+	  "x_dump      DOUBLE, "
+	  "y_dump      DOUBLE, "
 	  "px0         DOUBLE, "
 	  "py0         DOUBLE, "
 	  "pz0         DOUBLE, "
@@ -566,6 +577,8 @@ void MySQLSvc::initWriter()
 	  "px3         DOUBLE, "
 	  "py3         DOUBLE, "
 	  "pz3         DOUBLE, "
+	  "tx_PT       DOUBLE, "
+	  "ty_PT       DOUBLE, "
           "PRIMARY KEY(runID, trackID, eventID), "
 	  "INDEX(eventID), INDEX(charge))");
 #ifndef OUT_TO_SCREEN
@@ -638,6 +651,10 @@ void MySQLSvc::initWriter()
 
 void MySQLSvc::writeTrackingRes(SRecEvent* recEvent, TClonesArray* tracklets)
 {
+  runID = recEvent->getRunID();
+  spillID = recEvent->getSpillID();
+  if(eventIDs_loaded.back() != recEvent->getEventID()) eventIDs_loaded.push_back(recEvent->getEventID());  
+
   //Fill Track table/TrackHit table
   int nTracks_local = recEvent->getNTracks();
   for(int i = 0; i < nTracks_local; ++i)
@@ -664,12 +681,25 @@ void MySQLSvc::writeTrackTable(int trackID, SRecTrack* recTrack)
   double px3, py3, pz3, x3, y3, z3;
 
   int charge;
-  int numHits;
+  int roadID;
+  int numHits, numHitsSt1, numHitsSt2, numHitsSt3, numHitsSt4H, numHitsSt4V;
   double chisq;
+
+  TVector3 proj_target = recTrack->getTargetPos();
+  TVector3 proj_dump = recTrack->getDumpPos();
+
+  double tx_prop = recTrack->getPTSlopeX();
+  double ty_prop = recTrack->getPTSlopeY();
 
   //Track related
   charge = recTrack->getCharge();
+  roadID = recTrack->getTriggerRoad();
   numHits = recTrack->getNHits();
+  numHitsSt1 = recTrack->getNHitsInStation(1);
+  numHitsSt2 = recTrack->getNHitsInStation(2);
+  numHitsSt3 = recTrack->getNHitsInStation(3);
+  numHitsSt4H = recTrack->getNHitsInPTY();
+  numHitsSt4V = recTrack->getNHitsInPTX();
   chisq = recTrack->getChisq();
 
   //Vertex point
@@ -689,10 +719,13 @@ void MySQLSvc::writeTrackTable(int trackID, SRecTrack* recTrack)
   recTrack->getExpMomentumFast(z3, px3, py3, pz3);
 
   //Database output
-  sprintf(query, "INSERT INTO kTrack(trackID,runID,spillID,eventID,charge,numHits,chisq,x0,y0,z0,px0,py0,pz0," 
-	  "x1,y1,z1,px1,py1,pz1,x3,y3,z3,px3,py3,pz3) VALUES(%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,"
-	  "%f,%f,%f,%f,%f,%f,%f,%f)", trackID, runID, spillID, eventIDs.back(), charge, numHits, chisq, x0, y0, 
-	  z0, px0, py0, pz0, x1, y1, z1, px1, py1, pz1, x3, y3, z3, px3, py3, pz3);
+  sprintf(query, "INSERT INTO kTrack(trackID,runID,spillID,eventID,charge,roadID,numHits,numHitsSt1,numHitsSt2,numHitsSt3,"
+          "numHitsSt4H,numHitsSt4V,chisq,x0,y0,z0,px0,py0,pz0,x_target,y_target,z_target,x_dump,y_dump,z_dump" 
+	  "x1,y1,z1,px1,py1,pz1,x3,y3,z3,px3,py3,pz3,tx_PT,ty_PT) VALUES(%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,"
+	  "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)", trackID, runID, spillID, eventIDs_loaded.back(), 
+	  charge, numHits, roadID, numHitsSt1, numHitsSt2, numHitsSt3, numHitsSt4H, numHitsSt4V, chisq, x0, y0, z0, px0, py0, pz0, 
+	  proj_target.X(), proj_target.Y(), proj_target.Z(), proj_dump.X(), proj_dump.Y(), proj_dump.Z(), x1, y1, z1, px1, py1, pz1,
+	  x3, y3, z3, px3, py3, pz3, tx_prop, ty_prop);
 #ifndef OUT_TO_SCREEN
   server->Exec(query);
 #else
