@@ -33,7 +33,10 @@ int main(int argc, char **argv)
   p_mysqlSvc->setUserPasswd("production", "qqbar2mu+mu-");
   p_mysqlSvc->connect(argv[3], atoi(argv[4]));
   p_mysqlSvc->setWorkingSchema(argv[2]);
-  p_mysqlSvc->initWriter();
+  if(!p_mysqlSvc->initWriter())
+    {
+      exit(EXIT_FAILURE);
+    }
 
   ///Retrieve data from file
   TClonesArray* tracklets = new TClonesArray("Tracklet");

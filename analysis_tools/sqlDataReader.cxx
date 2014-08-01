@@ -38,11 +38,12 @@ int main(int argc, char **argv)
     {
       p_mysqlSvc->connect();
     }
-  if(!p_mysqlSvc->setWorkingSchema(argv[1]))
+
+  p_mysqlSvc->setWorkingSchema(argv[1]);
+  if(!p_mysqlSvc->initReader())
     {
       exit(EXIT_FAILURE);
     }
-  p_mysqlSvc->initReader();
 
   SRawEvent* rawEvent = new SRawEvent();
 

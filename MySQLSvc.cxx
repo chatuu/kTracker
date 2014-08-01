@@ -78,11 +78,17 @@ bool MySQLSvc::connect(std::string sqlServer, int serverPort)
   return true;
 }
 
-bool MySQLSvc::setWorkingSchema(std::string schema)
+void MySQLSvc::setWorkingSchema(std::string schema)
 {
   dataSchema = schema;
-  sprintf(query, "USE %s", dataSchema.c_str());
+  eventIDs.clear();
+  index_eventID = 0;
+}
 
+bool MySQLSvc::initReader()
+{
+  //check the essential info
+  sprintf(query, "USE %s", dataSchema.c_str());
   if(!server->Exec(query))
     {
       std::cout << "MySQLSvc: working schema does not exist! Will exit..." << std::endl;
@@ -94,14 +100,8 @@ bool MySQLSvc::setWorkingSchema(std::string schema)
       std::cout << "MySQLSvc: essential information is missing in this schema. Will exit..." << std::endl;
       return false;
     }
-  eventIDs.clear();
 
-  index_eventID = 0;
-  return true;
-}
-
-void MySQLSvc::initReader()
-{
+  //check addtional infomation
   if(!server->HasTable("QIE")) readQIE = false;
   if(!server->HasTable("TriggerHit")) readTriggerHits = false;
 
@@ -149,6 +149,8 @@ void MySQLSvc::initReader()
 
       server_temp->Close();
     }
+
+  return true;
 }
 
 bool MySQLSvc::isRunStopped()
@@ -525,8 +527,19 @@ bool MySQLSvc::getMCGenInfo(SRawMCEvent* mcEvent, int eventID)
   return true;
 }
 
-void MySQLSvc::initWriter()
+bool MySQLSvc::initWriter()
 {
+  //check the essential info
+  sprintf(query, "CREATE DATABASE IF NOT EXISTS %s", dataSchema.c_str());
+  if(!server->Exec(query))
+    {
+      std::cout << "MySQLSvc: working schema does not exist and cannot be created! Will exit..." << std::endl;
+      return false;
+    }
+  
+  sprintf(query, "USE %s", dataSchema.c_str());
+  server->Exec(query);
+
   //Clear all the tables if exist
   std::string tableNames[4] = {"kTrack", "kTrackHit", "kDimuon", "kInfo"};
   for(int i = 0; i < 4; ++i)
@@ -647,6 +660,8 @@ void MySQLSvc::initWriter()
 #else
   std::cout << __FUNCTION__ << ": " << query << std::endl;
 #endif
+
+  return true;
 }
 
 void MySQLSvc::writeTrackingRes(SRecEvent* recEvent, TClonesArray* tracklets)

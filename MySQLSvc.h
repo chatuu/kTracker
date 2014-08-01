@@ -65,17 +65,17 @@ public:
   bool getMCGenInfo(SRawMCEvent* mcEvent, int eventID);
 
   //initialize reader -- check the indexing, table existence
-  void initReader();
+  bool initReader();
 
   //Output to database/txt file/screen
-  void initWriter();  
+  bool initWriter();  
   void writeTrackingRes(SRecEvent* recEvent, TClonesArray* tracklets);
   void writeTrackTable(int trackID, SRecTrack* recTrack);
   void writeTrackHitTable(int trackID, Tracklet* tracklet);
   void writeDimuonTable(int dimuonID, SRecDimuon dimuon);
 
   //Set the data schema
-  bool setWorkingSchema(std::string schema);
+  void setWorkingSchema(std::string schema);
   void setLoggingSchema(std::string schema) { logSchema = schema; } 
   void enableQIE(bool opt) { readQIE = opt; }
   void enableTargetPos(bool opt) { readTargetPos = opt; }
