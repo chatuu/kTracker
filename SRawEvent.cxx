@@ -582,7 +582,7 @@ void SRawEvent::processCluster(std::list<Hit>& hits, std::vector<std::list<Hit>:
 	{
 	  cluster.front()->driftDistance > cluster.front()->driftDistance ? hits.erase(cluster.front()) : hits.erase(cluster.back());
 	}
-      else if(fabs(cluster.front()->tdcTime - cluster.back()->tdcTime) < 8.)
+      else if(fabs(cluster.front()->tdcTime - cluster.back()->tdcTime) < 8. && cluster.front()->detectorID >= 13 && cluster.front()->detectorID <= 18)
 	{
 	  hits.erase(cluster.front());
 	  hits.erase(cluster.back());

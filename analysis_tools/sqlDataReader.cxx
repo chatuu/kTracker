@@ -40,10 +40,7 @@ int main(int argc, char **argv)
     }
 
   p_mysqlSvc->setWorkingSchema(argv[1]);
-  if(!p_mysqlSvc->initReader())
-    {
-      exit(EXIT_FAILURE);
-    }
+  if(!p_mysqlSvc->initReader()) exit(EXIT_FAILURE);
 
   SRawEvent* rawEvent = new SRawEvent();
 

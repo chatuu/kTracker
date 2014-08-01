@@ -328,7 +328,7 @@ int MySQLSvc::getNEvents()
 {
 #ifndef MC_MODE
   //More cuts should apply, say spill quality cuts, event quality cuts, etc.
-  sprintf(query, "SELECT eventID FROM Event,Spill WHERE Event.spillID=Spill.spillID AND Spill.targetPos!=0 AND Spill.spillID!=0");
+  sprintf(query, "SELECT eventID FROM Event,Spill WHERE Event.spillID=Spill.spillID AND Spill.targetPos!=0 AND Spill.spillID!=0 AND Spill.beamIntensity>1000 AND Spill.targetPos>=1 AND Spill.targetPos<=7");
 #else
   sprintf(query, "SELECT eventID FROM mDimuon WHERE acceptHodoAll=1 AND acceptDriftAll=1");
 #endif
@@ -575,6 +575,7 @@ bool MySQLSvc::initWriter()
 	  "z_target    DOUBLE, "
 	  "x_dump      DOUBLE, "
 	  "y_dump      DOUBLE, "
+	  "z_dump      DOUBLE, "
 	  "px0         DOUBLE, "
 	  "py0         DOUBLE, "
 	  "pz0         DOUBLE, "
@@ -668,7 +669,14 @@ void MySQLSvc::writeTrackingRes(SRecEvent* recEvent, TClonesArray* tracklets)
 {
   runID = recEvent->getRunID();
   spillID = recEvent->getSpillID();
-  if(eventIDs_loaded.back() != recEvent->getEventID()) eventIDs_loaded.push_back(recEvent->getEventID());  
+  if(!eventIDs_loaded.empty())
+    {
+      if(eventIDs_loaded.back() != recEvent->getEventID()) eventIDs_loaded.push_back(recEvent->getEventID());  
+    }
+  else
+    {
+      eventIDs_loaded.push_back(recEvent->getEventID());
+    }
 
   //Fill Track table/TrackHit table
   int nTracks_local = recEvent->getNTracks();
@@ -735,10 +743,10 @@ void MySQLSvc::writeTrackTable(int trackID, SRecTrack* recTrack)
 
   //Database output
   sprintf(query, "INSERT INTO kTrack(trackID,runID,spillID,eventID,charge,roadID,numHits,numHitsSt1,numHitsSt2,numHitsSt3,"
-          "numHitsSt4H,numHitsSt4V,chisq,x0,y0,z0,px0,py0,pz0,x_target,y_target,z_target,x_dump,y_dump,z_dump" 
+          "numHitsSt4H,numHitsSt4V,chisq,x0,y0,z0,px0,py0,pz0,x_target,y_target,z_target,x_dump,y_dump,z_dump," 
 	  "x1,y1,z1,px1,py1,pz1,x3,y3,z3,px3,py3,pz3,tx_PT,ty_PT) VALUES(%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,"
 	  "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)", trackID, runID, spillID, eventIDs_loaded.back(), 
-	  charge, numHits, roadID, numHitsSt1, numHitsSt2, numHitsSt3, numHitsSt4H, numHitsSt4V, chisq, x0, y0, z0, px0, py0, pz0, 
+	  charge, roadID, numHits, numHitsSt1, numHitsSt2, numHitsSt3, numHitsSt4H, numHitsSt4V, chisq, x0, y0, z0, px0, py0, pz0, 
 	  proj_target.X(), proj_target.Y(), proj_target.Z(), proj_dump.X(), proj_dump.Y(), proj_dump.Z(), x1, y1, z1, px1, py1, pz1,
 	  x3, y3, z3, px3, py3, pz3, tx_prop, ty_prop);
 #ifndef OUT_TO_SCREEN
@@ -755,7 +763,7 @@ void MySQLSvc::writeTrackHitTable(int trackID, Tracklet* tracklet)
       if(iter->hit.index < 0) continue;
 
       sprintf(query, "INSERT INTO kTrackHit(runID,eventID,trackID,hitID,driftSign,residual) VALUES(%d,%d,%d,%d,%d,%f)",
-	      runID, eventIDs.back(), trackID, iter->hit.index, iter->sign, tracklet->residual[iter->hit.detectorID-1]);
+	      runID, eventIDs_loaded.back(), trackID, iter->hit.index, iter->sign, tracklet->residual[iter->hit.detectorID-1]);
 #ifndef OUT_TO_SCREEN
       server->Exec(query);
 #else
@@ -779,7 +787,7 @@ void MySQLSvc::writeDimuonTable(int dimuonID, SRecDimuon dimuon)
 
   sprintf(query, "INSERT INTO kDimuon(dimuonID,runID,spillID,eventID,posTrackID,negTrackID,dx,dy,dz,dpx,"
 	  "dpy,dpz,mass,xF,xB,xT,trackSeparation,chisq_dimuon) VALUES(%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)", 
-	  dimuonID, runID, spillID, eventIDs.back(), dimuon.trackID_pos+nTracks, dimuon.trackID_neg+nTracks, 
+	  dimuonID, runID, spillID, eventIDs_loaded.back(), dimuon.trackID_pos+nTracks, dimuon.trackID_neg+nTracks, 
 	  x0, y0, z0, px0, py0, pz0, dimuon.mass, dimuon.xF, dimuon.x1, dimuon.x2, dz, dimuon.chisq_kf);
 #ifndef OUT_TO_SCREEN
   server->Exec(query);

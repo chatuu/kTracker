@@ -20,6 +20,7 @@
 #include "KalmanFitter.h"
 #include "VertexFit.h"
 #include "MySQLSvc.h"
+#include "TriggerAnalyzer.h"
 
 #include "MODE_SWITCH.h"
 
