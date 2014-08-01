@@ -33,16 +33,13 @@ int main(int argc, char **argv)
   p_mysqlSvc->setUserPasswd("production", "qqbar2mu+mu-");
   p_mysqlSvc->connect(argv[3], atoi(argv[4]));
   p_mysqlSvc->setWorkingSchema(argv[2]);
-  if(!p_mysqlSvc->initWriter())
-    {
-      exit(EXIT_FAILURE);
-    }
+  if(!p_mysqlSvc->initWriter()) exit(EXIT_FAILURE);
 
   ///Retrieve data from file
   TClonesArray* tracklets = new TClonesArray("Tracklet");
   SRecEvent* recEvent = new SRecEvent();
 
-  TFile* dataFile = new TFile(argv[1], "recreate");
+  TFile* dataFile = new TFile(argv[1], "READ");
   TTree* dataTree = (TTree*)dataFile->Get("save");
 
   dataTree->SetBranchAddress("recEvent", &recEvent);
