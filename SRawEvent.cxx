@@ -631,6 +631,19 @@ void SRawEvent::processCluster(std::list<Hit>& hits, std::vector<std::list<Hit>:
   cluster.clear();
 }
 
+void SRawEvent::mergeEvent(const SRawEvent& event)
+{
+  fAllHits.insert(fAllHits.end(), event.fAllHits.begin(), event.fAllHits.end());
+  fTriggerHits.insert(fTriggerHits.end(), event.fTriggerHits.begin(), event.fTriggerHits.end());
+
+  fTurnID = event.fTurnID;
+  fRFID = event.fRFID;
+  for(int i = 0; i < 33; ++i) fIntensity[i] = event.fIntensity[i];
+
+  fTargetPos = event.fTargetPos;
+  reIndex();
+}
+
 void SRawEvent::setEventInfo(SRawEvent* event)
 {
   //Set runID, eventID, spillID

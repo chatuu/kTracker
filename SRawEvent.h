@@ -177,7 +177,10 @@ public:
   void setIntensity(Int_t i, Int_t val) { fIntensity[i] = val; }
   void setIntensity(Int_t val) { fIntensity[16] = val; }
 
-  //Set the event info from another event
+  ///Merge a event to this event
+  void mergeEvent(const SRawEvent& rawEvent);
+
+  ///Set the event info from another event
   void setEventInfo(SRawEvent* event);
 
   ///Clear the internal event structure
