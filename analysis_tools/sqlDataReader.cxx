@@ -59,6 +59,7 @@ int main(int argc, char **argv)
       cout << "\r Converting event " << rawEvent->getEventID() << ", " << (i+1)*100/nEvents << "% finished." << flush;
 
       saveTree->Fill();
+      if(i % 1000 == 0) saveTree->AutoSave("SaveSelf");
     }
   cout << endl;
   cout << "sqlDataReader ends successfully." << endl;
