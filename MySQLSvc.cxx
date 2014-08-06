@@ -103,10 +103,11 @@ bool MySQLSvc::initReader()
 
   //check addtional infomation
   if(!server->HasTable("QIE")) readQIE = false;
-  if(!server->HasTable("TriggerHit")) readTriggerHits = false;
+  //if(!server->HasTable("TriggerHit")) readTriggerHits = false;
+  readTriggerHits = false;
 
   if(!readQIE) std::cout << "MySQLSvc: QIE information readout is disabled." << std::endl; 
-  if(!readTriggerHits) std::cout << "MySQLSvc: TriggerHits table readout is disabled." << std::endl;
+  //if(!readTriggerHits) std::cout << "MySQLSvc: TriggerHits table readout is disabled." << std::endl;
   if(!readTargetPos) std::cout << "MySQLSvc: Target position readout is disabled." << std::endl;
 
   //Initialize trigger analyzer
