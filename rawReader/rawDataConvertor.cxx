@@ -85,12 +85,13 @@ int main(int argc, char **argv)
 	  h.tdcTime = h_coda.tdcTime;
 	  h.pos = p_geomSvc->getMeasurement(h.detectorID, h.elementID);
 	  h.driftDistance = p_geomSvc->getDriftDistance(h.detectorID, h.tdcTime);
-	  if(p_geomSvc->isInTime(h.detectorID, h.elementID)) h.setInTime();
+	  if(p_geomSvc->isInTime(h.detectorID, h.tdcTime)) h.setInTime();
 	
 	  rawEvent->insertHit(h);
 	}
 
       //Get the trigger hit list
+      /*
       int nTriggerHits = codaEvent->getNTriggerHits();
       for(int j = 0; j < nTriggerHits; ++j)
 	{
@@ -108,7 +109,7 @@ int main(int argc, char **argv)
 
 	  rawEvent->insertTriggerHit(h);
 	}
-      
+      */
       rawEvent->reIndex();
 
       //Fill the raw data tree and flush
