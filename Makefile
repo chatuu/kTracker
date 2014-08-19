@@ -34,6 +34,7 @@ LDFLAGS      += $(G4LDFLAGS)
 CXXFLAGS     += -I$(MYSQL_INCLUDE)
 LDFLAGS      += -lz -L$(MYSQL_LIB) -lmysqlclient
 
+SCODAEVENTO   = SCODAEvent.o SCODAEventDict.o
 SRAWEVENTO    = SRawEvent.o SRawEventDict.o
 SRECEVENTO    = SRecEvent.o SRecEventDict.o
 GEOMSVCO      = GeomSvc.o
@@ -71,7 +72,7 @@ SRAWEVENTSO   = libSRawEvent.so
 
 TRKEXTOBJS    = TrackExtrapolator/TrackExtrapolator.o TrackExtrapolator/DetectorConstruction.o TrackExtrapolator/Field.o TrackExtrapolator/TabulatedField3D.o \
 		TrackExtrapolator/Settings.o TrackExtrapolator/GenericSD.o TrackExtrapolator/MCHit.o TrackExtrapolator/TPhysicsList.o 
-CLASSOBJS     = $(GEOMSVCO) $(SRAWEVENTO) $(SRECEVENTO) $(KALMANUTILO) $(KALMANFILTERO) $(KALMANTRACKO) $(KALMANFITTERO) $(VERTEXFITO) \
+CLASSOBJS     = $(GEOMSVCO) $(SCODAEVENTO) $(SRAWEVENTO) $(SRECEVENTO) $(KALMANUTILO) $(KALMANFILTERO) $(KALMANTRACKO) $(KALMANFITTERO) $(VERTEXFITO) \
 		$(KALMANFASTO) $(FASTTRACKLETO) $(MYSQLSVCO) $(TRIGGERROADO) $(TRIGGERANALYZERO)
 ALIGNOBJS     = $(SMPUTILO) $(SMILLEPEDEO) $(MILLEPEDEO)
 OBJS          = $(CLASSOBJS) $(ALIGNOBJS) $(KVERTEXO) $(KTRACKERMULO) $(KSEEDERO) $(KVERTEXMO) $(KFASTTRACKO) $(KONLINETRACKO) $(MILLEALIGNO)
@@ -114,6 +115,10 @@ $(MILLEALIGN):   $(MILLEALIGNO) $(CLASSOBJS) $(ALIGNOBJS) $(TRKEXTOBJS)
 	@echo "$@ done."
 
 .SUFFIXES: .cxx
+
+SCODAEventDict.cxx: SCODAEvent.h SCODAEventLinkDef.h
+	@echo "Generating dictionary for $@ ..."
+	$(ROOTCINT) -f $@ -c $^
 
 SRawEventDict.cxx: SRawEvent.h SRawEventLinkDef.h
 	@echo "Generating dictionary for $@ ..."
