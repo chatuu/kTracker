@@ -61,7 +61,7 @@ public:
   //Debugging output
   void print() { std::cout << index << " : " << detectorID << " : " << elementID << " : " << inTime << std::endl; }
 
-  ClassDef(CODAHit, 5)
+  ClassDef(CODAHit, 6)
 };
 
 class SCODAEvent: public TObject

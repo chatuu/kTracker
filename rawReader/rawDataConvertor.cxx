@@ -41,6 +41,8 @@ int main(int argc, char **argv)
   TFile* dataFile = new TFile(argv[1], "READ");
   TTree* dataTree = (TTree*)dataFile->Get("save");
 
+  dataTree->SetBranchAddress("codaEvent", &codaEvent);
+
   SRawEvent* rawEvent = new SRawEvent();
 
   TFile* saveFile = new TFile(argv[2], "recreate");
@@ -58,7 +60,7 @@ int main(int argc, char **argv)
       dataTree->GetEntry(i);
 
       //Get event level info
-      rawEvent->setEventInfo(codaEvent->getRunID(), codaEvent->getSpillID(), codaEvent->getEventID());
+      rawEvent->setEventInfo(codaEvent->getRunID(), codaEvent->getSpillID(), codaEvent->getPhysEventID());
       //rawEvent->setTargetPos(codaEvent->getTargetPos()); //may need update later
       rawEvent->setTriggerBits(rawEvent->getTriggerBits());  //may need understand different between TS and my own definition
       rawEvent->setTurnID(codaEvent->getTurnID());
