@@ -63,6 +63,8 @@ Plane::Plane()
   rY = 0.;
   rZ = 0.;
 
+  tmin = -1.E6;
+  tmax = 1.E6;
   rtprofile = NULL;
 }
 
@@ -777,7 +779,7 @@ void GeomSvc::loadCalibration(std::string calibrationFile)
 	    }
 
 	  if(planes[detectorID].rtprofile != NULL) delete planes[detectorID].rtprofile;
-	  planes[detectorID].rtprofile = new TSpline3(getDetectorName(detectorID).c_str(), T, R, nBin, "b1e1");
+	  if(nBin > 0) planes[detectorID].rtprofile = new TSpline3(getDetectorName(detectorID).c_str(), T, R, nBin, "b1e1");
 	}
       cout << "GeomSvc: loaded calibration parameters from " << filename << endl; 
     }
@@ -786,9 +788,7 @@ void GeomSvc::loadCalibration(std::string calibrationFile)
 
 bool GeomSvc::isInTime(int detectorID, double tdcTime)
 {
-  if(planes[detectorID].rtprofile != NULL) return tdcTime > planes[detectorID].tmin && tdcTime < planes[detectorID].tmax;
-
-  return true;
+  return tdcTime > planes[detectorID].tmin && tdcTime < planes[detectorID].tmax;
 }
 
 void GeomSvc::printWirePosition()
