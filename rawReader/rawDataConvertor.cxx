@@ -67,10 +67,6 @@ int main(int argc, char **argv)
       rawEvent->setRFID(codaEvent->getRFID());
       rawEvent->setIntensity(codaEvent->getIntensityAll());
 
-      rawEvent->setTriggerEmu(p_triggerAna->acceptEvent(rawEvent, USE_HIT));
-      int nRoads[4] = {p_triggerAna->getNRoadsPosTop(), p_triggerAna->getNRoadsPosBot(), p_triggerAna->getNRoadsNegTop(), p_triggerAna->getNRoadsNegBot()};
-      rawEvent->setNRoads(nRoads);
-
       //Get hit list
       int nHits = codaEvent->getNHitsAll();
       for(int j = 0; j < nHits; ++j)
@@ -111,6 +107,11 @@ int main(int argc, char **argv)
 	}
       */
       rawEvent->reIndex();
+
+      //Trigger emulation
+      rawEvent->setTriggerEmu(p_triggerAna->acceptEvent(rawEvent, USE_HIT));
+      int nRoads[4] = {p_triggerAna->getNRoadsPosTop(), p_triggerAna->getNRoadsPosBot(), p_triggerAna->getNRoadsNegTop(), p_triggerAna->getNRoadsNegBot()};
+      rawEvent->setNRoads(nRoads);
 
       //Fill the raw data tree and flush
       saveTree->Fill();
