@@ -67,7 +67,7 @@ int main(int argc, char **argv)
       rawEvent->setRFID(codaEvent->getRFID());
       rawEvent->setIntensity(codaEvent->getIntensityAll());
 
-      rawEvent->setTriggerEmu(p_triggerAna->acceptEvent(rawEvent));
+      rawEvent->setTriggerEmu(p_triggerAna->acceptEvent(rawEvent, USE_HIT));
       int nRoads[4] = {p_triggerAna->getNRoadsPosTop(), p_triggerAna->getNRoadsPosBot(), p_triggerAna->getNRoadsNegTop(), p_triggerAna->getNRoadsNegBot()};
       rawEvent->setNRoads(nRoads);
 
