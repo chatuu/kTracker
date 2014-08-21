@@ -61,8 +61,8 @@ int main(int argc, char **argv)
   int m_runID;
   int m_spillID;
   int m_targetPos;
-  int m_first;
-  int m_last;
+  //int m_first;
+  //int m_last;
 
   TFile* spillFile = new TFile("spills.root", "READ");
   TTree* spillTree = (TTree*)spillFile->Get("save");
@@ -70,8 +70,8 @@ int main(int argc, char **argv)
   spillTree->SetBranchAddress("runID", &m_runID);
   spillTree->SetBranchAddress("spillID", &m_spillID);
   spillTree->SetBranchAddress("targetPos", &m_targetPos);
-  spillTree->SetBranchAddress("firstEvent", &m_first);
-  spillTree->SetBranchAddress("lastEvent", &m_last);
+  //spillTree->SetBranchAddress("firstEvent", &m_first);
+  //spillTree->SetBranchAddress("lastEvent", &m_last);
 
   for(int i = 0; i < spillTree->GetEntries(); ++i)
     {
@@ -80,8 +80,8 @@ int main(int argc, char **argv)
 
       spillID[nSpills] = m_spillID;
       targetPos[nSpills] = m_targetPos;
-      first[nSpills] = m_first;
-      last[nSpills] = m_last;
+      //first[nSpills] = m_first;
+      //last[nSpills] = m_last;
 
       ++nSpills;
     }
@@ -98,7 +98,14 @@ int main(int argc, char **argv)
       int idx = -1;
       for(int j = 0; j < nSpills; ++j)
 	{
+	  /*
 	  if(codaEvent->getPhysEventID() <= last[j] && codaEvent->getPhysEventID() >= first[j])
+	    {
+	      idx = j;
+	      break;
+	    }
+	  */
+	  if(codaEvent->getSpillID() == spillID[j])
 	    {
 	      idx = j;
 	      break;
@@ -107,7 +114,7 @@ int main(int argc, char **argv)
       if(idx < 0 || idx >= nSpills) continue;
 
       //Get event level info
-      rawEvent->setEventInfo(codaEvent->getRunID(), spillID[idx], codaEvent->getPhysEventID());
+      rawEvent->setEventInfo(codaEvent->getRunID(), codaEvent->getSpillID(), codaEvent->getPhysEventID());
       rawEvent->setTargetPos(targetPos[idx]); //may need update later
       rawEvent->setTriggerBits(rawEvent->getTriggerBits());  //may need understand different between TS and my own definition
       rawEvent->setTurnID(codaEvent->getTurnID());
