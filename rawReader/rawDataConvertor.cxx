@@ -88,12 +88,13 @@ int main(int argc, char **argv)
 
   int nEvents = dataTree->GetEntries();
   cout << "Totally " << nEvents << " events in this run, " << nSpills << " spills are loaded ..." << endl;
-  
-  if(argc > 5) nEvents = atoi(argv[5]);
+ 
+  int sample = argc > 4 ? atoi(argv[4]) : 1; 
   for(int i = 0; i < nEvents; ++i)
     {
       //read the CODA data
       dataTree->GetEntry(i);
+      if(codaEvent->getPhysEvent() % sample != 0) continue;
 
       int idx = -1;
       for(int j = 0; j < nSpills; ++j)
@@ -116,7 +117,7 @@ int main(int argc, char **argv)
       //Get event level info
       rawEvent->setEventInfo(codaEvent->getRunID(), codaEvent->getSpillID(), codaEvent->getPhysEventID());
       rawEvent->setTargetPos(targetPos[idx]); //may need update later
-      rawEvent->setTriggerBits(rawEvent->getTriggerBits());  //may need understand different between TS and my own definition
+      rawEvent->setTriggerBits(codaEvent->getTriggerBits());  //may need understand different between TS and my own definition
       rawEvent->setTurnID(codaEvent->getTurnID());
       rawEvent->setRFID(codaEvent->getRFID());
       rawEvent->setIntensity(codaEvent->getIntensityAll());
