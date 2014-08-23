@@ -89,12 +89,12 @@ int main(int argc, char **argv)
   int nEvents = dataTree->GetEntries();
   cout << "Totally " << nEvents << " events in this run, " << nSpills << " spills are loaded ..." << endl;
  
-  int sample = argc > 4 ? atoi(argv[4]) : 1; 
+  int sample = argc > 5 ? atoi(argv[5]) : 1; 
   for(int i = 0; i < nEvents; ++i)
     {
       //read the CODA data
       dataTree->GetEntry(i);
-      if(codaEvent->getPhysEvent() % sample != 0) continue;
+      if(codaEvent->getPhysEventID() % sample != 0) continue;
 
       int idx = -1;
       for(int j = 0; j < nSpills; ++j)
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 
 	  Hit h;
 	  h.index = h_coda.index;
-	  h.detectorID = h_coda.detectorID;
+	  h.detectorID = h_coda.detectorID + 1;
 	  h.elementID = h_coda.elementID;
 	  h.tdcTime = h_coda.tdcTime;
 	  h.pos = p_geomSvc->getMeasurement(h.detectorID, h.elementID);
