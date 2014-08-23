@@ -64,7 +64,7 @@ int main(int argc, char **argv)
   //int m_first;
   //int m_last;
 
-  TFile* spillFile = new TFile("spills.root", "READ");
+  TFile* spillFile = new TFile(argv[4], "READ");
   TTree* spillTree = (TTree*)spillFile->Get("save");
 
   spillTree->SetBranchAddress("runID", &m_runID);
