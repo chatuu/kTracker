@@ -130,8 +130,8 @@ int main(int argc, char **argv)
 	  if(h_coda.detectorID > 48 || h_coda.detectorID < 1) continue;
 
 	  Hit h;
-	  h.index = h_coda.index;
-	  h.detectorID = h_coda.detectorID + 1;
+	  h.index = h_coda.index + 1;
+	  h.detectorID = h_coda.detectorID;
 	  h.elementID = h_coda.elementID;
 	  h.tdcTime = h_coda.tdcTime;
 	  h.pos = p_geomSvc->getMeasurement(h.detectorID, h.elementID);
