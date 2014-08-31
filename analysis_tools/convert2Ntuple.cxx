@@ -34,6 +34,7 @@ int main(int argc, char* argv[])
 
   //mu+ infomation
   int nHits1;
+  int triggerID1;
   float chisq1;
   float px1_vertex, py1_vertex, pz1_vertex;
   float x1_vertex, y1_vertex, z1_vertex;
@@ -43,6 +44,7 @@ int main(int argc, char* argv[])
 
   //mu- infomation
   int nHits2;
+  int triggerID2;
   float chisq2;
   float px2_vertex, py2_vertex, pz2_vertex;
   float x2_vertex, y2_vertex, z2_vertex;
@@ -69,6 +71,7 @@ int main(int argc, char* argv[])
   saveTree->Branch("z0", &z0, "z0/F");
 
   saveTree->Branch("nHits1", &nHits1, "nHits1/I");
+  saveTree->Branch("triggerID1", &triggerID1, "triggerID1/I");
   saveTree->Branch("chisq1", &chisq1, "chisq1/F");
   saveTree->Branch("px1_vertex", &px1_vertex, "px1_vertex/F");
   saveTree->Branch("py1_vertex", &py1_vertex, "py1_vertex/F");
@@ -87,6 +90,7 @@ int main(int argc, char* argv[])
   saveTree->Branch("z1_dump", &z1_dump, "z1_dump/F");
  
   saveTree->Branch("nHits2", &nHits2, "nHits2/I");
+  saveTree->Branch("triggerID2", &triggerID2, "triggerID2/I");
   saveTree->Branch("chisq2", &chisq2, "chisq2/F");
   saveTree->Branch("px2_vertex", &px2_vertex, "px2_vertex/F");
   saveTree->Branch("py2_vertex", &py2_vertex, "py2_vertex/F");
@@ -132,6 +136,7 @@ int main(int argc, char* argv[])
 	  double x_dummy, y_dummy, z_dummy;
 	  SRecTrack posTrack = recEvent->getTrack(dimuon.trackID_pos);
 	  nHits1 = posTrack.getNHits();
+	  triggerID1 = posTrack.getTriggerRoad();
 	  chisq1 = posTrack.getChisq();
 	  px1_vertex = dimuon.p_pos.X();
 	  py1_vertex = dimuon.p_pos.Y();
@@ -152,6 +157,7 @@ int main(int argc, char* argv[])
 
 	  SRecTrack negTrack = recEvent->getTrack(dimuon.trackID_neg);
 	  nHits2 = negTrack.getNHits();
+	  triggerID2 = posTrack.getTriggerRoad();
 	  chisq2 = negTrack.getChisq();
 	  px2_vertex = dimuon.p_neg.X();
 	  py2_vertex = dimuon.p_neg.Y();
