@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
 
 	  SRecTrack negTrack = recEvent->getTrack(dimuon.trackID_neg);
 	  nHits2 = negTrack.getNHits();
-	  triggerID2 = posTrack.getTriggerRoad();
+	  triggerID2 = negTrack.getTriggerRoad();
 	  chisq2 = negTrack.getChisq();
 	  px2_vertex = dimuon.p_neg.X();
 	  py2_vertex = dimuon.p_neg.Y();
