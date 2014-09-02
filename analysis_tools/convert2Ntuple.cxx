@@ -213,17 +213,17 @@ int main(int argc, char* argv[])
 	  py2_st1 = y_dummy;
 	  pz2_st1 = z_dummy;
           negTrack.getMomentumSt3(x_dummy, y_dummy, z_dummy);
-	  px1_st3 = x_dummy;
-	  py1_st3 = y_dummy;
-	  pz1_st3 = z_dummy;
+	  px2_st3 = x_dummy;
+	  py2_st3 = y_dummy;
+	  pz2_st3 = z_dummy;
 	  negTrack.getExpPositionFast(650., x_dummy, y_dummy);
-	  x1_st1 = x_dummy;
-	  y1_st1 = y_dummy;
-	  z1_st1 = 650.;
+	  x2_st1 = x_dummy;
+	  y2_st1 = y_dummy;
+	  z2_st1 = 650.;
           negTrack.getExpPositionFast(1800., x_dummy, y_dummy);
-	  x1_st3 = x_dummy;
-	  y1_st3 = y_dummy;
-	  z1_st3 = 1800.;
+	  x2_st3 = x_dummy;
+	  y2_st3 = y_dummy;
+	  z2_st3 = 1800.;
 	
 	  saveTree->Fill();
 	}	  
