@@ -41,6 +41,9 @@ int main(int argc, char* argv[])
   float x1_target, y1_target, z1_target;
   float x1_dump,   y1_dump,   z1_dump;
   float px1_st1, py1_st1, pz1_st1;
+  float px1_st3, py1_st3, pz1_st3;
+  float x1_st1, y1_st1, z1_st1;
+  float x1_st3, y1_st3, z1_st3;
 
   //mu- infomation
   int nHits2;
@@ -51,6 +54,9 @@ int main(int argc, char* argv[])
   float x2_target, y2_target, z2_target;
   float x2_dump,   y2_dump,   z2_dump;
   float px2_st1, py2_st1, pz2_st1;
+  float px2_st3, py2_st3, pz2_st3;
+  float x2_st1, y2_st1, z2_st1;
+  float x2_st3, y2_st3, z2_st3;
 
   TFile* saveFile = new TFile(argv[2], "recreate");
   TTree* saveTree = new TTree("save", "save");
@@ -79,6 +85,15 @@ int main(int argc, char* argv[])
   saveTree->Branch("px1_st1", &px1_st1, "px1_st1/F");
   saveTree->Branch("py1_st1", &py1_st1, "py1_st1/F");
   saveTree->Branch("pz1_st1", &pz1_st1, "pz1_st1/F");
+  saveTree->Branch("px1_st3", &px1_st3, "px1_st3/F");
+  saveTree->Branch("py1_st3", &py1_st3, "py1_st3/F");
+  saveTree->Branch("pz1_st3", &pz1_st3, "pz1_st3/F");
+  saveTree->Branch("x1_st1", &x1_st1, "x1_st1/F");
+  saveTree->Branch("y1_st1", &y1_st1, "y1_st1/F");
+  saveTree->Branch("z1_st1", &z1_st1, "z1_st1/F");
+  saveTree->Branch("x1_st3", &x1_st3, "x1_st3/F");
+  saveTree->Branch("y1_st3", &y1_st3, "y1_st3/F");
+  saveTree->Branch("z1_st3", &z1_st3, "z1_st3/F");
   saveTree->Branch("x1_vertex", &x1_vertex, "x1_vertex/F");
   saveTree->Branch("y1_vertex", &y1_vertex, "y1_vertex/F");
   saveTree->Branch("z1_vertex", &z1_vertex, "z1_vertex/F");
@@ -98,6 +113,15 @@ int main(int argc, char* argv[])
   saveTree->Branch("px2_st1", &px2_st1, "px2_st1/F");
   saveTree->Branch("py2_st1", &py2_st1, "py2_st1/F");
   saveTree->Branch("pz2_st1", &pz2_st1, "pz2_st1/F");
+  saveTree->Branch("px2_st3", &px2_st3, "px2_st3/F");
+  saveTree->Branch("py2_st3", &py2_st3, "py2_st3/F");
+  saveTree->Branch("pz2_st3", &pz2_st3, "pz2_st3/F");
+  saveTree->Branch("x2_st1", &x2_st1, "x2_st1/F");
+  saveTree->Branch("y2_st1", &y2_st1, "y2_st1/F");
+  saveTree->Branch("z2_st1", &z2_st1, "z2_st1/F");
+  saveTree->Branch("x2_st3", &x2_st3, "x2_st3/F");
+  saveTree->Branch("y2_st3", &y2_st3, "y2_st3/F");
+  saveTree->Branch("z2_st3", &z2_st3, "z2_st3/F");
   saveTree->Branch("x2_vertex", &x2_vertex, "x2_vertex/F");
   saveTree->Branch("y2_vertex", &y2_vertex, "y2_vertex/F");
   saveTree->Branch("z2_vertex", &z2_vertex, "z2_vertex/F");
@@ -154,7 +178,20 @@ int main(int argc, char* argv[])
 	  px1_st1 = x_dummy;
 	  py1_st1 = y_dummy;
 	  pz1_st1 = z_dummy;
-
+          posTrack.getMomentumSt3(x_dummy, y_dummy, z_dummy);
+	  px1_st3 = x_dummy;
+	  py1_st3 = y_dummy;
+	  pz1_st3 = z_dummy;
+	  posTrack.getExpPositionFast(650., x_dummy, y_dummy, z_dummy);
+	  x1_st1 = x_dummy;
+	  y1_st1 = y_dummy;
+	  z1_st1 = 650.;
+          posTrack.getExpPositionFast(1800., y_dummy, z_dummy);
+	  x1_st3 = x_dummy;
+	  y1_st3 = y_dummy;
+	  z1_st3 = 1800.;
+	 
+ 
 	  SRecTrack negTrack = recEvent->getTrack(dimuon.trackID_neg);
 	  nHits2 = negTrack.getNHits();
 	  triggerID2 = negTrack.getTriggerRoad();
@@ -175,7 +212,19 @@ int main(int argc, char* argv[])
 	  px2_st1 = x_dummy;
 	  py2_st1 = y_dummy;
 	  pz2_st1 = z_dummy;
-
+          negTrack.getMomentumSt3(x_dummy, y_dummy, z_dummy);
+	  px1_st3 = x_dummy;
+	  py1_st3 = y_dummy;
+	  pz1_st3 = z_dummy;
+	  negTrack.getExpPositionFast(650., x_dummy, y_dummy);
+	  x1_st1 = x_dummy;
+	  y1_st1 = y_dummy;
+	  z1_st1 = 650.;
+          negTrack.getExpPositionFast(1800., x_dummy, y_dummy);
+	  x1_st3 = x_dummy;
+	  y1_st3 = y_dummy;
+	  z1_st3 = 1800.;
+	
 	  saveTree->Fill();
 	}	  
 
