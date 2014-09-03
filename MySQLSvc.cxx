@@ -8,6 +8,7 @@ Created: 9-29-2013
 */
 
 #include <boost/lexical_cast.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <TLorentzVector.h>
 
 #include "FastTracklet.h"
@@ -732,16 +733,19 @@ void MySQLSvc::writeTrackTable(int trackID, SRecTrack* recTrack)
   y0 = recTrack->getVtxPar(1);
   z0 = recTrack->getVtxPar(2);
   recTrack->getMomentumVertex(px0, py0, pz0);
+  if(boost::math::isnan(px0) || boost::math::isnan(py0) || boost::math::isnan(pz0)) return;
 
   //At station 1
   z1 = 600.;
   recTrack->getExpPositionFast(z1, x1, y1);
   recTrack->getExpMomentumFast(z1, px1, py1, pz1);
+  if(boost::math::isnan(px1) || boost::math::isnan(py1) || boost::math::isnan(pz1)) return;
 
   //At station 3
   z3 = 1900.;
   recTrack->getExpPositionFast(z3, x3, y3);
   recTrack->getExpMomentumFast(z3, px3, py3, pz3);
+  if(boost::math::isnan(px3) || boost::math::isnan(py3) || boost::math::isnan(pz3)) return;
 
   //Database output
   sprintf(query, "INSERT INTO kTrack(trackID,runID,spillID,eventID,charge,roadID,numHits,numHitsSt1,numHitsSt2,numHitsSt3,"
@@ -776,6 +780,9 @@ void MySQLSvc::writeTrackHitTable(int trackID, Tracklet* tracklet)
 
 void MySQLSvc::writeDimuonTable(int dimuonID, SRecDimuon dimuon)
 {
+  //Temporary fix for nan events: they appear because the z position of one or two muon tracks are tracked beyond upper limits
+  if(boost::math::isnan(dimuon.mass)) return; 
+
   double x0 = dimuon.vtx.X();
   double y0 = dimuon.vtx.Y();
   double z0 = dimuon.vtx.Z();
