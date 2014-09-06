@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
       spillTree->GetEntry(i);
 
       map_G2SEM.insert(spillInfo(spillID, G2SEM));
-      map_liveG2SEM.insert(spillInfo(spillID, liveG2SEM));
+      map_liveG2SEM.insert(spillInfo(spillID, G2SEM*(1. - busySum/QIESum - inhibitSum/QIESum)));
       map_ratio.insert(spillInfo(spillID, G2SEM/QIESum));
     }
 
