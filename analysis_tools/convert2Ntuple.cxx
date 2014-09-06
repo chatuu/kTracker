@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string>
+#include <map>
 
 #include <TROOT.h>
 #include <TFile.h>
@@ -26,7 +27,10 @@ int main(int argc, char* argv[])
   int spillID;
   int eventID;
   int targetPos;
-  
+  float G2SEM;
+  float liveG2SEM;
+  float intensity;
+
   //dimuon infomation
   float mass, xF, x1, x2, pT;
   float chisq_dimuon;
@@ -65,7 +69,9 @@ int main(int argc, char* argv[])
   saveTree->Branch("spillID", &spillID, "spillID/I");  
   saveTree->Branch("eventID", &eventID, "eventID/I");  
   saveTree->Branch("targetPos", &targetPos, "targetPos/I");
-
+  saveTree->Branch("G2SEM", &G2SEM, "G2SEM/F");
+  saveTree->Branch("liveG2SEM", &liveG2SEM, "liveG2SEM/F");
+  saveTree->Branch("intensity", &intensity, "intensity/F");
   saveTree->Branch("mass", &mass, "mass/F");
   saveTree->Branch("xF", &xF, "xF/F");
   saveTree->Branch("x1", &x1, "x1/F");
@@ -131,7 +137,31 @@ int main(int argc, char* argv[])
   saveTree->Branch("x2_dump", &x2_dump, "x2_dump/F");
   saveTree->Branch("y2_dump", &y2_dump, "y2_dump/F");
   saveTree->Branch("z2_dump", &z2_dump, "z2_dump/F");
-  
+ 
+  //Initialize the spill LUT
+  typedef map<int, float>::value_type spillInfo;
+  map<int, float> map_G2SEM, map_liveG2SEM, map_ratio;
+
+  float busySum, QIESum, inhibitSum;
+  TFile* spillFile = new TFile(argv[3], "READ");
+  TTree* spillTree = (TTree*)spillFile->Get("save");
+
+  spillTree->SetBranchAddress("spillID", &spillID);
+  spillTree->SetBranchAddress("G2SEM", &G2SEM);
+  spillTree->SetBranchAddress("liveG2SEM", &liveG2SEM);
+  spillTree->SetBranchAddress("QIESum", &QIESum);
+  spillTree->SetBranchAddress("busySum", &busySum);
+  spillTree->SetBranchAddress("inhibitSum", &inhibitSum);
+
+  for(int i = 0; i < spillTree->GetEntries(); ++i)
+    {
+      spillTree->GetEntry(i);
+
+      map_G2SEM.insert(spillInfo(spillID, G2SEM));
+      map_liveG2SEM.insert(spillInfo(spillID, liveG2SEM));
+      map_ratio.insert(spillInfo(spillID, G2SEM/QIESum));
+    }
+
   int nEntry = 0;
   for(int i = 0; i < dataTree->GetEntries(); ++i)
     {
@@ -141,6 +171,10 @@ int main(int argc, char* argv[])
       spillID = recEvent->getSpillID();
       eventID = recEvent->getEventID();
       targetPos = recEvent->getTargetPos();
+
+      G2SEM = map_G2SEM[spillID];
+      liveG2SEM = map_liveG2SEM[spillID];
+      intensity = rawEvent->getIntensity()*map_ratio[spillID];
 
       int nDimuons = recEvent->getNDimuons();
       for(int j = 0; j < nDimuons; ++j)
