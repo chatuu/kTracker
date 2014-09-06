@@ -148,7 +148,6 @@ int main(int argc, char* argv[])
 
   spillTree->SetBranchAddress("spillID", &spillID);
   spillTree->SetBranchAddress("G2SEM", &G2SEM);
-  spillTree->SetBranchAddress("liveG2SEM", &liveG2SEM);
   spillTree->SetBranchAddress("QIESum", &QIESum);
   spillTree->SetBranchAddress("busySum", &busySum);
   spillTree->SetBranchAddress("inhibitSum", &inhibitSum);
