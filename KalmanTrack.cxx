@@ -13,6 +13,7 @@ Created: 10-14-2012
 
 #include "GeomSvc.h"
 #include "KalmanTrack.h"
+#include "TriggerRoad.h"
 
 double Seed::getMomentum(double& px, double& py, double& pz)
 {
@@ -966,6 +967,7 @@ SRecTrack KalmanTrack::getSRecTrack()
     }
 
   _strack.swimToVertex();
+  _strack.setTriggerRoad(TriggerRoad(_strack).getRoadID());
   return _strack;
 }
 
