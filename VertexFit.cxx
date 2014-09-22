@@ -126,7 +126,7 @@ bool VertexFit::setRecEvent(SRecEvent* recEvent, int sign1, int sign2)
 	  double z_vertex_opt = getVertexZ0();
 	  if(optimize)
 	    {
-	      if(z_vertex_opt < -80. && getKFChisq() < 10.) z_vertex_opt = Z_TARGET;
+	      if(z_vertex_opt < -80. && getKFChisq() < 10.) z_vertex_opt = 4.094*(dimuon.p_pos_single + dimuon.p_neg_single).M() - 152.7;
 	    }
 
 	  track_pos.setZVertex(z_vertex_opt);
