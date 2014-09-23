@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
   //Initialize MySQL service and connect to database, e906-db1 by default
   MySQLSvc* p_mysqlSvc = MySQLSvc::instance();
   p_mysqlSvc->setUserPasswd("production", "qqbar2mu+mu-");
-  p_mysqlSvc->connect(argv[2], atoi(argv[3]));
+  p_mysqlSvc->connect(argv[3], atoi(argv[4]));
   p_mysqlSvc->setWorkingSchema(argv[1]);
   if(!(p_mysqlSvc->initReader() && p_mysqlSvc->initWriter())) exit(EXIT_FAILURE);
 
@@ -47,7 +47,6 @@ int main(int argc, char *argv[])
   TClonesArray* tracklets = new TClonesArray("Tracklet");
   TClonesArray& arr_tracklets = *tracklets;
 
-  /*
   TFile* saveFile = new TFile(argv[2], "recreate");
   TTree* saveTree = new TTree("save", "save");
 
@@ -56,11 +55,17 @@ int main(int argc, char *argv[])
   saveTree->Branch("recEvent", &recEvent, 256000, 99);
   saveTree->Branch("tracklets", &tracklets, 256000, 99);
   tracklets->BypassStreamer();
-  */
 
   //Initialize track finder
   KalmanFastTracking* fastfinder = new KalmanFastTracking(false);
   VertexFit* vtxfit  = new VertexFit();
+
+  //Initialize the trigger analyzer
+#ifdef TRIGGER_TRIMING
+  TriggerAnalyzer* triggerAna = new TriggerAnalyzer();
+  triggerAna->init();
+  triggerAna->buildTriggerTree();
+#endif
 
   //Quality control numbers and plots
   int nEvents_loaded = 0;
@@ -70,9 +75,8 @@ int main(int argc, char *argv[])
 
   //Start tracking
   int nEvents = p_mysqlSvc->getNEvents();
-  int sample = argc > 4 ? atoi(argv[4]) : 1;
   cout << "There are " << nEvents << " events in " << argv[1] << endl;
-  for(int i = 0; i < nEvents; i += sample) 
+  for(int i = 0; i < nEvents; ++i) 
     {
       //Read data
       if(!p_mysqlSvc->getNextEvent(rawEvent)) continue;
@@ -83,7 +87,13 @@ int main(int argc, char *argv[])
       cout << nEvents_tracked*100/nEvents_loaded << "% have at least one track, " << nEvents_dimuon*100/nEvents_loaded << "% have at least one dimuon pair, ";
       cout << nEvents_dimuon_real*100/nEvents_loaded << "% have successful dimuon vertex fit.";
 
+#ifdef TRIGGER_TRIMING
+      triggerAna->trimEvent(rawEvent);
+      rawEvent->reIndex("oact");
+#else
       rawEvent->reIndex("oac");
+#endif
+
       if(!fastfinder->setRawEvent(rawEvent)) continue;
       ++nEvents_tracked;
 
@@ -115,7 +125,7 @@ int main(int argc, char *argv[])
       if(nTracklets > 0)
 	{
 	  p_mysqlSvc->writeTrackingRes(recEvent, tracklets);
-  	  //saveTree->Fill();
+  	  saveTree->Fill();
 	}	 
       rawEvent->clear();
       recEvent->clear();
@@ -126,14 +136,16 @@ int main(int argc, char *argv[])
   cout << nEvents_dimuon << " events have at least one dimuon pair, ";
   cout << nEvents_dimuon_real << " events have successful dimuon vertex fit." << endl;
 
-  /*
   saveFile->cd();
   saveTree->Write();
   saveFile->Close();
-  */
 
   delete fastfinder;
   delete vtxfit;
+
+#ifdef TRIGGER_TRIMING
+  delete triggerAna;
+#endif
 
   return 1;
 }
