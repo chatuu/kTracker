@@ -147,7 +147,9 @@ bool VertexFit::setRecEvent(SRecEvent* recEvent, int sign1, int sign2)
 
 		      track_pos.setZVertex(z_vertex_opt);
 		      track_neg.setZVertex(z_vertex_opt);
-		      z_vertex_opt = 4.094*(track_pos.getMomentumVertex() + track_neg.getMomentumVertex()).M() - 152.7;
+
+		      double m = (track_pos.getMomentumVertex() + track_neg.getMomentumVertex()).M();
+		      z_vertex_opt = -189.6 + 17.71*m - 1.159*m*m;
 		    
 		      //std::cout << nTry << "  " << z_curr << "  " << z_vertex_opt << "  " << (track_pos.getMomentumVertex() + track_neg.getMomentumVertex()).M() << std::endl; 
 		    }
