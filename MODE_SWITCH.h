@@ -86,7 +86,7 @@
 #define Z_REF 0.
 #define Z_TARGET -129.54 
 #define Z_DUMP 40.
-#define RESOLUTION_DC 0.1
+#define RESOLUTION_DC 0.07
 
 #define BEAM_SPOT_X 0.5
 #define BEAM_SPOT_Y 0.5
