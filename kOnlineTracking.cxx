@@ -57,7 +57,11 @@ int main(int argc, char *argv[])
   tracklets->BypassStreamer();
 
   //Initialize track finder
+#ifdef _ENABLE_KF
+  KalmanFastTracking* fastfinder = new KalmanFastTracking(true);
+#else
   KalmanFastTracking* fastfinder = new KalmanFastTracking(false);
+#endif
   VertexFit* vtxfit  = new VertexFit();
 
   //Initialize the trigger analyzer
@@ -104,25 +108,32 @@ int main(int argc, char *argv[])
 
       recEvent->setRawEvent(rawEvent);
       nTracklets = 0;
-      int nPos = 0;
-      int nNeg = 0;
       for(std::list<Tracklet>::iterator iter = rec_tracklets.begin(); iter != rec_tracklets.end(); ++iter)
 	{
 	  //iter->print();
 	  iter->calcChisq();
 	  new(arr_tracklets[nTracklets++]) Tracklet(*iter);
 
+#ifndef _ENABLE_KF
 	  SRecTrack recTrack = iter->getSRecTrack();
 	  recEvent->insertTrack(recTrack);
-
-	  iter->getCharge() > 0 ? ++nPos : ++nNeg;
+#endif
 	}
-      if(nPos > 0 && nNeg > 0) ++nEvents_dimuon;
  
+#ifdef _ENABLE_KF
+      std::list<SRecTrack>& rec_tracks = fastfinder->getSRecTracks();
+      for(std::list<SRecTrack>::iterator iter = rec_tracks.begin(); iter != rec_tracks.end(); ++iter)
+	{
+	  //iter->print();
+	  recEvent->insertTrack(*iter);
+	}
+#endif
+
       //Perform dimuon vertex fit 
+      recEvent->reIndex();
       if(vtxfit->setRecEvent(recEvent)) ++nEvents_dimuon_real;
 
-      if(nTracklets > 0)
+      if(recEvent->getNTracks() > 0)
 	{
 	  p_mysqlSvc->writeTrackingRes(recEvent, tracklets);
   	  saveTree->Fill();

@@ -18,6 +18,7 @@ Created: 05-28-2013
 
 #include "KalmanFitter.h"
 #include "KalmanFastTracking.h"
+#include "TriggerRoad.h"
 
 KalmanFastTracking::KalmanFastTracking(bool flag) : enable_KF(flag)
 {
@@ -299,7 +300,7 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
 
   //Initialize tracklet lists
   for(int i = 0; i < 5; i++) trackletsInSt[i].clear();
-  tracks.clear();
+  stracks.clear();
 
   //Build tracklets in station 2, 3+, 3-
   //When i = 3, works for st3+, for i = 4, works for st3-
@@ -371,9 +372,9 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
 
 #ifdef _DEBUG_ON
   LogInfo(tracks.size() << " final tracks:");
-  for(std::list<KalmanTrack>::iterator kmtrk = tracks.begin(); kmtrk != tracks.end(); ++kmtrk)
+  for(std::list<SRecTrack>::iterator strack = tracks.begin(); strack != tracks.end(); ++strack)
     {
-      kmtrk->print();
+      strack->print();
     }
 #endif
 
@@ -1326,7 +1327,20 @@ void KalmanFastTracking::processOneTracklet(Tracklet& tracklet)
 
   //Resolve left-right based on the current solution, re-fit if anything changed
   //resolveLeftRight(kmtrk);
-  if(kmtrk.isValid()) tracks.push_back(kmtrk);
+  if(kmtrk.isValid())
+    {
+      SRecTrack strack = kmtrk.getSRecTrack();
+
+      //Set trigger road ID
+      TriggerRoad road(tracklet);
+      strack.setTriggerRoad(road.getRoadID());
+
+      //Set prop tube slopes
+      strack.setNHitsInPT(tracklet.seg_x.getNHits(), tracklet.seg_y.getNHits());
+      strack.setPTSlope(tracklet.seg_x.a, tracklet.seg_y.a);
+    
+      stracks.push_back(strack);
+    }
 }
 
 bool KalmanFastTracking::fitTrack(KalmanTrack& kmtrk)
