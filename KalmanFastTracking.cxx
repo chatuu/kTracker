@@ -1325,7 +1325,11 @@ void KalmanFastTracking::processOneTracklet(Tracklet& tracklet)
   //Fit the track first with possibily a few nodes unresolved
   if(!fitTrack(kmtrk)) 
     {
-      stracks.push_back(tracklet.getSRecTrack());
+      SRecTrack strack = kmtrk.getSRecTrack();
+
+      strack.setKalmanStatus(-1);
+      stracks.push_back(strack);
+
       return;
     }
 
@@ -1347,6 +1351,9 @@ void KalmanFastTracking::processOneTracklet(Tracklet& tracklet)
     }
   else
     {
+      SRecTrack strack = kmtrk.getSRecTrack();
+
+      strack.setKalmanStatus(-1);
       stracks.push_back(tracklet.getSRecTrack());
     }
 }
