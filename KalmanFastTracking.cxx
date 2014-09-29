@@ -1347,6 +1347,7 @@ void KalmanFastTracking::processOneTracklet(Tracklet& tracklet)
       strack.setNHitsInPT(tracklet.seg_x.getNHits(), tracklet.seg_y.getNHits());
       strack.setPTSlope(tracklet.seg_x.a, tracklet.seg_y.a);
     
+      strack.setKalmanStatus(1);
       stracks.push_back(strack);
     }
   else
