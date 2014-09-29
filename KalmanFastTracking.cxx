@@ -1323,7 +1323,11 @@ void KalmanFastTracking::processOneTracklet(Tracklet& tracklet)
   kmtrk.getNodeList().back().getPredicted() = trkpar_curr;
 
   //Fit the track first with possibily a few nodes unresolved
-  if(!fitTrack(kmtrk)) return;
+  if(!fitTrack(kmtrk)) 
+    {
+      stracks.push_back(tracklet.getSRecTrack());
+      return;
+    }
 
   //Resolve left-right based on the current solution, re-fit if anything changed
   //resolveLeftRight(kmtrk);
@@ -1340,6 +1344,10 @@ void KalmanFastTracking::processOneTracklet(Tracklet& tracklet)
       strack.setPTSlope(tracklet.seg_x.a, tracklet.seg_y.a);
     
       stracks.push_back(strack);
+    }
+  else
+    {
+      stracks.push_back(tracklet.getSRecTrack());
     }
 }
 
