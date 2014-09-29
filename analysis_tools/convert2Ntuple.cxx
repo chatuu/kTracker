@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
   float G2SEM;
   float liveG2SEM;
   float intensity;
+  int flag;
 
   //dimuon infomation
   float mass, xF, x1, x2, pT;
@@ -68,6 +69,7 @@ int main(int argc, char* argv[])
   saveTree->Branch("runID", &runID, "runID/I");  
   saveTree->Branch("spillID", &spillID, "spillID/I");  
   saveTree->Branch("eventID", &eventID, "eventID/I");  
+  saveTree->Branch("flag", &flag, "flag/I");
   saveTree->Branch("targetPos", &targetPos, "targetPos/I");
   saveTree->Branch("G2SEM", &G2SEM, "G2SEM/F");
   saveTree->Branch("liveG2SEM", &liveG2SEM, "liveG2SEM/F");
@@ -179,6 +181,23 @@ int main(int argc, char* argv[])
       for(int j = 0; j < nDimuons; ++j)
 	{
 	  SRecDimuon dimuon = recEvent->getDimuon(j);
+
+	  flag = -1;
+	  if(dimuon.isValid())
+	    {
+	      if(dimuon.isTarget())
+		{
+		  flag = 1;
+		}
+	      else if(dimuon.isDump())
+		{
+		  flag = 2;
+		}
+	      else
+		{
+		  flag = 3;
+		}
+	    }
 
 	  mass = dimuon.mass;
 	  xF = dimuon.xF;
