@@ -74,7 +74,7 @@ int KalmanFitter::processOneTrack(KalmanTrack& _track)
 	    }
 	  else
 	    {
-	      LogInfo("Failed in prediction and filtering. ");
+	      //LogInfo("Failed in prediction and filtering. ");
 	      return 0;
 	    }
 	}

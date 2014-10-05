@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <cmath>
 #include <algorithm>
 #include <string>
@@ -13,6 +15,7 @@
 #include <TClonesArray.h>
 #include <TMath.h>
 #include <TRandom.h>
+#include <TChain.h>
 
 #include "GeomSvc.h"
 #include "SRawEvent.h"
@@ -36,7 +39,7 @@ int main(int argc, char *argv[])
   SRecEvent* recEvent = new SRecEvent();
 
   TFile* dataFile = new TFile(argv[1], "READ");
-  TTree* dataTree = (TTree *)dataFile->Get("save");
+  TTree* dataTree = (TTree*)dataFile->Get("save");
 
   dataTree->SetBranchAddress("rawEvent", &rawEvent);
   dataTree->SetBranchAddress("recEvent", &recEvent);
@@ -52,30 +55,31 @@ int main(int argc, char *argv[])
   //Load track bank of mu+ and mu-
   vector<SRecTrack> ptracks, mtracks;
   vector<int> pflags, mflags;
-  ptracks.clear(); mtracks.clear();
+  //vector<int> pintensity, mintensity;
+  ptracks.clear(); mtracks.clear(); 
   pflags.clear(); mflags.clear();
-  ptracks.reserve(200000); mtracks.reserve(200000);
-  pflags.reserve(200000); mflags.reserve(200000);
+  //pintensity.clear(); mintensity.clear();
+  ptracks.reserve(100000); mtracks.reserve(100000); 
+  pflags.reserve(100000); mflags.reserve(100000);
+  //pintensity.reserve(100000); mintensity.reserve(100000);
 
   //Extract all the tracks and put in the container
   TRandom rnd;
   rnd.SetSeed(atoi(argv[4]));
  
   int nEvtMax = dataTree->GetEntries();
-  //double lo = atof(argv[5]);
-  //double hi = atof(argv[6]);
   for(int i = 0; i < nEvtMax; i++)
     {
       dataTree->GetEntry(i);
-      if(!rawEvent->isTriggeredBy(SRawEvent::MATRIX4)) continue;
       if(i % 1000 == 0) cout << "  " << i << "/" << nEvtMax << endl;
-
-      //intensity selection
-      //if(rawEvent->getIntensity() < lo || rawEvent->getIntensity() > hi) continue;
+      
+      if(!rawEvent->isTriggeredBy(SRawEvent::MATRIX1)) continue;
 
       int nTracks = recEvent->getNTracks();
+      if(nTracks != 1) continue;
       for(int j = 0; j < nTracks; j++)
 	{
+	  //cout << j << endl;
 	  SRecTrack track = recEvent->getTrack(j);
 	  track.setZVertex(track.getZVertex());
 	  if(!track.isValid()) continue;
@@ -84,6 +88,7 @@ int main(int argc, char *argv[])
     	    {
 	      ptracks.push_back(track);
 	      pflags.push_back(1);
+	      //pintensity.push_back(rawEvent->getIntensity(16));
 	    }
 	  else
 	    {

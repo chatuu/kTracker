@@ -61,7 +61,7 @@ bool KalmanFilter::predict(Node& _node)
 
   if(fabs(_trkpar_curr._state_kf[0][0]) < 1E-5 || fabs(_trkpar_curr._state_kf[0][0]) > 1. || _trkpar_curr._state_kf[0][0] != _trkpar_curr._state_kf[0][0])
     {
-      LogInfo("Current track parameter is undefined! ");
+      //LogInfo("Current track parameter is undefined! ");
       //_node.getHit().print();
       //_node.print(true);
       return false;
