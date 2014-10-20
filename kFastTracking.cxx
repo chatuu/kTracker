@@ -53,7 +53,11 @@ int main(int argc, char *argv[])
   SRecEvent* recEvent = new SRecEvent();
 
   TFile* saveFile = new TFile(argv[2], "recreate");
+#ifdef ATTACH_RAW
   TTree* saveTree = dataTree->CloneTree(0);
+#else
+  TTree* saveTree = new TTree("save", "save");
+#endif
 
   saveTree->Branch("recEvent", &recEvent, 256000, 99);
   saveTree->Branch("time", &time, "time/D");
@@ -85,6 +89,10 @@ int main(int argc, char *argv[])
       dataTree->GetEntry(i);
       cout << "\r Processing event " << i << " with eventID = " << rawEvent->getEventID() << ", ";
       cout << (i - offset + 1)*100/(nEvtMax - offset) << "% finished .. ";
+
+#ifdef MC_MODE
+      if(!rawEvent->isEmuTriggered()) continue;
+#endif
 
       clock_t time_single = clock();
 

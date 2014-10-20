@@ -23,6 +23,9 @@
 //=== Enable Kalman fitting in fast tracking and alignment, enabled by default
 //#define _ENABLE_KF
 
+//=== Attach the raw data to the reconstructed events
+#define ATTACH_RAW
+
 //=== Enable triming of hodoscope hits by trigger requirements
 #define TRIGGER_TRIMING
 
