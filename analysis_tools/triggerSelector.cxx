@@ -37,10 +37,9 @@ int main(int argc, char *argv[])
   for(Int_t i = 0; i < dataTree->GetEntries(); ++i)
     {
       dataTree->GetEntry(i);
-      if(!rawEvent->isTriggeredBy(SRawEvent::NIM3)) continue;
+      if(rawEvent->isTriggeredBy(SRawEvent::NIM3)) saveTree->Fill();
 
       rawEvent->clear();
-      rawEvent_new->clear();
     }
   
   saveFile->cd();
