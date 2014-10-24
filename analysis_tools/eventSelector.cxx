@@ -13,9 +13,6 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-  double lo = atof(argv[3]);
-  double hi = atof(argv[4]);
-
   TFile* dataFile = new TFile(argv[1], "READ");
   TTree* dataTree = (TTree*)dataFile->Get("save");
 
@@ -28,7 +25,16 @@ int main(int argc, char* argv[])
   TTree* saveTree = new TTree("save", "save");
   
   double mass;
+  double x1, x2, xF;
+  int target;
+  int flag;
+
   saveTree->Branch("mass", &mass, "mass/D");
+  saveTree->Branch("x1", &x1, "x1/D");
+  saveTree->Branch("x2", &x2, "x2/D");
+  saveTree->Branch("xF", &xF, "xF/D");
+  saveTree->Branch("target", &target, "target/I");
+  saveTree->Branch("flag", &flag, "flag/I");
 
   int nEntry = 0;
   for(int i = 0; i < dataTree->GetEntries(); ++i)
@@ -47,7 +53,7 @@ int main(int argc, char* argv[])
 	{
 	  SRecDimuon dimuon = recEvent->getDimuon(j);
 	  mass = dimuon.mass;
-	  if(dimuon.isValid())
+	  if(dimuon.isValid() && dimuon.isTarget())
 	    {
     	      saveTree->Fill();
 	    }
