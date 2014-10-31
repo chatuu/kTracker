@@ -434,6 +434,10 @@ void KalmanFastTracking::buildBackPartialTracks()
       Tracklet tracklet_best;
       for(std::list<Tracklet>::iterator tracklet2 = trackletsInSt[1].begin(); tracklet2 != trackletsInSt[1].end(); ++tracklet2)
 	{
+#ifdef EVAL_MODE
+	  std::cout << "Build_Back_Partial: " << tracklet2->tx << "  " << tracklet3->tx << "  " << tracklet2->x0 << "  " << tracklet3->x0 << "  " << tracklet2->ty << "  " << tracklet3->ty << "  " << tracklet2->y0 << "  " << tracklet3->y0 << std::endl; 
+#endif
+
 #ifndef ALIGNMENT_MODE
 	  //Extract the X hits from station-2 tracke
 	  nHitsX2 = nHitsX3;

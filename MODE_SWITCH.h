@@ -8,6 +8,9 @@
 //=== Enable this when running over MC events
 //#define MC_MODE
 
+//=== Enable evaluation outputs
+#define EVAL_MODE
+
 //=== Enable alignment mode
 //#define ALIGNMENT_MODE
 

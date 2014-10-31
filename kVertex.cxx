@@ -47,9 +47,8 @@ int main(int argc, char *argv[])
   LogInfo("Initializing the track finder and kalman filter ... ");
   VertexFit* vtxfit = new VertexFit();
   vtxfit->enableOptimization();
-  if(argc > 3) vtxfit->bookEvaluation(argv[3]);
 
-  int nEvtMax = argc > 4 ? atoi(argv[4]) : dataTree->GetEntries();
+  int nEvtMax = argc > 3 ? atoi(argv[3]) : dataTree->GetEntries();
   if(nEvtMax > dataTree->GetEntries()) nEvtMax = dataTree->GetEntries();
   LogInfo("Running from event 0 through to event " << nEvtMax);
   for(int i = 0; i < nEvtMax; i++)
