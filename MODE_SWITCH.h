@@ -9,7 +9,7 @@
 //#define MC_MODE
 
 //=== Enable evaluation outputs
-#define EVAL_MODE
+//#define EVAL_MODE
 
 //=== Enable alignment mode
 //#define ALIGNMENT_MODE
@@ -24,7 +24,7 @@
 //#define _ENABLE_TRIGGER_MASK
 
 //=== Enable Kalman fitting in fast tracking and alignment, enabled by default
-//#define _ENABLE_KF
+#define _ENABLE_KF
 
 //=== Attach the raw data to the reconstructed events
 #define ATTACH_RAW
@@ -36,7 +36,7 @@
 //#define LOAD_ONLINE_ALIGNMENT
 
 //--------------- Geometry version ---------------
-#define GEOMETRY_VERSION "geometry_G3_run2"
+#define GEOMETRY_VERSION "geometry_G4_run2"
 
 //-------------- SQL database --------------------
 #define MYSQL_SERVER_ADDR "localhost"
