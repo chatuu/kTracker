@@ -371,8 +371,8 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
     }
 
 #ifdef _DEBUG_ON
-  LogInfo(tracks.size() << " final tracks:");
-  for(std::list<SRecTrack>::iterator strack = tracks.begin(); strack != tracks.end(); ++strack)
+  LogInfo(stracks.size() << " final tracks:");
+  for(std::list<SRecTrack>::iterator strack = stracks.begin(); strack != stracks.end(); ++strack)
     {
       strack->print();
     }
@@ -982,6 +982,24 @@ bool KalmanFastTracking::acceptTracklet(Tracklet& tracklet)
       return false;
     }
 
+  //Hodoscope masking requirement
+  if(!hodoMask(tracklet)) return false;
+
+  //For back partials, require projection inside KMAG, and muon id in prop. tubes
+  if(tracklet.stationID > 4)
+    {
+      if(!p_geomSvc->isInKMAG(tracklet.getExpPositionX(Z_KMAG_BEND), tracklet.getExpPositionY(Z_KMAG_BEND))) return false;
+#ifndef ALIGNMENT_MODE
+      if(!muonID(tracklet)) return false;
+#endif
+    }
+
+  //If everything is fine ...
+  return true;
+}
+
+bool KalmanFastTracking::hodoMask(Tracklet& tracklet)
+{
   //LogInfo(tracklet.stationID);
   int nHodoHits = 0;
   for(std::vector<int>::iterator stationID = stationIDs_mask[tracklet.stationID-1].begin(); stationID != stationIDs_mask[tracklet.stationID-1].end(); ++stationID)
@@ -996,10 +1014,11 @@ bool KalmanFastTracking::acceptTracklet(Tracklet& tracklet)
 	  int idx2 = elementID - 1;
  
 	  double factor = tracklet.stationID == 2 ? 5. : 3.;
+	  double xfudge = tracklet.stationID < 4 ? 0.5*(x_mask_max[idx1][idx2] - x_mask_min[idx1][idx2]) : 0.;
 	  double z_hodo = z_mask[idx1];
     	  double x_hodo = tracklet.getExpPositionX(z_hodo);
 	  double y_hodo = tracklet.getExpPositionY(z_hodo);
-    	  double err_x = factor*tracklet.getExpPosErrorX(z_hodo);
+    	  double err_x = factor*tracklet.getExpPosErrorX(z_hodo) + xfudge;
 	  double err_y = factor*tracklet.getExpPosErrorY(z_hodo);
 
 	  double x_min = x_mask_min[idx1][idx2] - err_x;
@@ -1027,17 +1046,6 @@ bool KalmanFastTracking::acceptTracklet(Tracklet& tracklet)
 #ifdef _DEBUG_ON
   LogInfo(tracklet.stationID << "  " << nHodoHits << "  " << stationIDs_mask[tracklet.stationID-1].size());
 #endif
-
-  //For back partials, require projection inside KMAG, and muon id in prop. tubes
-  if(tracklet.stationID > 4)
-    {
-      if(!p_geomSvc->isInKMAG(tracklet.getExpPositionX(Z_KMAG_BEND), tracklet.getExpPositionY(Z_KMAG_BEND))) return false;
-#ifndef ALIGNMENT_MODE
-      if(!muonID(tracklet)) return false;
-#endif
-    }
-
-  //If everything is fine ...
   return true;
 }
 
