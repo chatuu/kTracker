@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 
       //Neither of the tracks should be used
       if(pflags[id1] < 0 || mflags[id2] < 0) continue;
-      if(ptracks[id1].getMomentumVecSt1().Py()*mtracks[id1].getMomentumVecSt1().Py() > 0) continue;
+      if(ptracks[id1].getTriggerRoad()*mtracks[id1].getTriggerRoad() > 0) continue;
 
       mixEvent->insertTrack(ptracks[id1]); pflags[id1] = -1;
       mixEvent->insertTrack(mtracks[id2]); mflags[id2] = -1;
