@@ -498,6 +498,14 @@ void KalmanFastTracking::buildBackPartialTracks()
 	      continue;
 	    }
 
+	  if(!hodoMask(tracklet_23))
+	    {
+#ifdef _DEBUG_ON
+	      LogInfo("Hodomasking failed!");
+#endif
+	      continue;
+	    }
+
 #ifndef COARSE_MODE
 	  resolveLeftRight(tracklet_23, 25.);
 	  resolveLeftRight(tracklet_23, 100.);
