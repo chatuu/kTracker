@@ -443,6 +443,8 @@ void KalmanFastTracking::buildBackPartialTracks()
 #ifdef EVAL_MODE
 	  std::cout << "Build_Back_Partial: " << tracklet2->tx << "  " << tracklet3->tx << "  " << tracklet2->x0 << "  " << tracklet3->x0 << "  " << tracklet2->ty << "  " << tracklet3->ty << "  " << tracklet2->y0 << "  " << tracklet3->y0 << std::endl; 
 #endif
+	  //a very rough cut
+	  if(fabs(tracklet2->tx - tracklet3->tx) > 0.15 || fabs(tracklet2->ty - tracklet3->ty) > 0.1) continue;
 
 #ifndef ALIGNMENT_MODE
 	  //Extract the X hits from station-2 track
@@ -579,7 +581,8 @@ void KalmanFastTracking::buildGlobalTracks()
 
 	  Tracklet tracklet_global = (*tracklet23) * (*tracklet1);
 	  fitTracklet(tracklet_global);
-  
+	  if(!hodoMask(tracklet_global)) continue;
+
 #ifndef COARSE_MODE
 	  ///Resolve the left-right with a tight pull cut, then a loose one, then resolve by single projections
 	  resolveLeftRight(tracklet_global, 100.);
