@@ -15,11 +15,11 @@ def compile(filename):
     ldflags = ldflags + ' ' + os.popen('geant4-config --libs').readline().strip()
 
     ## BOOST part
-    cflags = cflags + ' -I' + os.environ['BOOST']
+    #cflags = cflags + ' -I' + os.environ['BOOST']
 
     ## MySQL part
-    cflags = cflags + ' -I' + os.environ['MYSQL_INCLUDE']
-    ldflags = ldflags + ' -lz -L'+os.environ['MYSQL_LIB'] + ' -lmysqlclient'
+    cflags = cflags + ' ' + os.popen('mysql_config --include').readline().strip()
+    ldflags = ldflags + ' ' + os.popen('mysql_config --libs').readline().strip()
 
     ## kTracker part
     ldflags = ldflags + ' -L./ -lkTracker'
