@@ -41,21 +41,32 @@ int main(int argc, char *argv[])
   TTree* mcTree = (TTree*)mcFile->Get("save");
 
   mcTree->SetBranchAddress("rawEvent", &mcEvent);
- 
+
+  //Book output file
   TFile* saveFile = new TFile(argv[3], "recreate");
-  TTree* saveTree = mcTree->CloneTree(0);
+
+  //Prepare the random tree
+  TTree* randomTree = dataTree->CloneTree(0);
 
   Int_t targetPos = atoi(argv[4]);
-  Int_t index_MC = 0;
+  TRandom rndm(0);
+  Double_t ratio = Double_t(mcTree->GetEntries())/Double_t(dataTree->Draw("", Form("fTargetPos = %d", targetPos)));
   for(Int_t i = 0; i < dataTree->GetEntries(); ++i)
     {
-      if(index_MC > mcTree->GetEntries()) break;
-
       dataTree->GetEntry(i);
       if(dataEvent->getTargetPos() != targetPos) continue;
+      if(rndm.Rndm() > ratio) continue;
 
-      mcTree->GetEntry(index_MC++);
-      cout << i << "  " << index_MC << endl;
+      randomTree->Fill();
+    }
+
+  //Save the final MC tree
+  TTree* saveTree = mcTree->CloneTree(0);
+  Int_t nEntries = mcTree->GetEntries() < randomTree->GetEntries() ? mcTree->GetEntries() : randomTree->GetEntries();
+  for(Int_t i = 0; i < nEntries; ++i)
+    {
+      randomTree->GetEntry(i);
+      mcTree->GetEntry(i);
 
       mcEvent->mergeEvent(*dataEvent);
       mcEvent->setTriggerEmu(triggerAna->acceptEvent(mcEvent, USE_HIT));
