@@ -90,10 +90,6 @@ int main(int argc, char *argv[])
       cout << "\r Processing event " << i << " with eventID = " << rawEvent->getEventID() << ", ";
       cout << (i - offset + 1)*100/(nEvtMax - offset) << "% finished .. ";
 
-#ifdef MC_MODE
-      if(!rawEvent->isEmuTriggered()) continue;
-#endif
-
       clock_t time_single = clock();
 
 #ifdef TRIGGER_TRIMING
