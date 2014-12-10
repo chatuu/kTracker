@@ -55,11 +55,11 @@ public:
   //Quality cut
   bool isValid();
 
+  //Get expected position at a given Z
+  double getExpPosition(double z) { return a*z + b; }
+
   //Number of hits
   int getNHits();
-
-  //Get reference pos at first two planes
-  double getPosRef();
 
   //Fit the segment -- naive linear fit
   void fit();
@@ -78,6 +78,9 @@ public:
 
   //Hit list -- only 4 hits at most
   SignedHit hits[4];
+
+  //Debugging output
+  void print();
 
   //static pointer to geometry
   static const GeomSvc* p_geomSvc;

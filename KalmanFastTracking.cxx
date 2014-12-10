@@ -170,7 +170,7 @@ KalmanFastTracking::KalmanFastTracking(bool flag) : enable_KF(flag)
 #endif
 
   //Initialize super stationIDs
-  for(int i = 0; i < 4; i++) superIDs[i].clear();
+  for(int i = 0; i < 6; i++) superIDs[i].clear();
   superIDs[0].push_back((p_geomSvc->getDetectorIDs("D1X")[0] + 1)/2);
   superIDs[0].push_back((p_geomSvc->getDetectorIDs("D1U")[0] + 1)/2);
   superIDs[0].push_back((p_geomSvc->getDetectorIDs("D1V")[0] + 1)/2);
@@ -183,6 +183,10 @@ KalmanFastTracking::KalmanFastTracking(bool flag) : enable_KF(flag)
   superIDs[3].push_back((p_geomSvc->getDetectorIDs("D3mX")[0] + 1)/2);
   superIDs[3].push_back((p_geomSvc->getDetectorIDs("D3mU")[0] + 1)/2);
   superIDs[3].push_back((p_geomSvc->getDetectorIDs("D3mV")[0] + 1)/2);
+  superIDs[4].push_back((p_geomSvc->getDetectorIDs("P1X")[0] + 1)/2);
+  superIDs[4].push_back((p_geomSvc->getDetectorIDs("P2X")[0] + 1)/2);
+  superIDs[5].push_back((p_geomSvc->getDetectorIDs("P1Y")[0] + 1)/2);
+  superIDs[5].push_back((p_geomSvc->getDetectorIDs("P2Y")[0] + 1)/2);
 
 #ifdef _DEBUG_ON
   cout << "=============" << endl;
@@ -191,6 +195,12 @@ KalmanFastTracking::KalmanFastTracking(bool flag) : enable_KF(flag)
     {
       for(int j = 0; j < 3; j++) cout << i << "  " << j << ": " << superIDs[i][j] << endl;
     }
+  cout << "Proptube IDs: " << endl;
+  for(int i = 4; i < 6; i++)
+    {
+      for(int j = 0; j < 2; j++) cout << i << "  " << j << ": " << superIDs[i][j] << endl;
+    }
+
 
   //Initialize widow sizes for X-U matching and z positions of all chambers
   cout << "======================" << endl;
@@ -296,6 +306,15 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
 	  hitIDs_muid[i][j].clear();
 	  hitIDs_muid[i][j] = rawEvent->getHitsIndexInDetector(detectorIDs_muid[i][j]);
 	}
+    }
+  
+  buildPropSegments();
+  if(propSegs[0].empty() || propSegs[1].empty())
+    {
+#ifdef _DEBUG_ON
+      LogInfo("Failed in prop tube segment building: " << propSegs[0].size() << ", " << propSegs[1].size());
+#endif
+      return false;
     }
 
   //Initialize tracklet lists
@@ -982,6 +1001,7 @@ void KalmanFastTracking::buildTrackletsInStation(int stationID, double* pos_exp,
 #ifdef _DEBUG_ON
 	      tracklet_new.print(); 
 #endif
+
 	      if(acceptTracklet(tracklet_new)) 
 		{
 		  trackletsInSt[listID].push_back(tracklet_new);
@@ -1093,7 +1113,6 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
 
   double slope[2] = {tracklet.tx, tracklet.ty};
   PropSegment* segs[2] = {&(tracklet.seg_x), &(tracklet.seg_y)};
-  double pos_absorb[2] = {tracklet.getExpPositionX(MUID_Z_REF), tracklet.getExpPositionY(MUID_Z_REF)};
   
   for(int i = 0; i < 2; ++i)
     {
@@ -1102,7 +1121,8 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
       if(i == 1) LogInfo("Working in Y-Z:");
 #endif
 
-      if(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut)
+      double pos_ref = i == 0 ? tracklet.getExpPositionX(MUID_Z_REF) : tracklet.getExpPositionY(MUID_Z_REF);
+      if(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut && fabs(segs[i]->getExpPosition(MUID_Z_REF) - pos_ref) < MUID_R_CUT)
 	{
 #ifdef _DEBUG_ON
 	  LogInfo("Muon ID are already avaiable!");
@@ -1110,60 +1130,82 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
 	  continue;
 	}
 
-      segs[i]->init();
-      for(int j = 0; j < 4; ++j)
+      for(std::list<PropSegment>::iterator iter = propSegs[i].begin(); iter != propSegs[i].end(); ++iter)
 	{
-	  int index = detectorIDs_muid[i][j] - 25;
-	  double pos_ref = j < 2 ? pos_absorb[i] : segs[i]->getPosRef(); 
-	  double pos_exp = slope[i]*(z_mask[index] - z_ref_muid[i][j]) + pos_ref;
-
-	  double win_tight = cut*(z_mask[index] - z_ref_muid[i][j]);
-	  win_tight = win_tight > 2.54 ? win_tight : 2.54;
-	  double win_loose = win_tight*2;
-
 #ifdef _DEBUG_ON
-	  LogInfo("Step " << j << ", z_ref = " <<  z_ref_muid[i][j] << ", pos_ref = " << pos_ref << ", window = " << win_tight);
-	  LogInfo("searching on plane " << p_geomSvc->getDetectorName(detectorIDs_muid[i][j]) << ", expected pos : " << pos_exp - win_tight << " --- " << pos_exp + win_tight);
+	  LogInfo("Testing this prop segment, with ref pos = " << pos_ref << ", slope_ref = " << slope[i]);
+	  iter->print();
 #endif
-	  if(!p_geomSvc->isInPlane(detectorIDs_muid[i][j], tracklet.getExpPositionX(z_mask[index]), tracklet.getExpPositionY(z_mask[index]))) continue;
-
-	  double dist_min = 1E6;
-	  for(std::list<int>::iterator iter = hitIDs_muid[i][j].begin(); iter != hitIDs_muid[i][j].end(); ++iter)
+	  if(fabs(iter->a - slope[i]) < cut && fabs(iter->getExpPosition(MUID_Z_REF) - pos_ref) < MUID_R_CUT)
 	    {
-	      double pos = hitAll[*iter].pos;
+	      *(segs[i]) = *iter;
 #ifdef _DEBUG_ON
-	      LogInfo(" ... trying this hit: "); hitAll[*iter].print();
+	      LogInfo("Accepted!");
 #endif
-	      double dist = pos - pos_exp;
-	      if(dist < -win_loose) continue;
-	      if(dist > win_loose) break;
-	      
-	      double dist_l = fabs(pos - hitAll[*iter].driftDistance - pos_exp);
-	      double dist_r = fabs(pos + hitAll[*iter].driftDistance - pos_exp);
-	      dist = dist_l < dist_r ? dist_l : dist_r;
-	      if(dist < dist_min)
-		{
-		  dist_min = dist;
-		  if(dist < win_tight)
-		    {
-		      segs[i]->hits[j].hit = hitAll[*iter];
-		      segs[i]->hits[j].sign = fabs(pos - hitAll[*iter].driftDistance - pos_exp) < fabs(pos + hitAll[*iter].driftDistance - pos_exp) ? -1 : 1;
-#ifdef _DEBUG_ON
-		      LogInfo(" ... Accepted this prop tube hit!");
-#endif
-		    }
-		}
+	      break;
 	    }
 	}
-      
-      segs[i]->fit();
-#ifdef _DEBUG_ON
-      LogInfo("Prop tube segment has " << segs[i]->getNHits() << " hits with a = " << segs[i]->a << " chisq = " << segs[i]->chisq << ", comparing with a = " << slope[i]);
-#endif
-      if(!(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut)) return false;
+
+      if(!segs[i]->isValid()) return false;
     }
 
   return true;
+}
+
+void KalmanFastTracking::buildPropSegments()
+{
+#ifdef _DEBUG_ON
+  LogInfo("Building prop. tube segments");
+#endif
+
+  for(int i = 0; i < 2; ++i)
+    {
+      propSegs[i].clear();
+
+      //note for prop tubes superID index starts from 4
+      std::list<SRawEvent::hit_pair> pairs_forward = rawEvent->getPartialHitPairsInSuperDetector(superIDs[i+4][0]);
+      std::list<SRawEvent::hit_pair> pairs_backward = rawEvent->getPartialHitPairsInSuperDetector(superIDs[i+4][1]);
+
+#ifdef _DEBUG_ON
+      for(std::list<SRawEvent::hit_pair>::iterator iter = pairs_forward.begin(); iter != pairs_forward.end(); ++iter) LogInfo("Forward: " << iter->first << "  " << iter->second << "  " << hitAll[iter->first].index << "  " << (iter->second < 0 ? -1 : hitAll[iter->second].index));
+      for(std::list<SRawEvent::hit_pair>::iterator iter = pairs_backward.begin(); iter != pairs_backward.end(); ++iter) LogInfo("Backward: " << iter->first << "  " << iter->second << "  " << hitAll[iter->first].index << "  " << (iter->second < 0 ? -1 : hitAll[iter->second].index));
+#endif
+      for(std::list<SRawEvent::hit_pair>::iterator fiter = pairs_forward.begin(); fiter != pairs_forward.end(); ++fiter)
+	{
+#ifdef _DEBUG_ON
+	  LogInfo("Trying forward pair " << fiter->second << "  " << fiter->second);
+#endif
+	  for(std::list<SRawEvent::hit_pair>::iterator biter = pairs_backward.begin(); biter != pairs_backward.end(); ++biter)
+	    {
+#ifdef _DEBUG_ON
+	  LogInfo("Trying backward pair " << biter->second << "  " << biter->second);
+#endif
+
+	      PropSegment seg;
+
+	      //Note that the backward plane comes as the first in pair
+	      if(fiter->first >= 0) seg.hits[1] = SignedHit(hitAll[fiter->first], 0);
+	      if(fiter->second >= 0) seg.hits[0] = SignedHit(hitAll[fiter->second], 0);
+	      if(biter->first >= 0) seg.hits[3] = SignedHit(hitAll[biter->first], 0);
+	      if(biter->second >= 0) seg.hits[2] = SignedHit(hitAll[biter->second], 0);
+
+	      seg.fit();
+#ifdef _DEBUG_ON
+	      seg.print();
+#endif
+	      if(seg.isValid()) 
+		{
+		  propSegs[i].push_back(seg);
+		}
+#ifdef _DEBUG_ON
+	      else
+		{
+		  LogInfo("Rejected!");
+		}
+#endif
+	    }
+	}
+    }
 }
 
 int KalmanFastTracking::fitTracklet(Tracklet& tracklet)

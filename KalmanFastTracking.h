@@ -55,6 +55,8 @@ public:
   bool hodoMask(Tracklet& tracklet);
   bool muonID(Tracklet& tracklet);
 
+  void buildPropSegments();
+
   //Resolve left-right when possible
   void resolveLeftRight(SRawEvent::hit_pair hpair, int& LR1, int& LR2);
   void resolveLeftRight(Tracklet& tracklet, double threshold);
@@ -103,6 +105,10 @@ private:
   //Final SRecTrack list
   std::list<SRecTrack> stracks;
 
+  //Prop. tube segments for muon id purposes
+  // 0 for X-Z, 1 for Y-Z
+  std::list<PropSegment> propSegs[2];
+
   ///Configurations of tracklet finding
   //Hodo. IDs for masking
   std::vector<int> detectorIDs_mask[4];
@@ -123,9 +129,9 @@ private:
   double y_mask_min[24][72];
   double y_mask_max[24][72];
   
-  ///For following part, id = 0, 1, 2, 3 stand for station 1, 2, 3+, 3-
+  ///For following part, id = 0, 1, 2, 3, 4, 5 stand for station 1, 2, 3+, 3-, and prop tubes X-Z and Y-Z
   //Super plane IDs for DCs
-  std::vector<int> superIDs[4];
+  std::vector<int> superIDs[6];
   
   //Window sizes for X-U combination
   double u_win[4];
