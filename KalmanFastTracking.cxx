@@ -513,7 +513,7 @@ void KalmanFastTracking::buildBackPartialTracks()
 	  resolveLeftRight(tracklet_23, 100.);
 #endif
 	  ///Remove bad hits if needed
-	  //removeBadHits(tracklet_23);
+	  removeBadHits(tracklet_23);
 
 
 #ifdef _DEBUG_ON
@@ -610,6 +610,7 @@ void KalmanFastTracking::buildGlobalTracks()
 	      tracklet_best = tracklet_global;
     	    }
 #ifdef _DEBUG_ON
+	  else
 	    {
 	      LogInfo("Rejected!!!");
 	    }
@@ -780,7 +781,8 @@ void KalmanFastTracking::removeBadHits(Tracklet& tracklet)
 	    }
 	}
 
-      if(hit_remove != NULL && res_remove > HIT_REJECT*resol_plane[hit_remove->hit.detectorID])
+      double cut = hit_remove->sign == 0 ? HIT_REJECT*resol_plane[hit_remove->hit.detectorID] + hit_remove->hit.driftDistance : HIT_REJECT*resol_plane[hit_remove->hit.detectorID];
+      if(hit_remove != NULL && res_remove > cut)
 	{
 #ifdef _DEBUG_ON
 	  LogInfo("Dropping this hit: " << res_remove << "  " << HIT_REJECT*resol_plane[hit_remove->hit.detectorID]);
@@ -1090,14 +1092,23 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
 #endif
 
   double slope[2] = {tracklet.tx, tracklet.ty};
-  double pos_absorb[2] = {tracklet.getExpPositionX(MUID_Z_REF), tracklet.getExpPositionY(MUID_Z_REF)};
   PropSegment* segs[2] = {&(tracklet.seg_x), &(tracklet.seg_y)};
+  double pos_absorb[2] = {tracklet.getExpPositionX(MUID_Z_REF), tracklet.getExpPositionY(MUID_Z_REF)};
+  
   for(int i = 0; i < 2; ++i)
     {
 #ifdef _DEBUG_ON
       if(i == 0) LogInfo("Working in X-Z:");
       if(i == 1) LogInfo("Working in Y-Z:");
 #endif
+
+      if(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut)
+	{
+#ifdef _DEBUG_ON
+	  LogInfo("Muon ID are already avaiable!");
+#endif
+	  continue;
+	}
 
       segs[i]->init();
       for(int j = 0; j < 4; ++j)
