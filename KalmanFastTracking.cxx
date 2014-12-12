@@ -278,6 +278,12 @@ KalmanFastTracking::~KalmanFastTracking()
   delete minimizer[1];
 }
 
+void KalmanFastTracking::setRawEventDebug(SRawEvent* event_input)
+{
+  rawEvent = event_input;
+  hitAll = event_input->getAllHits();
+}
+
 bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
 {
   rawEvent = event_input;
