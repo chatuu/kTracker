@@ -72,7 +72,7 @@
 #define MUID_REJECT 4.
 #define MUID_P0 0.11825 
 #define MUID_Z_REF 2028.19
-#define MUID_R_CUT 1.5
+#define MUID_R_CUT 3.0
 
 //--------------- Geometry setup -----------------
 #define nChamberPlanes 24
