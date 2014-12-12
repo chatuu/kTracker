@@ -1060,7 +1060,10 @@ bool KalmanFastTracking::acceptTracklet(Tracklet& tracklet)
     {
       if(!p_geomSvc->isInKMAG(tracklet.getExpPositionX(Z_KMAG_BEND), tracklet.getExpPositionY(Z_KMAG_BEND))) return false;
 #ifndef ALIGNMENT_MODE
-      if(!muonID(tracklet)) return false;
+      if(!muonID_comp(tracklet)) 
+	{
+	  if(!muonID_search(tracklet)) return false;
+	}
 #endif
     }
 
@@ -1119,7 +1122,103 @@ bool KalmanFastTracking::hodoMask(Tracklet& tracklet)
   return true;
 }
 
-bool KalmanFastTracking::muonID(Tracklet& tracklet)
+bool KalmanFastTracking::muonID_search(Tracklet& tracklet)
+{
+  //Set the cut value on multiple scattering
+  //multiple scattering: sigma = 0.0136*sqrt(L/L0)*(1. + 0.038*ln(L/L0))/P, L = 1m, L0 = 1.76cm
+  double cut = 0.03;
+  if(tracklet.stationID == 6)
+    {
+      double cut_the = MUID_THE_P0*tracklet.invP;
+      double cut_emp = MUID_EMP_P0 + MUID_EMP_P1/tracklet.invP + MUID_EMP_P2/tracklet.invP/tracklet.invP;
+      cut = MUID_REJECT*(cut_the > cut_emp ? cut_the : cut_emp);
+    }
+#ifdef _DEBUG_ON
+  LogInfo("Muon ID cut is: " << cut << " rad.");
+#endif
+
+  double slope[2] = {tracklet.tx, tracklet.ty};
+  PropSegment* segs[2] = {&(tracklet.seg_x), &(tracklet.seg_y)};
+  double pos_absorb[2] = {tracklet.getExpPositionX(MUID_Z_REF), tracklet.getExpPositionY(MUID_Z_REF)};
+
+  for(int i = 0; i < 2; ++i)
+    {
+#ifdef _DEBUG_ON
+      if(i == 0) LogInfo("Working in X-Z:");
+      if(i == 1) LogInfo("Working in Y-Z:");
+#endif
+
+      double pos_ref = i == 0 ? tracklet.getExpPositionX(MUID_Z_REF) : tracklet.getExpPositionY(MUID_Z_REF);
+      if(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut && fabs(segs[i]->getExpPosition(MUID_Z_REF) - pos_ref) < MUID_R_CUT)
+	{
+#ifdef _DEBUG_ON
+	  LogInfo("Muon ID are already avaiable!");
+#endif
+	  continue;
+	}
+
+      segs[i]->init();
+      for(int j = 0; j < 4; ++j)
+	{
+	  int index = detectorIDs_muid[i][j] - 25;
+	  double pos_ref = j < 2 ? pos_absorb[i] : segs[i]->getPosRef(); 
+	  double pos_exp = slope[i]*(z_mask[index] - z_ref_muid[i][j]) + pos_ref;
+
+	  double win_tight = cut*(z_mask[index] - z_ref_muid[i][j]);
+	  win_tight = win_tight > 2.54 ? win_tight : 2.54;
+	  double win_loose = win_tight*2;
+
+#ifdef _DEBUG_ON
+	  LogInfo("Step " << j << ", z_ref = " <<  z_ref_muid[i][j] << ", pos_ref = " << pos_ref << ", window = " << win_tight);
+	  LogInfo("searching on plane " << p_geomSvc->getDetectorName(detectorIDs_muid[i][j]) << ", expected pos : " << pos_exp - win_tight << " --- " << pos_exp + win_tight);
+#endif
+	  
+	  if(!p_geomSvc->isInPlane(detectorIDs_muid[i][j], tracklet.getExpPositionX(z_mask[index]), tracklet.getExpPositionY(z_mask[index]))) continue;
+
+	  double dist_min = 1E6;
+	  for(std::list<int>::iterator iter = hitIDs_muid[i][j].begin(); iter != hitIDs_muid[i][j].end(); ++iter)
+	    {
+#ifdef _DEBUG_ON
+	      LogInfo(" ... trying this hit: "); hitAll[*iter].print();
+#endif
+	      
+	      double pos = hitAll[*iter].pos;
+	      double dist = pos - pos_exp;
+	      
+      	      if(dist < -win_loose) continue;
+	      if(dist > win_loose) break;
+
+	      double dist_l = fabs(pos - hitAll[*iter].driftDistance - pos_exp);
+	      double dist_r = fabs(pos + hitAll[*iter].driftDistance - pos_exp);
+	      dist = dist_l < dist_r ? dist_l : dist_r;
+
+	      if(dist < dist_min)
+		{
+		  dist_min = dist;
+		  if(dist < win_tight)
+		    {
+		      segs[i]->hits[j].hit = hitAll[*iter];
+		      segs[i]->hits[j].sign = fabs(pos - hitAll[*iter].driftDistance - pos_exp) < fabs(pos + hitAll[*iter].driftDistance - pos_exp) ? -1 : 1;
+#ifdef _DEBUG_ON
+		      LogInfo(" ... Accepted this prop tube hit!");
+#endif
+		    }
+		}
+	    }
+	}
+
+      segs[i]->fit();
+#ifdef _DEBUG_ON
+      LogInfo("Prop tube segment has " << segs[i]->getNHits() << " hits with a = " << segs[i]->a << " chisq = " << segs[i]->chisq << ", comparing with a = " << slope[i]);
+#endif
+      if(!(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut)) return false;
+    }
+
+  return true;
+}
+
+
+bool KalmanFastTracking::muonID_comp(Tracklet& tracklet)
 {
   //Set the cut value on multiple scattering
   //multiple scattering: sigma = 0.0136*sqrt(L/L0)*(1. + 0.038*ln(L/L0))/P, L = 1m, L0 = 1.76cm

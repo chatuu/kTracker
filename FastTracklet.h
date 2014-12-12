@@ -57,7 +57,10 @@ public:
 
   //Get expected position at a given Z
   double getExpPosition(double z) { return a*z + b; }
-
+ 
+  //Get reference pos at first two planes
+  double getPosRef();
+  
   //Number of hits
   int getNHits();
 

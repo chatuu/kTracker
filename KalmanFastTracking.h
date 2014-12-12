@@ -54,7 +54,8 @@ public:
   //Check the quality of tracklet, number of hits
   bool acceptTracklet(Tracklet& tracklet);
   bool hodoMask(Tracklet& tracklet);
-  bool muonID(Tracklet& tracklet);
+  bool muonID_comp(Tracklet& tracklet);
+  bool muonID_search(Tracklet& tracklet);
 
   void buildPropSegments();
 

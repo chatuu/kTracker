@@ -74,6 +74,23 @@ void PropSegment::print()
 
 }
 
+double PropSegment::getPosRef()
+{
+  if(hits[0].hit.index < 0 && hits[1].hit.index < 0) return -9999.;
+
+  int nRefPoints = 0;
+  double pos_exp = 0.;
+  for(int i = 0; i < 2; ++i)
+    {
+      if(hits[i].hit.index < 0) continue;
+
+      pos_exp += hits[i].hit.pos;
+      ++nRefPoints;
+    }
+
+  return pos_exp/nRefPoints;
+}
+
 int PropSegment::getNHits()
 {
   int nHits = 0;
