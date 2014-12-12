@@ -357,7 +357,7 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
   for(int i = 0; i < 2; ++i)
     {
       std::cout << "=======================================================================================" << std::endl;
-      LogInfo("Prop tube segments in " << i == 0 ? "X-Z" : "Y-Z");
+      LogInfo("Prop tube segments in " << (i == 0 ? "X-Z" : "Y-Z"));
       for(std::list<PropSegment>::iterator seg = propSegs[i].begin(); seg != propSegs[i].end(); ++seg)
 	{
 	  seg->print();
@@ -1122,7 +1122,8 @@ bool KalmanFastTracking::hodoMask(Tracklet& tracklet)
 bool KalmanFastTracking::muonID(Tracklet& tracklet)
 {
   //Set the cut value on multiple scattering
-  double cut = tracklet.stationID == 6 ? MUID_REJECT*(MUID_P0 + MUID_P1/tracklet.invP + MUID_P2/tracklet.invP/tracklet.invP) : 0.03; 
+  //multiple scattering: sigma = 0.0136*sqrt(L/L0)*(1. + 0.038*ln(L/L0))/P, L = 1m, L0 = 1.76cm
+  double cut = tracklet.stationID == 6 ? MUID_REJECT*MUID_P0*tracklet.invP : 0.03; 
 
 #ifdef _DEBUG_ON
   LogInfo("Muon ID cut is: " << cut << " rad.");
