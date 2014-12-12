@@ -348,7 +348,18 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
   buildGlobalTracks();
  
 #ifdef _DEBUG_ON 
-  for(int i = 0; i <= 4; i++)
+  for(int i = 0; i < 2; ++i)
+    {
+      std::cout << "=======================================================================================" << std::endl;
+      LogInfo("Prop tube segments in " << i == 0 ? "X-Z" : "Y-Z");
+      for(std::list<PropSegment>::iterator seg = propSegs[i].begin(); seg != propSegs[i].end(); ++seg)
+	{
+	  seg->print();
+	}
+      std::cout << "=======================================================================================" << std::endl;
+    }
+
+  for(int i = 0; i <= 4; ++i)
     {
       std::cout << "=======================================================================================" << std::endl;
       LogInfo("Final tracklets in station: " << i+1 << " is " << trackletsInSt[i].size()); 

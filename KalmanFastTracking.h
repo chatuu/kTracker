@@ -33,6 +33,7 @@ public:
 
   //Set the input event
   bool setRawEvent(SRawEvent* event_input);
+  void setRawEventDebug(SRawEvent* event_input); //set the hit list only, tracking is not started, only for debugging
 
   //Event quality cut
   bool acceptEvent(SRawEvent* rawEvent);
@@ -89,6 +90,7 @@ public:
   std::list<Tracklet>& getFinalTracklets() { return trackletsInSt[4]; }
   std::list<Tracklet>& getBackPartials() { return trackletsInSt[3]; }
   std::list<SRecTrack>& getSRecTracks() { return stracks; }
+  std::list<PropSegment>& getPropSegments(int i) { return propSegs[i]; }
 
   ///Tool, a simple-minded chi square fit
   void chi2fit(int n, double x[], double y[], double& a, double& b);
