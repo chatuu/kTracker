@@ -1123,8 +1123,13 @@ bool KalmanFastTracking::muonID(Tracklet& tracklet)
 {
   //Set the cut value on multiple scattering
   //multiple scattering: sigma = 0.0136*sqrt(L/L0)*(1. + 0.038*ln(L/L0))/P, L = 1m, L0 = 1.76cm
-  double cut = tracklet.stationID == 6 ? MUID_REJECT*MUID_P0*tracklet.invP : 0.03; 
-
+  double cut = 0.03;
+  if(tracklet.stationID == 6)
+    {
+      double cut_the = MUID_THE_P0*tracklet.invP;
+      double cut_emp = MUID_EMP_P0 + MUID_EMP_P1/tracklet.invP + MUID_EMP_P2/tracklet.invP/tracklet.invP;
+      cut = MUID_REJECT*(cut_the > cut_emp ? cut_the : cut_emp);
+    }
 #ifdef _DEBUG_ON
   LogInfo("Muon ID cut is: " << cut << " rad.");
 #endif
