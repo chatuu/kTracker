@@ -109,8 +109,11 @@ int main(int argc, char *argv[])
 
   int nEntriesMax = int(nPlus < nMinus ? 0.8*nPlus : 0.8*nMinus);
   if(nEntries > nEntriesMax) nEntries = nEntriesMax;
-  while(saveTree->GetEntries() < nEntries)
+  int nTries = 0;
+  while(saveTree->GetEntries() < nEntries && nTries - saveTree->GetEntries() < 10000)
     {
+      ++nTries;
+
       int id1 = int(rnd.Rndm()*nPlus);
       int id2 = int(rnd.Rndm()*nMinus);
 

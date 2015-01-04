@@ -1229,6 +1229,7 @@ bool KalmanFastTracking::muonID_comp(Tracklet& tracklet)
       double cut_emp = MUID_EMP_P0 + MUID_EMP_P1/tracklet.invP + MUID_EMP_P2/tracklet.invP/tracklet.invP;
       cut = MUID_REJECT*(cut_the > cut_emp ? cut_the : cut_emp);
     }
+
 #ifdef _DEBUG_ON
   LogInfo("Muon ID cut is: " << cut << " rad.");
 #endif
