@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
   Int_t targetPos = atoi(argv[4]);
   TRandom rndm(0);
-  Double_t ratio = Double_t(mcTree->GetEntries())/Double_t(dataTree->Draw("", Form("fTargetPos = %d", targetPos)));
+  Double_t ratio = Double_t(mcTree->GetEntries())/Double_t(dataTree->Draw("", Form("fTargetPos == %d", targetPos)));
   for(Int_t i = 0; i < dataTree->GetEntries(); ++i)
     {
       dataTree->GetEntry(i);
@@ -59,10 +59,12 @@ int main(int argc, char *argv[])
 
       randomTree->Fill();
     }
+  cout << "Ratio = " << ratio << ", total random events = " << randomTree->GetEntries() << endl;
 
   //Save the final MC tree
   TTree* saveTree = mcTree->CloneTree(0);
   Int_t nEntries = mcTree->GetEntries() < randomTree->GetEntries() ? mcTree->GetEntries() : randomTree->GetEntries();
+  cout << mcTree->GetEntries() << " entries in MC file, will generated " << nEntries << " merged events" << endl;
   for(Int_t i = 0; i < nEntries; ++i)
     {
       randomTree->GetEntry(i);

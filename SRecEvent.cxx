@@ -450,7 +450,7 @@ bool SRecDimuon::isValid()
   if(p_pos.Pz() + p_neg.Pz() > 120.) return false;
 
   //Track separation cuts
-  if(fabs(vtx_pos.Z() - vtx_neg.Z()) > 100.) return false;
+  if(fabs(vtx_pos.Z() - vtx_neg.Z()) > 175.) return false;
 
   //Everything is fine
   return true;
