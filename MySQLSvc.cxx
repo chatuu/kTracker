@@ -657,6 +657,7 @@ bool MySQLSvc::initWriter()
   std::cout << __FUNCTION__ << ": " << query << std::endl;
 #endif
 
+  //Tracker source
   sprintf(query, "INSERT INTO kInfo (infoKey,infoValue) "
 	  "VALUES('%s','%s')", "sourceSchema", dataSchema.c_str());
 #ifndef OUT_TO_SCREEN
@@ -664,6 +665,11 @@ bool MySQLSvc::initWriter()
 #else
   std::cout << __FUNCTION__ << ": " << query << std::endl;
 #endif
+
+  //Tracker version
+  sprintf(query, "INSERT INTO kInfo (infoKey,infoValue) "
+	  "VALUES('%s','%s')", "version", "ROOT decoder/r1.2.0");
+  server->Exec(query);
 
   return true;
 }
