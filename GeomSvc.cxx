@@ -265,7 +265,7 @@ void GeomSvc::init(std::string geometrySchema)
   //Connect server
   char serverName[200];
   sprintf(serverName, "mysql://%s:%d", MYSQL_SERVER_ADDR, MYSQL_SERVER_PORT);
-  TSQLServer* con = TSQLServer::Connect(serverName, "seaguest","qqbar2mu+mu-");
+  TSQLServer* con = TSQLServer::Connect(serverName, MYSQL_USER, MYSQL_PASS);
   
   //Make query to Planes table
   char query[300];

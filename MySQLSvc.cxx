@@ -31,8 +31,8 @@ MySQLSvc::MySQLSvc()
   dataSchema = "run_002173_R003";
   logSchema = "log";
 
-  user = "seaguest";
-  passwd = "qqbar2mu+mu-";
+  user = MYSQL_USER;
+  passwd = MYSQL_PASS;
 
   nEvents = 0;
   nTracks = 0;
@@ -143,7 +143,7 @@ bool MySQLSvc::initReader()
       //Temporarily connect as production user
       char address[200];
       sprintf(address, "mysql://%s:%d", server->GetHost(), server->GetPort()); 
-      TSQLServer* server_temp = TSQLServer::Connect(address, "production", "qqbar2mu+mu-");
+      TSQLServer* server_temp = TSQLServer::Connect(address, MYSQL_PRO_USER, MYSQL_PRO_PASS);
 
       sprintf(query, "USE %s", dataSchema.c_str()); server_temp->Exec(query);
       sprintf(query, "ALTER TABLE Hit ENABLE KEYS"); server_temp->Exec(query);

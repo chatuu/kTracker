@@ -46,6 +46,12 @@
 #define MYSQL_SERVER_PORT 3306
 //#define MYSQL_SERVER_PORT 3283
 
+#define MYSQL_USER ""
+#define MYSQL_PASS ""
+
+#define MYSQL_PRO_USER ""
+#define MYSQL_PRO_PASS ""
+
 //==== Enable/disable dimuon mode
 #define DIMUON_MODE 0
 

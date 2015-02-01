@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 
   //Initialize MySQL service and connect to database, e906-db1 by default
   MySQLSvc* p_mysqlSvc = MySQLSvc::instance();
-  p_mysqlSvc->setUserPasswd("production", "qqbar2mu+mu-");
+  p_mysqlSvc->setUserPasswd(MYSQL_PRO_USER, MYSQL_PRO_PASS);
   p_mysqlSvc->connect(argv[3], atoi(argv[4]));
   p_mysqlSvc->setWorkingSchema(argv[1]);
   if(!(p_mysqlSvc->initReader() && p_mysqlSvc->initWriter())) exit(EXIT_FAILURE);

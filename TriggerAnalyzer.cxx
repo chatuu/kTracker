@@ -54,7 +54,7 @@ bool TriggerAnalyzer::init(std::string schemaName)
   
   char serverName[200];
   sprintf(serverName, "mysql://%s:%d", MYSQL_SERVER_ADDR, MYSQL_SERVER_PORT);
-  TSQLServer* server = TSQLServer::Connect(serverName, "seaguest","qqbar2mu+mu-");
+  TSQLServer* server = TSQLServer::Connect(serverName, MYSQL_USER, MYSQL_PASS);
   if(server == NULL) return false;
 
   TSQLResult* res = server->Query(query);
