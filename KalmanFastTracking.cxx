@@ -845,7 +845,7 @@ void KalmanFastTracking::removeBadHits(Tracklet& tracklet)
 	    }
 
 	  //If both hit pairs are not included, the track can be rejected
-	  if(hit_neighbour->hit.index < 0) 
+	  if(hit_neighbour->hit.index < 0 && hit_neighbour->hit.detectorID > 6) 
 	    {
 #ifdef _DEBUG_ON
 	      LogInfo("Both hits in a view are missing! Will exit the bad hit removal...");
