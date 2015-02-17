@@ -267,7 +267,7 @@ bool Tracklet::isValid()
   int nHits = nXHits + nUHits + nVHits;
   if(stationID < 5)
     {
-      if(nXHits < 1 || nUHits < 1 || nVHits < 1) return false;
+      //if(nXHits < 1 || nUHits < 1 || nVHits < 1) return false;
       if(nHits < 4) return false;
       if(chisq > 15.) return false;
     }
@@ -296,7 +296,8 @@ bool Tracklet::isValid()
 	}
 
       //Number of hits cut after removing bad hits
-      for(int i = 0; i < 3; ++i)
+      if(nRealHits[0][0] + nRealHits[0][1] + nRealHits[0][2] < 4) return false;
+      for(int i = 1; i < 3; ++i)
 	{
 	  if(nRealHits[i][0] < 1 || nRealHits[i][1] < 1 || nRealHits[i][2] < 1) return false;
 	  if(nRealHits[i][0] + nRealHits[i][1] + nRealHits[i][2] < 4) return false;
