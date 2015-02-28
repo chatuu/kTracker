@@ -75,9 +75,6 @@ public:
   //resolve left/right
   void resolveLR();
 
-  //a simplified version of chisq fit
-  void linearFit();
-
   //track slope the interception
   double a;
   double b;

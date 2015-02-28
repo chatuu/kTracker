@@ -233,7 +233,7 @@ void PropSegment::fit_2hits()
   chisq = 0.;
 }
 
-void PropSegment::linearFit()
+void PropSegment::fit_34hits()
 {
   double sum = 0.;
   double sx = 0.;
@@ -274,6 +274,7 @@ void PropSegment::linearFit()
     }
 }
 
+/*
 void PropSegment::fit_34hits()
 {
   //Algorithm refer to Kun's PhD thesis
@@ -336,6 +337,7 @@ void PropSegment::fit_34hits()
 	}
     }
 }
+*/
 
 //General tracklet part
 const GeomSvc* Tracklet::p_geomSvc = GeomSvc::instance();
