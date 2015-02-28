@@ -57,7 +57,10 @@ public:
 
   //Get expected position at a given Z
   double getExpPosition(double z) { return a*z + b; }
- 
+
+  //Get the closest approach to a given space position/proptube wire
+  double getClosestApproach(double z, double pos);
+
   //Get reference pos at first two planes
   double getPosRef();
   
@@ -65,7 +68,12 @@ public:
   int getNHits();
 
   //Fit the segment -- naive linear fit
-  void fit();
+  void fit();   // external call
+  void fit_2hits();
+  void fit_34hits();
+
+  //resolve left/right
+  void resolveLR();
 
   //a simplified version of chisq fit
   void linearFit();

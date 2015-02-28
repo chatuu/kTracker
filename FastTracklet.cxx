@@ -74,6 +74,11 @@ void PropSegment::print()
 
 }
 
+double PropSegment::getClosestApproach(double z, double pos)
+{
+  return (a*z + b - pos)/sqrt(a*a + 1.);
+}
+
 double PropSegment::getPosRef()
 {
   if(hits[0].hit.index < 0 && hits[1].hit.index < 0) return -9999.;
@@ -103,20 +108,19 @@ int PropSegment::getNHits()
 
 bool PropSegment::isValid()
 {
-  if(getNHits() < 3) return false;
+  if(getNHits() < 2) return false;
+  if((hits[0].hit.index < 0 && hits[1].hit.index < 0) || (hits[2].hit.index < 0 && hits[3].hit.index < 0)) return false;
   if(chisq > 5.) return false;
 
   //May need optimization
-  if(fabs(a) > 0.15) return false;
-  if(fabs(b) > 150.) return false;
+  if(fabs(a) > TX_MAX) return false;
+  if(fabs(b) > X0_MAX) return false;
 
   return true;
 }
 
-void PropSegment::fit()
+void PropSegment::resolveLR()
 {
-  if(getNHits() < 3) return;
-
   //Sign assignment for 1st and 2nd hits
   if(hits[0].hit.index > 0 && hits[1].hit.index > 0)
     {
@@ -156,12 +160,25 @@ void PropSegment::fit()
       hits[2].sign = 0;
       hits[3].sign = 0;
     }
+}
 
-  //A linear fit
-  linearFit();
+void PropSegment::fit()
+{
+  //Resolve left/right for the first time
+  resolveLR();
+
+  int nHits = getNHits();
+  if(nHits == 2) 
+    {
+      fit_2hits();
+    }
+  else
+    {
+      fit_34hits();
+    }
 
   //remove one bad hits if possible/needed
-  if(getNHits() == 4 && chisq > 5.)
+  if(nHits == 4 && chisq > 5.)
     {
       int index = 0;
       double res_max = fabs(hits[0].pos() - a*p_geomSvc->getPlanePosition(hits[0].hit.detectorID) - b);
@@ -183,24 +200,37 @@ void PropSegment::fit()
 
       //remove the bad hit
       hits[index].hit.index = -1;
-      if(index < 2)
-	{
-	  hits[0].sign = 0;
-	  hits[1].sign = 0;
-	}
-      else
-	{
-	  hits[2].sign = 0;
-	  hits[3].sign = 0;
-	}
+      resolveLR();
 
       //fit again
-      linearFit();
+      fit_34hits();
 
 #ifdef _DEBUG_ON
       LogInfo("After removing a = " << a << ", b = " << b << ", chisq = " << chisq);
 #endif
     }
+}
+
+void PropSegment::fit_2hits()
+{
+  double z[2], pos[2];
+  
+  int idx = 0;
+  for(int i = 0; i < 4; ++i)
+    {
+      if(hits[i].hit.index < 0) continue;
+
+      z[idx] = p_geomSvc->getPlanePosition(hits[i].hit.detectorID);
+      pos[idx] = hits[i].hit.pos;
+
+      ++idx;
+    }
+
+  a = (pos[1] - pos[0])/(z[1] - z[0]);
+  b = pos[0] - a*z[0];
+  err_a = 1.5;
+  err_b = 1.5;
+  chisq = 0.;
 }
 
 void PropSegment::linearFit()
@@ -241,6 +271,69 @@ void PropSegment::linearFit()
     {
       if(hits[i].hit.index < 0) continue;
       chisq += ((y[i] - a*x[i] -b)*(y[i] - a*x[i] -b));
+    }
+}
+
+void PropSegment::fit_34hits()
+{
+  //Algorithm refer to Kun's PhD thesis
+
+  //prepare the raw data
+  int len = 0;
+  double x[4], y[4], r[4];    //note r here is signed drift distance
+  for(int i = 0; i < 4; ++i)
+    {
+      if(hits[i].hit.index < 0) continue;
+
+      y[len] = hits[i].pos();
+      x[len] = p_geomSvc->getPlanePosition(hits[i].hit.detectorID);
+      r[len] = hits[i].sign*hits[i].hit.driftDistance;
+
+      ++len;
+    }
+
+  //while loop with less than 100 iterations
+  a = 0;
+  int iter = 0;
+  double a_prev = 0;        // value of a in previous iteration
+  double _x[4], _y[4];      // corrected hit pos
+  while(fabs(a_prev - a) < 1E-3 && ++iter < 100)
+    {
+      a_prev = a;
+
+      //prepare corrected hit pos
+      double C, D, E, F, G, H;
+      C = 0.;
+      D = 0.;
+      E = 0.;
+      F = 0.;
+      G = 0.;
+      H = 0.;
+      
+      for(int i = 0; i < len; ++i)
+	{
+	  _x[i] = x[i] - r[i]*a/sqrt(a*a + 1.);
+	  _y[i] = y[i] + r[i]/sqrt(a*a + 1.);
+
+	  C += 1.;
+	  D += _x[i];
+	  E += _y[i];
+	  F += _x[i]*_x[i];
+	  G += _y[i]*_y[i];
+	  H += _x[i]*_y[i];
+	}
+
+      double alpha = H - D*E/C;
+      double beta = F - G -D*D/C + E*E/C;
+   
+      a = (-beta + sqrt(beta*beta + 4*alpha*alpha))/alpha/2.;
+      b = (E - a*D)/C;
+    
+      chisq = 0.;
+      for(int i = 0; i < len; ++i)
+	{
+	  chisq += (a*_x[i] + b - _y[i])*(a*_x[i] + b - _y[i])/(a*a + 1.);
+	}
     }
 }
 

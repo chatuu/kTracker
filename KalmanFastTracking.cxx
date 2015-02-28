@@ -1149,7 +1149,7 @@ bool KalmanFastTracking::muonID_search(Tracklet& tracklet)
 #endif
 
       double pos_ref = i == 0 ? tracklet.getExpPositionX(MUID_Z_REF) : tracklet.getExpPositionY(MUID_Z_REF);
-      if(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut && fabs(segs[i]->getExpPosition(MUID_Z_REF) - pos_ref) < MUID_R_CUT)
+      if(segs[i]->getNHits() > 2 && segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut && fabs(segs[i]->getExpPosition(MUID_Z_REF) - pos_ref) < MUID_R_CUT)
 	{
 #ifdef _DEBUG_ON
 	  LogInfo("Muon ID are already avaiable!");
@@ -1214,6 +1214,7 @@ bool KalmanFastTracking::muonID_search(Tracklet& tracklet)
       if(!(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut)) return false;
     }
 
+  if(segs[0]->getNHits() + segs[1]->getNHits() < 5) return false;
   return true;
 }
 
@@ -1245,7 +1246,7 @@ bool KalmanFastTracking::muonID_comp(Tracklet& tracklet)
 #endif
 
       double pos_ref = i == 0 ? tracklet.getExpPositionX(MUID_Z_REF) : tracklet.getExpPositionY(MUID_Z_REF);
-      if(segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut && fabs(segs[i]->getExpPosition(MUID_Z_REF) - pos_ref) < MUID_R_CUT)
+      if(segs[i]->getNHits() > 2 && segs[i]->isValid() && fabs(slope[i] - segs[i]->a) < cut && fabs(segs[i]->getExpPosition(MUID_Z_REF) - pos_ref) < MUID_R_CUT)
 	{
 #ifdef _DEBUG_ON
 	  LogInfo("Muon ID are already avaiable!");
@@ -1272,6 +1273,7 @@ bool KalmanFastTracking::muonID_comp(Tracklet& tracklet)
       if(!segs[i]->isValid()) return false;
     }
 
+  if(segs[0]->getNHits() + segs[1]->getNHits() < 5) return false;
   return true;
 }
 
