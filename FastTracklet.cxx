@@ -162,11 +162,16 @@ void PropSegment::resolveLR()
     }
 }
 
+void PropSegment::resolveLR(int settings)
+{
+  hits[0].sign = 2*(settings & 1) - 1;
+  hits[1].sign = 2*((settings & 2) >> 1) - 1;
+  hits[2].sign = 2*((settings & 4) >> 1) - 1;
+  hits[3].sign = 2*((settings & 8) >> 1) - 1;
+}
+
 void PropSegment::fit()
 {
-  //Resolve left/right for the first time
-  resolveLR();
-
   int nHits = getNHits();
   if(nHits == 2) 
     {
@@ -200,7 +205,6 @@ void PropSegment::fit()
 
       //remove the bad hit
       hits[index].hit.index = -1;
-      resolveLR();
 
       //fit again
       fit_34hits();
@@ -233,7 +237,35 @@ void PropSegment::fit_2hits()
   chisq = 0.;
 }
 
+/*
 void PropSegment::fit_34hits()
+{
+  int index_min = -1;
+  double chisq_min = 1E8;
+  for(int i = 0; i < 16; ++i)
+    {
+      resolveLR(i);
+
+      linearFit_iterative();
+      if(chisq < chisq_min)
+	{
+	  chisq_min = chisq;
+	  index_min = i;
+	}
+    }
+
+  resolveLR(index_min);
+  linearFit_iterative();
+}
+*/
+
+void PropSegment::fit_34hits()
+{
+  resolveLR();
+  linearFit_simple();
+}
+
+void PropSegment::linearFit_simple()
 {
   double sum = 0.;
   double sx = 0.;
@@ -274,8 +306,7 @@ void PropSegment::fit_34hits()
     }
 }
 
-/*
-void PropSegment::fit_34hits()
+void PropSegment::linearFit_iterative()
 {
   //Algorithm refer to Kun's PhD thesis
 
@@ -296,9 +327,9 @@ void PropSegment::fit_34hits()
   //while loop with less than 100 iterations
   a = 0;
   int iter = 0;
-  double a_prev = 0;        // value of a in previous iteration
+  double a_prev = -999.;        // value of a in previous iteration
   double _x[4], _y[4];      // corrected hit pos
-  while(fabs(a_prev - a) < 1E-3 && ++iter < 100)
+  while(fabs(a_prev - a) > 1E-4 && ++iter < 100)
     {
       a_prev = a;
 
@@ -337,7 +368,6 @@ void PropSegment::fit_34hits()
 	}
     }
 }
-*/
 
 //General tracklet part
 const GeomSvc* Tracklet::p_geomSvc = GeomSvc::instance();

@@ -72,8 +72,13 @@ public:
   void fit_2hits();
   void fit_34hits();
 
+  //linear chisq fitter
+  void linearFit_simple();
+  void linearFit_iterative();
+
   //resolve left/right
   void resolveLR();
+  void resolveLR(int setting);
 
   //track slope the interception
   double a;
