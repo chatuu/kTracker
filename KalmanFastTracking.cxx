@@ -621,8 +621,10 @@ void KalmanFastTracking::buildGlobalTracks()
 
 #ifndef COARSE_MODE
 	  ///Resolve the left-right with a tight pull cut, then a loose one, then resolve by single projections
+	  resolveLeftRight(tracklet_global, 50.);
 	  resolveLeftRight(tracklet_global, 100.);
-	  resolveLeftRight(tracklet_global, 1000.);
+	  resolveLeftRight(tracklet_global, 200.);
+	  resolveLeftRight(tracklet_global, 500.);
           resolveSingleLeftRight(tracklet_global);
 #endif
 	  ///Remove bad hits if needed
