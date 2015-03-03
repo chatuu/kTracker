@@ -183,12 +183,14 @@ void PropSegment::fit()
     }
 
   //remove one bad hits if possible/needed
-  if(nHits == 4 && chisq > 5.)
+  while(nHits == 4 && chisq > 5.)
     {
-      int index = 0;
-      double res_max = fabs(hits[0].pos() - a*p_geomSvc->getPlanePosition(hits[0].hit.detectorID) - b);
-      for(int i = 1; i < 4; ++i)
+      int index = -1;
+      double res_max = 0.;
+      for(int i = 0; i < 4; ++i)
 	{
+	  if(hits[i].hit.index < 0) continue;
+
 	  double res = fabs(hits[i].pos() - a*p_geomSvc->getPlanePosition(hits[i].hit.detectorID) - b);
 	  if(res > res_max)
 	    {
@@ -207,7 +209,15 @@ void PropSegment::fit()
       hits[index].hit.index = -1;
 
       //fit again
-      fit_34hits();
+      --nHits;
+      if(nHits == 2)
+	{
+	  fit_2hits();
+	}
+      else
+	{
+	  fit_34hits();
+	}
 
 #ifdef _DEBUG_ON
       LogInfo("After removing a = " << a << ", b = " << b << ", chisq = " << chisq);
