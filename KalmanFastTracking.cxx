@@ -625,6 +625,7 @@ void KalmanFastTracking::buildGlobalTracks()
 	  resolveLeftRight(tracklet_global, 100.);
 	  resolveLeftRight(tracklet_global, 200.);
 	  resolveLeftRight(tracklet_global, 500.);
+	  resolveLeftRight(tracklet_global, 1000.);
           resolveSingleLeftRight(tracklet_global);
 #endif
 	  ///Remove bad hits if needed

@@ -271,16 +271,7 @@ bool Tracklet::isValid()
       if(nHits < 4) return false;
       if(chisq > 15.) return false;
     }
-
-  //Back partial
-  if(stationID == 5)
-    {
-      if(nXHits < 2 || nUHits < 2 || nVHits < 2) return false;
-      if(nHits < 8) return false; 
-    }
-
-  //Global tracks
-  if(stationID == 6)
+  else
     {
       //Number of hits cuts, second index is X, U, V, second index is station-1, 2, 3
       int nRealHits[3][3] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
@@ -296,20 +287,25 @@ bool Tracklet::isValid()
 	}
 
       //Number of hits cut after removing bad hits
-      for(int i = 0; i < 3; ++i)
+      for(int i = 1; i < 3; ++i)
 	{
 	  if(nRealHits[i][0] < 1 || nRealHits[i][1] < 1 || nRealHits[i][2] < 1) return false;
 	  if(nRealHits[i][0] + nRealHits[i][1] + nRealHits[i][2] < 4) return false;
 	}
 
-      if(prob < PROB_TIGHT) return false;
-      
-      if(KMAG_ON == 1)
+      //for global tracks only
+      if(stationID == 6)
 	{
-	  if(invP < INVP_MIN || invP > INVP_MAX) return false;
-       	}
+	  if(nRealHits[0][0] < 1 || nRealHits[0][1] < 1 || nRealHits[0][2] < 1) return false;
+	  if(nRealHits[0][0] + nRealHits[0][1] + nRealHits[0][2] < 4) return false;
+	  
+	  if(prob < PROB_TIGHT) return false;
+	  if(KMAG_ON == 1)
+    	    {
+    	      if(invP < INVP_MIN || invP > INVP_MAX) return false;
+    	    }
+	}
     }
-
 
   return true;
 }
