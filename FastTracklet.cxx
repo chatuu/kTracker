@@ -183,7 +183,7 @@ void PropSegment::fit()
     }
 
   //remove one bad hits if possible/needed
-  while(nHits == 4 && chisq > 5.)
+  while(nHits > 2 && chisq > 5.)
     {
       int index = -1;
       double res_max = 0.;
