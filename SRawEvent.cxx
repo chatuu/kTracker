@@ -654,7 +654,7 @@ void SRawEvent::sagittaReduce(std::list<Hit>& hits)
 	  for(int k = 0; k < idx_D1; ++k)
 	    {
 	      if(p_geomSvc->getPlaneType(hitTemp[i].detectorID) != p_geomSvc->getPlaneType(hitTemp[k].detectorID)) continue;
-	      double s1 = hitTemp[i].pos - p_geomSvc->getPlanePosition(hitTemp[i].detectorID);
+	      double s1 = hitTemp[k].pos - slope*p_geomSvc->getPlanePosition(hitTemp[k].detectorID);
 	    
 	      if(fabs(s1/s2 - 1.77) < 0.3)
 		{
@@ -669,7 +669,7 @@ void SRawEvent::sagittaReduce(std::list<Hit>& hits)
   int idx = 0;
   for(std::list<Hit>::iterator iter = hits.begin(); iter != hits.end(); )
     {
-      if(flag[idx] > 0)
+      if(flag[idx] < 0)
 	{
 	  iter = hits.erase(iter);
 	}
