@@ -126,6 +126,7 @@ KalmanFastTracking::KalmanFastTracking(bool flag) : enable_KF(flag)
   for(int i = 25; i <= 48; i++)
     {
       double factor = 0.15;
+      if(i > 24 && i < 29) factor = 0.25; //for station-1
       if(i > 28 && i < 33) factor = 0.2; //for station-2
 
       z_mask[i-25] = p_geomSvc->getPlanePosition(i);
@@ -623,9 +624,6 @@ void KalmanFastTracking::buildGlobalTracks()
 	  ///Resolve the left-right with a tight pull cut, then a loose one, then resolve by single projections
 	  resolveLeftRight(tracklet_global, 50.);
 	  resolveLeftRight(tracklet_global, 100.);
-	  resolveLeftRight(tracklet_global, 200.);
-	  resolveLeftRight(tracklet_global, 500.);
-	  resolveLeftRight(tracklet_global, 1000.);
           resolveSingleLeftRight(tracklet_global);
 #endif
 	  ///Remove bad hits if needed
