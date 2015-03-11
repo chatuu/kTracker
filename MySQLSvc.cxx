@@ -612,7 +612,8 @@ bool MySQLSvc::initWriter()
 	  "hitID       BIGINT,  "
 	  "driftSign   SMALLINT,"
 	  "residual    DOUBLE,  "
-	  "PRIMARY KEY(runID, trackID, hitID))");
+	  "PRIMARY KEY(runID, trackID, hitID),"
+	  "INDEX(eventID), INDEX(charge), INDEX(spillID) )");
 #ifndef OUT_TO_SCREEN
   server->Exec(query);
 #else
@@ -648,7 +649,8 @@ bool MySQLSvc::initWriter()
 	  "isValid     INTEGER,"
 	  "isTarget    INTEGER,"
 	  "isDump      INTEGER,"
-	  "PRIMARY KEY(runID, dimuonID, eventID))");
+	  "PRIMARY KEY(runID, dimuonID, eventID),"
+	  "INDEX(eventID), INDEX(spillID) )");
 #ifndef OUT_TO_SCREEN
   server->Exec(query);
 #else
