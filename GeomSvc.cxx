@@ -326,11 +326,11 @@ void GeomSvc::init(std::string geometrySchema)
 	{
 	  planes[detectorID].planeType = 1;
 	}
-      else if(detectorName.find("U") != string::npos)
+      else if((detectorName.find("U") != string::npos || detectorName.find("V") != string::npos) && planes[detectorID].angleFromVert > 0)
 	{
 	  planes[detectorID].planeType = 2;
 	}
-      else if(detectorName.find("V") != string::npos)
+      else if((detectorName.find("U") != string::npos || detectorName.find("V") != string::npos) && planes[detectorID].angleFromVert < 0)
 	{
 	  planes[detectorID].planeType = 3;
 	}

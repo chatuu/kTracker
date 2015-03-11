@@ -1585,7 +1585,7 @@ void KalmanFastTracking::processOneTracklet(Tracklet& tracklet)
       SRecTrack strack = tracklet.getSRecTrack();
 
       strack.setKalmanStatus(-1);
-      stracks.push_back(tracklet.getSRecTrack());
+      stracks.push_back(strack);
     }
 }
 
