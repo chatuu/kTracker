@@ -94,9 +94,9 @@ int main(int argc, char *argv[])
 
 #ifdef TRIGGER_TRIMING
       triggerAna->trimEvent(rawEvent);
-      rawEvent->reIndex("aoct");
+      rawEvent->reIndex("aocts");
 #else
-      rawEvent->reIndex("aoc");
+      rawEvent->reIndex("aocs");
 #endif
       if(!fastfinder->setRawEvent(rawEvent)) continue;
 
