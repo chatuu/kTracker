@@ -23,35 +23,52 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-  cout << "Uploading file: " << argv[1] << " to sql schema " << argv[2] << endl;
-
   ///Initialize the geometry service and output file 
   GeomSvc* p_geomSvc = GeomSvc::instance();
   p_geomSvc->init(GEOMETRY_VERSION);
 
   MySQLSvc* p_mysqlSvc = MySQLSvc::instance();
   p_mysqlSvc->setUserPasswd("production", "qqbar2mu+mu-");
-  p_mysqlSvc->connect(argv[3], atoi(argv[4]));
-  p_mysqlSvc->setWorkingSchema(argv[2]);
+  p_mysqlSvc->connect(argv[4], atoi(argv[5]));
+  p_mysqlSvc->setWorkingSchema(argv[3]);
   if(!p_mysqlSvc->initWriter()) exit(EXIT_FAILURE);
 
   ///Retrieve data from file
   TClonesArray* tracklets = new TClonesArray("Tracklet");
-  SRecEvent* recEvent = new SRecEvent();
+  SRecEvent* recEvent1 = new SRecEvent();
 
-  TFile* dataFile = new TFile(argv[1], "READ");
-  TTree* dataTree = (TTree*)dataFile->Get("save");
+  TFile* dataFile1 = new TFile(argv[1], "READ");
+  TTree* dataTree1 = (TTree*)dataFile1->Get("save");
 
-  dataTree->SetBranchAddress("recEvent", &recEvent);
-  dataTree->SetBranchAddress("tracklets", &tracklets);
+  dataTree1->SetBranchAddress("recEvent", &recEvent1);
+  dataTree1->SetBranchAddress("tracklets", &tracklets);
 
-  int nEvents = dataTree->GetEntries();
+  SRecEvent* recEvent2 = new SRecEvent();
+  
+  TFile* dataFile2 = new TFile(argv[2], "READ");
+  TTree* dataTree2 = (TTree *)dataFile2->Get("save");
+
+  dataTree2->SetBranchAddress("recEvent", &recEvent2);
+
+  int idx_vtx = 0;
+  dataTree2->GetEntry(idx_vtx);
+  int nEvents = dataTree1->GetEntries();
   for(int i = 0; i < nEvents; ++i)
     {
-      dataTree->GetEntry(i);
-      cout << "\r Uploading event " << recEvent->getEventID() << ", " << (i+1)*100/nEvents << "% finished." << flush;
+      dataTree1->GetEntry(i);
+      cout << "\r Uploading event " << recEvent1->getEventID() << ", " << (i+1)*100/nEvents << "% finished." << flush;
 
-      p_mysqlSvc->writeTrackingRes(recEvent, tracklets);
+      if(recEvent1->getEventID() == recEvent2->getEventID())
+	{
+	  for(int j = 0; j < recEvent2->getNDimuons(); ++j)
+	    {
+	      recEvent1->insertDimuon(recEvent2->getDimuon(j));
+	    }
+
+	  dataTree2->GetEntry(++idx_vtx);
+	}
+
+      p_mysqlSvc->writeTrackingRes(recEvent1, tracklets);
     }
   cout << endl;
   cout << "sqlResWriter ends successfully." << endl;
