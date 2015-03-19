@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
   double x2_st3, y2_st3, z2_st3;
 
   TFile* saveFile = new TFile(argv[2], "recreate");
-  TTree* saveTree = new TTree("save", "save");
+  TTree* saveTree = new TTree("data", "save");
 
   saveTree->Branch("runID", &runID, "runID/I");  
   saveTree->Branch("spillID", &spillID, "spillID/I");  
@@ -149,26 +149,27 @@ int main(int argc, char* argv[])
   saveTree->Branch("z2_up", &z2_up, "z2_up/D");
  
   //Initialize the spill LUT
-  typedef map<int, float>::value_type spillInfo;
   map<int, float> map_G2SEM, map_liveG2SEM, map_ratio;
+  map<int, int> map_enable;
 
-  float m_G2SEM, busySum, QIESum, inhibitSum;
+  float m_G2SEM, m_busySum, m_QIESum, m_inhibitSum;
   TFile* spillFile = new TFile(argv[3], "READ");
   TTree* spillTree = (TTree*)spillFile->Get("save");
 
   spillTree->SetBranchAddress("spillID", &spillID);
   spillTree->SetBranchAddress("G2SEM", &m_G2SEM);
-  spillTree->SetBranchAddress("QIESum", &QIESum);
-  spillTree->SetBranchAddress("busySum", &busySum);
-  spillTree->SetBranchAddress("inhibitSum", &inhibitSum);
+  spillTree->SetBranchAddress("QIESum", &m_QIESum);
+  spillTree->SetBranchAddress("busySum", &m_busySum);
+  spillTree->SetBranchAddress("inhibitSum", &m_inhibitSum);
 
   for(int i = 0; i < spillTree->GetEntries(); ++i)
     {
       spillTree->GetEntry(i);
 
-      map_G2SEM.insert(spillInfo(spillID, m_G2SEM));
-      map_liveG2SEM.insert(spillInfo(spillID, m_G2SEM*(1. - busySum/QIESum - inhibitSum/QIESum)));
-      map_ratio.insert(spillInfo(spillID, m_G2SEM/QIESum));
+      map_G2SEM[spillID] = m_G2SEM;
+      map_liveG2SEM[spillID] = m_G2SEM*(1. - m_busySum/m_QIESum - m_inhibitSum/m_QIESum);
+      map_ratio[spillID] = m_G2SEM/m_QIESum;
+      map_enable[spillID] = -1;
     }
 
   int nEntry = 0;
@@ -180,6 +181,9 @@ int main(int argc, char* argv[])
       spillID = recEvent->getSpillID();
       eventID = recEvent->getEventID();
       targetPos = recEvent->getTargetPos();
+
+      if(map_G2SEM.count(spillID) == 0) continue;
+      map_enable[spillID] = 1;
 
       G2SEM = map_G2SEM[spillID];
       liveG2SEM = map_liveG2SEM[spillID];
@@ -300,8 +304,22 @@ int main(int argc, char* argv[])
       recEvent->clear();
     }
 
+  TTree* spillSaveTree = spillTree->CloneTree(0);
+  for(int i = 0; i < spillTree->GetEntries(); ++i)
+    {
+      spillTree->GetEntry(i);
+
+      if(map_enable[spillID] > 0) 
+	{
+	  map_enable[spillID] = -1;
+	  spillSaveTree->Fill();
+	}
+    }
+  spillSaveTree->SetName("spill");
+
   saveFile->cd();
   saveTree->Write();
+  spillSaveTree->Write();
   saveFile->Close();
 
   return 1;
