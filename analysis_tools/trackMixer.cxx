@@ -49,51 +49,48 @@ int main(int argc, char *argv[])
   TFile* saveFile = new TFile(argv[2], "recreate");
   TTree* saveTree = new TTree("save", "save");
 
-  saveTree->Branch("rawEvent", &rawEvent, 256000, 99);
   saveTree->Branch("recEvent", &mixEvent, 256000, 99);
 
   //Load track bank of mu+ and mu-
-  vector<SRecTrack> ptracks, mtracks;
-  vector<int> pflags, mflags;
-  //vector<int> pintensity, mintensity;
-  ptracks.clear(); mtracks.clear(); 
-  pflags.clear(); mflags.clear();
-  //pintensity.clear(); mintensity.clear();
-  ptracks.reserve(100000); mtracks.reserve(100000); 
-  pflags.reserve(100000); mflags.reserve(100000);
-  //pintensity.reserve(100000); mintensity.reserve(100000);
+  vector<SRecTrack> ptracks[7], mtracks[7];
+  vector<int> pflags[7], mflags[7];
+  for(int i = 0; i < 7; ++i)
+    {
+      ptracks[i].reserve(25000);
+      pflags[i].reserve(25000);
+
+      mtracks[i].reserve(25000);
+      mflags[i].reserve(25000);
+    }
 
   //Extract all the tracks and put in the container
-  TRandom rnd;
-  rnd.SetSeed(atoi(argv[4]));
- 
+
   int nEvtMax = dataTree->GetEntries();
   for(int i = 0; i < nEvtMax; i++)
     {
       dataTree->GetEntry(i);
-      if(i % 1000 == 0) cout << "  " << i << "/" << nEvtMax << endl;
-      
       if(!rawEvent->isTriggeredBy(SRawEvent::MATRIX1)) continue;
+      if(rawEvent->getTargetPos() < 1 || rawEvent->getTargetPos() > 7) continue;
 
       int nTracks = recEvent->getNTracks();
       if(nTracks != 1) continue;
+
+      int index = rawEvent->getTargetPos() - 1;
       for(int j = 0; j < nTracks; j++)
 	{
-	  //cout << j << endl;
 	  SRecTrack track = recEvent->getTrack(j);
 	  track.setZVertex(track.getZVertex());
 	  if(!track.isValid()) continue;
 
 	  if(track.getCharge() > 0)
     	    {
-	      ptracks.push_back(track);
-	      pflags.push_back(1);
-	      //pintensity.push_back(rawEvent->getIntensity(16));
+	      ptracks[index].push_back(track);
+	      pflags[index].push_back(1);
 	    }
 	  else
 	    {
-	      mtracks.push_back(track);
-	      mflags.push_back(1);
+	      mtracks[index].push_back(track);
+	      mflags[index].push_back(1);
 	    }
 	}
 
@@ -102,30 +99,40 @@ int main(int argc, char *argv[])
     }
 
   //Random combination
-  int nPlus = ptracks.size();
-  int nMinus = mtracks.size();
-  int nEntries = atoi(argv[3]);
-  LogInfo("Totally " << nPlus << " positive tracks and " << nMinus << " negative tracks ..");
-
-  int nEntriesMax = int(nPlus < nMinus ? 0.8*nPlus : 0.8*nMinus);
-  if(nEntries > nEntriesMax) nEntries = nEntriesMax;
-  int nTries = 0;
-  while(saveTree->GetEntries() < nEntries && nTries - saveTree->GetEntries() < 10000)
+  TRandom rnd;
+  rnd.SetSeed(atoi(argv[3]));
+ 
+  int eventID = 0;
+  for(int i = 0; i < 7; ++i)
     {
-      ++nTries;
+      int nPlus = ptracks[i].size();
+      int nMinus = mtracks[i].size();
+      int nPairs = int(nPlus < nMinus ? 0.8*nPlus : 0.8*nMinus);
+      cout << nPlus << " mu+ and " << nMinus << " mu- tracks with targetPos = " << i+1;
+      cout << ", will generate " << nPairs << " random pairs. " << endl; 
 
-      int id1 = int(rnd.Rndm()*nPlus);
-      int id2 = int(rnd.Rndm()*nMinus);
+      int nTries = 0;
+      int nSuccess = 0;
+      while(nSuccess < nPairs && nTries - nSuccess < 10000)
+	{
+	  ++nTries;
 
-      //Neither of the tracks should be used
-      if(pflags[id1] < 0 || mflags[id2] < 0) continue;
-      if(ptracks[id1].getTriggerRoad()*mtracks[id1].getTriggerRoad() > 0) continue;
+	  int idx1 = int(rnd.Rndm()*nPlus);
+	  int idx2 = int(rnd.Rndm()*nMinus);
 
-      mixEvent->insertTrack(ptracks[id1]); pflags[id1] = -1;
-      mixEvent->insertTrack(mtracks[id2]); mflags[id2] = -1;
+	  if(pflags[i][idx1] < 0 || mflags[i][idx2] < 0) continue;
+	  if(ptracks[i][idx1].getTriggerRoad()*mtracks[i][idx2].getTriggerRoad() > 0) continue;
 
-      saveTree->Fill();
-      mixEvent->clear();
+	  mixEvent->setEventInfo(atoi(argv[3]), 0, eventID++);
+	  mixEvent->setTargetPos(i+1);
+	  mixEvent->insertTrack(ptracks[i][idx1]); pflags[i][idx1] = -1;
+	  mixEvent->insertTrack(mtracks[i][idx2]); mflags[i][idx2] = -1;
+
+	  ++nSuccess;
+
+	  saveTree->Fill();
+	  mixEvent->clear();
+	}
     }
 
   saveFile->cd();
