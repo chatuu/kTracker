@@ -51,6 +51,10 @@ int main(int argc, char *argv[])
 
   saveTree->Branch("recEvent", &mixEvent, 256000, 99);
 
+  //Initialize vertex finder
+  VertexFit* vtxfit = new VertexFit();
+  vtxfit->enableOptimization();
+
   //Load track bank of mu+ and mu-
   vector<SRecTrack> ptracks[7], mtracks[7];
   vector<int> pflags[7], mflags[7];
@@ -121,12 +125,15 @@ int main(int argc, char *argv[])
 	  int idx2 = int(rnd.Rndm()*nMinus);
 
 	  if(pflags[i][idx1] < 0 || mflags[i][idx2] < 0) continue;
-	  if(ptracks[i][idx1].getTriggerRoad()*mtracks[i][idx2].getTriggerRoad() > 0) continue;
+	  if((ptracks[i][idx1].getTriggerRoad() > 0 && mtracks[i][idx2].getTriggerRoad() > 0) || (ptracks[i][idx1].getTriggerRoad() < 0 && mtracks[i][idx2].getTriggerRoad() < 0)) continue;
 
 	  mixEvent->setEventInfo(atoi(argv[3]), 0, eventID++);
 	  mixEvent->setTargetPos(i+1);
 	  mixEvent->insertTrack(ptracks[i][idx1]); pflags[i][idx1] = -1;
 	  mixEvent->insertTrack(mtracks[i][idx2]); mflags[i][idx2] = -1;
+
+	  vtxfit->setRecEvent(mixEvent);
+	  if(eventID % 1000 == 0) saveTree->AutoSave("SaveSelf");
 
 	  ++nSuccess;
 
@@ -138,6 +145,8 @@ int main(int argc, char *argv[])
   saveFile->cd();
   saveTree->Write();
   saveFile->Close();
+
+  delete vtxfit;
 
   return 1;
 }
