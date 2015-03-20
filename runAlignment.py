@@ -54,7 +54,7 @@ for i in range(offset, nCycle+1):
     alignFile = 'run_'+runID+'_align_'+str(i)+'.root'
     recFile_initial = 'rec_'+runID+'_align_'+str(i)
 
-    runCmd('./update '+rawFile+' '+alignFile)
+    runCmd('./update ac '+rawFile+' '+alignFile)
 
     # divide the task to nJobs jobs and submit them all to background
     nEvents_single = nEvtMax/nJobs
