@@ -14,9 +14,9 @@ Settings::Settings()
   recordMethod = "hits";
   eventPos = "both";
   dimuonSource = "both";
-  login = "seaguest";
+  login = MYSQL_USER;
   outputFileName = "test_default";
-  password = "qqbar2mu+mu-";
+  password = MYSQL_PASS;
   fMagName = "tab.Fmag";
   kMagName = "tab.Kmag";
   sqlServer = MYSQL_SERVER_ADDR;

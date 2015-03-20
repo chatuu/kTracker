@@ -28,7 +28,7 @@ int main(int argc, char **argv)
   p_geomSvc->init(GEOMETRY_VERSION);
 
   MySQLSvc* p_mysqlSvc = MySQLSvc::instance();
-  p_mysqlSvc->setUserPasswd("production", "qqbar2mu+mu-");
+  p_mysqlSvc->setUserPasswd(MYSQL_USER, MYSQL_PASS);
   p_mysqlSvc->connect(argv[4], atoi(argv[5]));
   p_mysqlSvc->setWorkingSchema(argv[3]);
   if(!p_mysqlSvc->initWriter()) exit(EXIT_FAILURE);
