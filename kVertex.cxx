@@ -34,15 +34,21 @@ int main(int argc, char *argv[])
   //Retrieve the raw event
   LogInfo("Retrieving the event stored in ROOT file ... ");
   SRecEvent* recEvent = new SRecEvent();
-
+  
   TFile* dataFile = new TFile(argv[1], "READ");
   TTree* dataTree = (TTree*)dataFile->Get("save");
 
   dataTree->SetBranchAddress("recEvent", &recEvent);
 
   TFile* saveFile = new TFile(argv[2], "recreate");
+#ifdef ATTACH_RAW 
   TTree* saveTree = dataTree->CloneTree(0);
-  
+#else
+  TTree* saveTree = new TTree("save", "save");
+
+  saveTree->Branch("recEvent", &recEvent, 256000, 99);
+#endif
+
   //Initialize track finder
   LogInfo("Initializing the track finder and kalman filter ... ");
   VertexFit* vtxfit = new VertexFit();

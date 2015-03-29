@@ -182,6 +182,19 @@ bool VertexFit::setRecEvent(SRecEvent* recEvent, int sign1, int sign2)
 	    }
 	  dimuon.calcVariables();
 
+	  //Test three fixed hypothesis
+	  track_pos.setZVertex(Z_DUMP);
+	  track_neg.setZVertex(Z_DUMP);
+	  dimuon.chisq_dump = track_pos.getChisqVertex() + track_neg.getChisqVertex();
+
+	  track_pos.setZVertex(Z_TARGET);
+	  track_neg.setZVertex(Z_TARGET);
+	  dimuon.chisq_target = track_pos.getChisqVertex() + track_neg.getChisqVertex();
+	    
+	  track_pos.setZVertex(Z_UPSTREAM+10.);
+	  track_neg.setZVertex(Z_UPSTREAM+10.);
+	  dimuon.chisq_upstream = track_pos.getChisqVertex() + track_neg.getChisqVertex();
+
 	  //Fill the final data
 	  recEvent->insertDimuon(dimuon);
           

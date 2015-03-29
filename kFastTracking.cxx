@@ -11,6 +11,7 @@
 #include <TMatrixD.h>
 #include <TLorentzVector.h>
 #include <TClonesArray.h>
+#include <TString.h>
 
 #include "GeomSvc.h"
 #include "SRawEvent.h"
@@ -74,10 +75,15 @@ int main(int argc, char *argv[])
   KalmanFastTracking* fastfinder = new KalmanFastTracking(false);
 #endif
 
+  //make the reIndex options
+  TString opt = "aocs";
+
 #ifdef TRIGGER_TRIMING
   TriggerAnalyzer* triggerAna = new TriggerAnalyzer();
   triggerAna->init();
   triggerAna->buildTriggerTree();
+
+  opt = opt + "t";
 #endif
 
   int offset = argc > 3 ? atoi(argv[3]) : 0;
@@ -94,10 +100,8 @@ int main(int argc, char *argv[])
 
 #ifdef TRIGGER_TRIMING
       triggerAna->trimEvent(rawEvent);
-      rawEvent->reIndex("aocts");
-#else
-      rawEvent->reIndex("aocs");
 #endif
+      rawEvent->reIndex(opt.Data());
       if(!fastfinder->setRawEvent(rawEvent)) continue;
 
       //Fill the TClonesArray

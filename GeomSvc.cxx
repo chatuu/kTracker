@@ -393,11 +393,12 @@ void GeomSvc::init(std::string geometrySchema)
 
   /////Here starts the user-defined part
   //load alignment parameters
+  calibration_loaded = false;
 #ifndef LOAD_ONLINE_ALIGNMENT
   loadAlignment("alignment.txt", "alignment_hodo.txt", "alignment_prop.txt");
   loadMilleAlignment("align_mille.txt");
+  loadCalibration("calibration.txt");
 #endif
-  calibration_loaded = false;
 
   ///Initialize the position look up table for all wires, hodos, and tubes
   typedef std::map<std::pair<int, int>, double>::value_type posType;

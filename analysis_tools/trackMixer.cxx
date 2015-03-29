@@ -26,12 +26,13 @@
 #include "VertexFit.h"
 #include "SRecEvent.h"
 
+using namespace std;
+
 int main(int argc, char *argv[])
 {
-  //Initialize geometry service
-  LogInfo("Initializing geometry service ... ");
-  GeomSvc* geometrySvc = GeomSvc::instance();
-  geometrySvc->init(GEOMETRY_VERSION);
+  //Initialize job options
+  GeomSvc* p_geomSvc = GeomSvc::instance();
+  p_geomSvc->init(GEOMETRY_VERSION);
 
   //Retrieve the raw event
   LogInfo("Retrieving the event stored in ROOT file ... ");
@@ -47,9 +48,15 @@ int main(int argc, char *argv[])
   SRecEvent* mixEvent = new SRecEvent();
 
   TFile* saveFile = new TFile(argv[2], "recreate");
-  TTree* saveTree = new TTree("save", "save");
 
-  saveTree->Branch("recEvent", &mixEvent, 256000, 99);
+  TTree* saveTree_mix = new TTree("save_mix", "save_mix");
+  saveTree_mix->Branch("recEvent", &mixEvent, 256000, 99);
+
+  TTree* saveTree_pp = new TTree("save_pp", "save_pp");
+  saveTree_pp->Branch("recEvent", &recEvent, 256000, 99);
+
+  TTree* saveTree_mm = new TTree("save_mm", "save_mm");
+  saveTree_mm->Branch("recEvent", &recEvent, 256000, 99);
 
   //Initialize vertex finder
   VertexFit* vtxfit = new VertexFit();
@@ -68,7 +75,6 @@ int main(int argc, char *argv[])
     }
 
   //Extract all the tracks and put in the container
-
   int nEvtMax = dataTree->GetEntries();
   for(int i = 0; i < nEvtMax; i++)
     {
@@ -79,32 +85,54 @@ int main(int argc, char *argv[])
       int nTracks = recEvent->getNTracks();
       if(nTracks != 1) continue;
 
-      int index = rawEvent->getTargetPos() - 1;
-      for(int j = 0; j < nTracks; j++)
-	{
-	  SRecTrack track = recEvent->getTrack(j);
-	  track.setZVertex(track.getZVertex());
-	  if(!track.isValid()) continue;
+      SRecTrack track = recEvent->getTrack(0);
+      track.setZVertex(track.getZVertex());
+      if(!track.isValid()) continue;
 
-	  if(track.getCharge() > 0)
-    	    {
-	      ptracks[index].push_back(track);
-	      pflags[index].push_back(1);
-	    }
-	  else
-	    {
-	      mtracks[index].push_back(track);
-	      mflags[index].push_back(1);
-	    }
+      int index = rawEvent->getTargetPos() - 1;
+      if(track.getCharge() > 0)
+	{
+	  ptracks[index].push_back(track);
+	  pflags[index].push_back(1);
+	}
+      else
+	{
+	  mtracks[index].push_back(track);
+	  mflags[index].push_back(1);
 	}
 
       rawEvent->clear();
       recEvent->clear();
     }
 
+  //Like-sign muon pairs
+  for(int i = 0; i < nEvtMax; ++i)
+    {
+      dataTree->GetEntry(i);
+      vtxfit->setRecEvent(recEvent, 1, 1);
+
+      if(recEvent->getNDimuons() > 0) saveTree_pp->Fill();
+      recEvent->clear();
+    }
+
+  for(int i = 0; i < nEvtMax; ++i)
+    {
+      dataTree->GetEntry(i);
+      vtxfit->setRecEvent(recEvent, -1, -1);
+
+      if(recEvent->getNDimuons() > 0) saveTree_mm->Fill();
+      recEvent->clear();
+    }
+
+  saveFile->cd();
+  saveTree_pp->Write();
+  saveTree_mm->Write();
+
   //Random combination
+  dataTree->GetEntry(0);
+  int runID = rawEvent->getRunID();
   TRandom rnd;
-  rnd.SetSeed(atoi(argv[3]));
+  rnd.SetSeed(runID);
  
   int eventID = 0;
   for(int i = 0; i < 7; ++i)
@@ -127,26 +155,29 @@ int main(int argc, char *argv[])
 	  if(pflags[i][idx1] < 0 || mflags[i][idx2] < 0) continue;
 	  if((ptracks[i][idx1].getTriggerRoad() > 0 && mtracks[i][idx2].getTriggerRoad() > 0) || (ptracks[i][idx1].getTriggerRoad() < 0 && mtracks[i][idx2].getTriggerRoad() < 0)) continue;
 
-	  mixEvent->setEventInfo(atoi(argv[3]), 0, eventID++);
+	  mixEvent->setEventInfo(runID, 0, eventID++);
 	  mixEvent->setTargetPos(i+1);
 	  mixEvent->insertTrack(ptracks[i][idx1]); pflags[i][idx1] = -1;
 	  mixEvent->insertTrack(mtracks[i][idx2]); mflags[i][idx2] = -1;
 
 	  vtxfit->setRecEvent(mixEvent);
-	  if(eventID % 1000 == 0) saveTree->AutoSave("SaveSelf");
+	  if(eventID % 1000 == 0) saveTree_mix->AutoSave("SaveSelf");
 
 	  ++nSuccess;
 
-	  saveTree->Fill();
+	  saveTree_mix->Fill();
 	  mixEvent->clear();
 	}
+      cout << "   Generated " << nSuccess << " fake pairs after " << nTries << " tries." << endl;
     }
+  cout << endl;
+  cout << "kVertex_mix ends successfully." << endl;
 
   saveFile->cd();
-  saveTree->Write();
+  saveTree_mix->Write();
   saveFile->Close();
 
   delete vtxfit;
 
-  return 1;
+  return EXIT_SUCCESS;
 }
