@@ -91,12 +91,12 @@ public:
   void insertZ(Double_t z) { fZ.push_back(z); }
   void insertChisq(Double_t chisq) { fChisqAtNode.push_back(chisq); }
 
-  ///Fast-adjust of kMag
+  ///Fast-adjust of kmag
   void adjustKMag(double kmagStr);
 
   ///Vertex stuff
   bool isVertexValid();
-  void setZVertex(Double_t z);
+  void setZVertex(Double_t z, bool update = true);
 
   ///Plain setting, no KF-related stuff
   void setVertexFast(TVector3 mom, TVector3 pos);
@@ -122,6 +122,9 @@ public:
   TVector3 getTargetMom() { return fTargetMom; }
   TVector3 getVertexPos() { return fVertexPos; }
   TVector3 getVertexMom() { return fVertexMom; }
+  Double_t getChisqDump() { return fChisqDump; }
+  Double_t getChisqTarget() { return fChisqTarget; }
+  Double_t getChisqUpstream() { return fChisqUpstream; }
 
   //Set mom/pos at a given location
   void setDumpPos(TVector3 pos) { fDumpPos = pos; } 
@@ -130,7 +133,10 @@ public:
   void setDumpMom(TVector3 mom) { fDumpMom = mom; } 
   void setDumpFaceMom(TVector3 mom) { fDumpFaceMom = mom; } 
   void setTargetMom(TVector3 mom) { fTargetMom = mom; } 
- 
+  void setChisqDump(Double_t chisq) { fChisqDump = chisq; }
+  void setChisqTarget(Double_t chisq) { fChisqTarget = chisq; }
+  void setChisqUpstream(Double_t chisq) { fChisqUpstream = chisq; }
+
   //Trigger road info
   void setTriggerRoad(Int_t roadID) { fTriggerID = roadID; }
   Int_t getTriggerRoad() { return fTriggerID; }
@@ -190,7 +196,12 @@ private:
   Double_t fPropSlopeX;
   Double_t fPropSlopeY;
 
-  ClassDef(SRecTrack, 8)
+  //Chisq of three test position
+  Double_t fChisqTarget;
+  Double_t fChisqDump;
+  Double_t fChisqUpstream;
+
+  ClassDef(SRecTrack, 9)
 };
 
 class SRecDimuon: public TObject
@@ -265,11 +276,11 @@ public:
   void setEventInfo(SRawEvent* rawEvent);
   void setEventInfo(int runID, int spillID, int eventID) { fRunID = runID; fSpillID = spillID; fEventID = eventID; }
   void setTargetPos(int targetPos) { fTargetPos = targetPos; }
-
-  //directly setup everything by raw event
+  
+  ///directly setup everything by raw event
   void setRawEvent(SRawEvent* rawEvent);
 
-  //Trigger Util
+  ///Trigger util
   bool isTriggeredBy(Int_t trigger) { return (fTriggerBits & trigger) != 0; }
 
   Int_t getRunID() { return fRunID; }
