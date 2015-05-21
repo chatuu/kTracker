@@ -72,7 +72,7 @@ public:
 
   //Output to database/txt file/screen
   bool initWriter();  
-  void writeTrackingRes(SRecEvent* recEvent, TClonesArray* tracklets);
+  void writeTrackingRes(SRecEvent* recEvent, TClonesArray* tracklets = NULL);
   void writeTrackTable(int trackID, SRecTrack* recTrack);
   void writeTrackHitTable(int trackID, Tracklet* tracklet);
   void writeDimuonTable(int dimuonID, SRecDimuon dimuon);
@@ -116,8 +116,9 @@ private:
   bool readQIE;
   bool readTriggerHits;
   bool readTargetPos;
+  bool readTrackPos;
   bool setTriggerEmu;
-
+ 
   //Random generator
   TRandom rndm;
 

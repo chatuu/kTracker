@@ -41,6 +41,7 @@ MySQLSvc::MySQLSvc()
   readQIE = true;
   readTriggerHits = true;
   readTargetPos = true;
+  readTrackPos = true;
 
   rndm.SetSeed(0);
 }
@@ -100,6 +101,25 @@ bool MySQLSvc::initReader()
     {
       std::cout << "MySQLSvc: essential information is missing in this schema. Will exit..." << std::endl;
       return false;
+    }
+
+  if(!server->HasTable("mHit"))
+    {
+      readTrackPos = false;
+    }
+  else
+    {
+      sprintf(query, "SELECT * FROM mHit LIMIT 1");
+      
+      if(makeQuery() == 0)
+	{
+	  readTrackPos = false;
+	}
+      else
+	{
+	  nextEntry();
+	  if(getInt(0) == 0) readTrackPos = false;
+	}
     }
 
   //check addtional infomation
@@ -464,7 +484,8 @@ bool MySQLSvc::getMCGenInfo(SRawMCEvent* mcEvent, int eventID)
   double px = getDouble(10);
   double py = getDouble(11);
   mcEvent->pT = sqrt(px*px + py*py);
-
+  
+  if(!readTrackPos) return true;
   for(int i = 0; i < 2; ++i)
     {
       //At vertex
@@ -556,7 +577,7 @@ bool MySQLSvc::initWriter()
     }
 
   //Book kTrack table
-  sprintf(query, "CREATE TABLE kTrack ("
+  sprintf(query, "CREATE TABLE IF NOT EXISTS kTrack ("
 	  "trackID     INTEGER,"
 	  "runID       INTEGER,"
 	  "spillID     INTEGER,"
@@ -596,8 +617,8 @@ bool MySQLSvc::initWriter()
 	  "pz3         DOUBLE, "
 	  "tx_PT       DOUBLE, "
 	  "ty_PT       DOUBLE, "
-          "PRIMARY KEY(runID, trackID, eventID), "
-	  "INDEX(eventID), INDEX(charge))");
+          "PRIMARY KEY(runID, eventID, trackID), "
+	  "INDEX(eventID), INDEX(spillID))");
 #ifndef OUT_TO_SCREEN
   server->Exec(query);
 #else
@@ -605,15 +626,14 @@ bool MySQLSvc::initWriter()
 #endif
 
   //Book kHit table
-  sprintf(query, "CREATE TABLE kTrackHit ("
+  sprintf(query, "CREATE TABLE IF NOT EXISTS kTrackHit ("
 	  "runID       SMALLINT,"
 	  "eventID     INTEGER, "
 	  "trackID     INTEGER, "
 	  "hitID       BIGINT,  "
 	  "driftSign   SMALLINT,"
 	  "residual    DOUBLE,  "
-	  "PRIMARY KEY(runID, trackID, hitID),"
-	  "INDEX(eventID), INDEX(charge), INDEX(spillID) )");
+	  "PRIMARY KEY(runID, eventID, trackID, hitID)");
 #ifndef OUT_TO_SCREEN
   server->Exec(query);
 #else
@@ -621,7 +641,7 @@ bool MySQLSvc::initWriter()
 #endif
 
   //Bool kDimuon table
-  sprintf(query, "CREATE TABLE kDimuon ("
+  sprintf(query, "CREATE TABLE IF NOT EXISTS kDimuon ("
 	  "dimuonID    INTEGER,"
 	  "runID       INTEGER,"
 	  "spillID     INTEGER,"
@@ -649,7 +669,7 @@ bool MySQLSvc::initWriter()
 	  "isValid     INTEGER,"
 	  "isTarget    INTEGER,"
 	  "isDump      INTEGER,"
-	  "PRIMARY KEY(runID, dimuonID, eventID),"
+	  "PRIMARY KEY(runID, eventID, dimuonID),"
 	  "INDEX(eventID), INDEX(spillID) )");
 #ifndef OUT_TO_SCREEN
   server->Exec(query);
@@ -704,7 +724,7 @@ void MySQLSvc::writeTrackingRes(SRecEvent* recEvent, TClonesArray* tracklets)
     {
       int trackID = nTracks + i;
       writeTrackTable(trackID, &recEvent->getTrack(i));
-      writeTrackHitTable(trackID, (Tracklet*)tracklets->At(i));
+      if(tracklets == NULL) writeTrackHitTable(trackID, (Tracklet*)tracklets->At(i));
     }
 
   int nDimuons_local = recEvent->getNDimuons();
