@@ -13,6 +13,8 @@ Created: 10-24-2011
 #include <TRandom.h>
 #include <TMath.h>
 #include <TString.h>
+#include <TROOT.h>
+#include <TRandom.h>
 
 #include "SRawEvent.h"
 #include "GeomSvc.h"
@@ -445,6 +447,7 @@ void SRawEvent::reIndex(std::string option)
   bool _triggermask = false;
   bool _sagittareduce = false;
   bool _externalpar = false;
+  bool _realization = false;
 
   TString option_lower(option.c_str());
   option_lower.ToLower();
@@ -457,8 +460,10 @@ void SRawEvent::reIndex(std::string option)
   if(option_lower.Contains("t")) _triggermask = true;
   if(option_lower.Contains("s")) _sagittareduce = true;
   if(option_lower.Contains("e")) _externalpar = true;
+  if(option_lower.Contains("r")) _realization = true;
   
   ///Dump the vector into a list and do the reduction
+  extern TRandom* gRandom;
   GeomSvc* p_geomSvc = GeomSvc::instance();
   
   std::list<Hit> hitlist_temp;
@@ -485,7 +490,15 @@ void SRawEvent::reIndex(std::string option)
       if(_nonchamber && iter->detectorID > 24) continue;
       if(_triggermask && iter->detectorID > 24 && iter->detectorID <= 40 && (!iter->isTriggerMask())) continue;
 
-      hitlist_temp.push_back(*iter);
+      if(_realization && iter->detectorID <= 24)
+	{
+	  iter->driftDistance += gRandom->Gaus(0., 0.04);
+	  if(gRandom->Rndm() < 0.94) hitlist_temp.push_back(*iter);
+	}
+      else
+	{
+	  hitlist_temp.push_back(*iter);
+	}
     }
 
   if(_mergehodo)
