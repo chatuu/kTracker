@@ -496,7 +496,7 @@ bool MySQLSvc::getMCGenInfo(SRawMCEvent* mcEvent, int eventID)
       mcEvent->p_vertex[i].SetXYZ(getDouble(0), getDouble(1), getDouble(2));
    
       //Number of chamber hits in one track
-      sprintf(query, "SELECT COUNT(*) FROM mHit WHERE detectorName LIKE 'D%%' AND mTrackID=%d", trackID[i]);
+      sprintf(query, "SELECT COUNT(*) FROM mHit WHERE detectorName LIKE 'D%%' AND inTime>0 && mTrackID=%d", trackID[i]);
       if(makeQuery() != 1) return false;
 
       nextEntry();
