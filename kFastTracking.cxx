@@ -20,7 +20,7 @@
 #include "KalmanFastTracking.h"
 #include "KalmanFitter.h"
 #include "VertexFit.h"
-#include "TriggerAnalyzer.h"
+#include "EventReducer.h"
 #include "MODE_SWITCH.h"
 
 using namespace std;
@@ -75,16 +75,12 @@ int main(int argc, char *argv[])
   KalmanFastTracking* fastfinder = new KalmanFastTracking(false);
 #endif
 
-  //make the reIndex options
+  //Initialize the event reducer
   TString opt = "aocs";
-
 #ifdef TRIGGER_TRIMING
-  TriggerAnalyzer* triggerAna = new TriggerAnalyzer();
-  triggerAna->init();
-  triggerAna->buildTriggerTree();
-
   opt = opt + "t";
 #endif
+  EventReducer* eventReducer = new EventReducer(opt);
 
   int offset = argc > 3 ? atoi(argv[3]) : 0;
   int nEvtMax = argc > 4 ? atoi(argv[4]) + offset : dataTree->GetEntries();
@@ -98,10 +94,7 @@ int main(int argc, char *argv[])
 
       clock_t time_single = clock();
 
-#ifdef TRIGGER_TRIMING
-      triggerAna->trimEvent(rawEvent);
-#endif
-      rawEvent->reIndex(opt.Data());
+      eventReducer->reduceEvent(rawEvent);
       if(!fastfinder->setRawEvent(rawEvent)) continue;
 
       //Fill the TClonesArray
@@ -152,12 +145,9 @@ int main(int argc, char *argv[])
   saveFile->Close();
 
   delete fastfinder;
+  delete eventReducer;
 #ifdef _ENABLE_KF
   filter->close();
-#endif
-
-#ifdef TRIGGER_TRIMING
-  delete triggerAna;
 #endif
 
   return 1;

@@ -11,6 +11,7 @@
 #include <TMatrixD.h>
 #include <TLorentzVector.h>
 #include <TClonesArray.h>
+#include <TString.h>
 
 #include "GeomSvc.h"
 #include "SRawEvent.h"
@@ -21,6 +22,7 @@
 #include "VertexFit.h"
 #include "MySQLSvc.h"
 #include "TriggerAnalyzer.h"
+#include "EventReducer.h"
 
 #include "MODE_SWITCH.h"
 
@@ -64,12 +66,12 @@ int main(int argc, char *argv[])
 #endif
   VertexFit* vtxfit  = new VertexFit();
 
-  //Initialize the trigger analyzer
+  //Initialize the event reducer
+  TString opt = "aocs";
 #ifdef TRIGGER_TRIMING
-  TriggerAnalyzer* triggerAna = new TriggerAnalyzer();
-  triggerAna->init();
-  triggerAna->buildTriggerTree();
+  opt = opt + "t";
 #endif
+  EventReducer* eventReducer = new EventReducer(opt);
 
   //Quality control numbers and plots
   int nEvents_loaded = 0;
@@ -91,13 +93,7 @@ int main(int argc, char *argv[])
       cout << nEvents_tracked*100/nEvents_loaded << "% have at least one track, " << nEvents_dimuon*100/nEvents_loaded << "% have at least one dimuon pair, ";
       cout << nEvents_dimuon_real*100/nEvents_loaded << "% have successful dimuon vertex fit.";
 
-#ifdef TRIGGER_TRIMING
-      triggerAna->trimEvent(rawEvent);
-      rawEvent->reIndex("oact");
-#else
-      rawEvent->reIndex("oac");
-#endif
-
+      eventReducer->reduceEvent(rawEvent);
       if(!fastfinder->setRawEvent(rawEvent)) continue;
       ++nEvents_tracked;
 
@@ -153,10 +149,7 @@ int main(int argc, char *argv[])
 
   delete fastfinder;
   delete vtxfit;
-
-#ifdef TRIGGER_TRIMING
-  delete triggerAna;
-#endif
+  delete eventReducer;
 
   return 1;
 }
