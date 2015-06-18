@@ -59,6 +59,15 @@ int EventReducer::reduceEvent(SRawEvent* rawEvent)
       if(hodomask && iter->detectorID <= 24 && (!iter->isHodoMask())) continue;
       if(triggermask && iter->detectorID > 24 && iter->detectorID <= 40 && (!iter->isTriggerMask())) continue;
 
+      //only temporary before the mapping is fixed
+      if((iter->detectorID == 17 || iter->detectorID == 18) && iter->elementID >= 97 && iter->elementID <= 104)
+	{
+	  iter->detectorID = iter->detectorID == 17 ? 18 : 17;
+	  iter->pos = p_geomSvc->getMeasurement(iter->detectorID, iter->elementID);
+	  //iter->driftDistance = p_geomSvc->getDriftDistance(iter->detectorID, iter->tdcTime);
+	  //iter->setInTime(p_geomSvc->isInTime(iter->detectorID, iter->tdcTime));
+	}
+
       if(externalpar)
 	{
 	  iter->pos = p_geomSvc->getMeasurement(iter->detectorID, iter->elementID);
