@@ -1,6 +1,6 @@
 #include "EventReducer.h"
 
-EventReducer::EventReducer(TString options) : afterhit(false), hodomask(false), outoftime(false), decluster(false), mergehodo(false), triggermask(false), sagitta(false), hough(false), externalpar(false)
+EventReducer::EventReducer(TString options) : afterhit(false), hodomask(false), outoftime(false), decluster(false), mergehodo(false), triggermask(false), sagitta(false), hough(false), externalpar(false), realization(false)
 {
   //parse the reducer setup
   options.ToLower();
@@ -13,6 +13,7 @@ EventReducer::EventReducer(TString options) : afterhit(false), hodomask(false), 
   if(options.Contains("s")) sagitta = true;
   if(options.Contains("g")) hough = true;
   if(options.Contains("e")) externalpar = true;
+  if(options.Contains("r")) realization = true;
 
   //initialize services
   p_geomSvc = GeomSvc::instance();
