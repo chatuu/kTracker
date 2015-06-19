@@ -83,6 +83,11 @@
 #define MUID_Z_REF 2028.19
 #define MUID_R_CUT 3.0
 
+#define SAGITTA_TARGET_CENTER 1.85
+#define SAGITTA_TARGET_WIN 0.25
+#define SAGITTA_DUMP_CENTER 1.5
+#define SAGITTA_DUMP_WIN 0.3
+
 //--------------- Geometry setup -----------------
 #define nChamberPlanes 24
 #define nHodoPlanes 16
