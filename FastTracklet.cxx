@@ -480,7 +480,7 @@ double Tracklet::getExpPosErrorX(double z) const
   double err_x;
   if(KMAG_ON == 1 && stationID >= 5 && z < Z_KMAG_BEND - 1.)
     {
-      double err_kick = err_invP*PT_KICK_KMAG;
+      double err_kick = fabs(err_invP*PT_KICK_KMAG);
       double err_tx_st1 = err_tx + err_kick;
       double err_x0_st1 = err_x0 + err_kick*Z_KMAG_BEND;
 
@@ -609,7 +609,7 @@ void Tracklet::getXZErrorInSt1(double& err_tx_st1, double& err_x0_st1)
 {
   if(KMAG_ON == 1)
     {
-      double err_kick = err_invP*PT_KICK_KMAG;
+      double err_kick = fabs(err_invP*PT_KICK_KMAG);
       err_tx_st1 = err_tx + err_kick;
       err_x0_st1 = err_x0 + err_kick*Z_KMAG_BEND;
     }
