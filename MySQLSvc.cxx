@@ -617,7 +617,10 @@ bool MySQLSvc::initWriter()
 	  "pz3         DOUBLE, "
 	  "tx_PT       DOUBLE, "
 	  "ty_PT       DOUBLE, "
-          "PRIMARY KEY(runID, eventID, trackID), "
+          "chisq_target     DOUBLE, "
+	  "chisq_dump       DOUBLE, "
+	  "chisq_upstream   DOUBLE, "
+	  "PRIMARY KEY(runID, eventID, trackID), "
 	  "INDEX(eventID), INDEX(spillID))");
 #ifndef OUT_TO_SCREEN
   server->Exec(query);
@@ -746,7 +749,7 @@ void MySQLSvc::writeTrackTable(int trackID, SRecTrack* recTrack)
   int charge;
   int roadID;
   int numHits, numHitsSt1, numHitsSt2, numHitsSt3, numHitsSt4H, numHitsSt4V;
-  double chisq;
+  double chisq, chisq_target, chisq_dump, chisq_upstream;
 
   TVector3 proj_target = recTrack->getTargetPos();
   TVector3 proj_dump = recTrack->getDumpPos();
@@ -764,6 +767,9 @@ void MySQLSvc::writeTrackTable(int trackID, SRecTrack* recTrack)
   numHitsSt4H = recTrack->getNHitsInPTY();
   numHitsSt4V = recTrack->getNHitsInPTX();
   chisq = recTrack->getChisq();
+  chisq_target = recTrack->getChisqTarget();
+  chisq_dump = recTrack->getChisqDump();
+  chisq_upstream = recTrack->getChisqUpstream();
 
   //Vertex point
   x0 = recTrack->getVtxPar(0);
@@ -787,11 +793,12 @@ void MySQLSvc::writeTrackTable(int trackID, SRecTrack* recTrack)
   //Database output
   sprintf(query, "INSERT INTO kTrack(trackID,runID,spillID,eventID,charge,roadID,numHits,numHitsSt1,numHitsSt2,numHitsSt3,"
           "numHitsSt4H,numHitsSt4V,chisq,x0,y0,z0,px0,py0,pz0,x_target,y_target,z_target,x_dump,y_dump,z_dump," 
-	  "x1,y1,z1,px1,py1,pz1,x3,y3,z3,px3,py3,pz3,tx_PT,ty_PT) VALUES(%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,"
-	  "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)", trackID, runID, spillID, eventIDs_loaded.back(), 
-	  charge, roadID, numHits, numHitsSt1, numHitsSt2, numHitsSt3, numHitsSt4H, numHitsSt4V, chisq, x0, y0, z0, px0, py0, pz0, 
-	  proj_target.X(), proj_target.Y(), proj_target.Z(), proj_dump.X(), proj_dump.Y(), proj_dump.Z(), x1, y1, z1, px1, py1, pz1,
-	  x3, y3, z3, px3, py3, pz3, tx_prop, ty_prop);
+	  "x1,y1,z1,px1,py1,pz1,x3,y3,z3,px3,py3,pz3,tx_PT,ty_PT,chisq_target,chisq_dump,chisq_upstream) VALUES(%d,%d,%d,%d,"
+	  "%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)", 
+	  trackID, runID, spillID, eventIDs_loaded.back(),charge, roadID, numHits, numHitsSt1, numHitsSt2, numHitsSt3, numHitsSt4H, 
+	  numHitsSt4V, chisq, x0, y0, z0, px0, py0, pz0, proj_target.X(), proj_target.Y(), proj_target.Z(), proj_dump.X(), 
+	  proj_dump.Y(), proj_dump.Z(), x1, y1, z1, px1, py1, pz1, x3, y3, z3, px3, py3, pz3, tx_prop, ty_prop, chisq_target,
+	  chisq_dump, chisq_upstream);
 #ifndef OUT_TO_SCREEN
   server->Exec(query);
 #else
