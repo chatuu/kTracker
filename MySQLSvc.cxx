@@ -636,7 +636,7 @@ bool MySQLSvc::initWriter()
 	  "hitID       BIGINT,  "
 	  "driftSign   SMALLINT,"
 	  "residual    DOUBLE,  "
-	  "PRIMARY KEY(runID, eventID, trackID, hitID)");
+	  "PRIMARY KEY(runID, eventID, trackID, hitID))");
 #ifndef OUT_TO_SCREEN
   server->Exec(query);
 #else
@@ -727,7 +727,7 @@ void MySQLSvc::writeTrackingRes(SRecEvent* recEvent, TClonesArray* tracklets)
     {
       int trackID = nTracks + i;
       writeTrackTable(trackID, &recEvent->getTrack(i));
-      if(tracklets == NULL) writeTrackHitTable(trackID, (Tracklet*)tracklets->At(i));
+      if(tracklets != NULL) writeTrackHitTable(trackID, (Tracklet*)tracklets->At(i));
     }
 
   int nDimuons_local = recEvent->getNDimuons();
