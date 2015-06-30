@@ -65,10 +65,13 @@ int main(int argc, char **argv)
 	      recEvent1->insertDimuon(recEvent2->getDimuon(j));
 	    }
 
+	  p_mysqlSvc->writeTrackingRes(recEvent2, tracklets);
 	  dataTree2->GetEntry(++idx_vtx);
 	}
-
-      p_mysqlSvc->writeTrackingRes(recEvent1, tracklets);
+      else
+	{
+	  p_mysqlSvc->writeTrackingRes(recEvent1, tracklets);
+	}
     }
   cout << endl;
   cout << "sqlResWriter ends successfully." << endl;
