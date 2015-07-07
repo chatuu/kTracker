@@ -52,6 +52,9 @@ int EventReducer::reduceEvent(SRawEvent* rawEvent)
 {
     int nHits_before = rawEvent->getNHitsAll();
 
+    //sort the hit list first
+    std::sort(rawEvent->fAllHits.begin(), rawEvent->fAllHits.end());
+
     //Label the hits which are not on an active trigger road as intime and trigger masked
     if(triggermask)
     {

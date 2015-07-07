@@ -435,8 +435,10 @@ Int_t SRawEvent::getNHitsInD3m()
     return nHits;
 }
 
-void SRawEvent::reIndex()
+void SRawEvent::reIndex(bool doSort)
 {
+    if(doSort) std::sort(fAllHits.begin(), fAllHits.end());
+
     ///Reset the number of hits on each plane
     for(Int_t i = 0; i < nChamberPlanes+nHodoPlanes+nPropPlanes+1; i++) fNHits[i] = 0;
     for(UInt_t i = 0; i < fAllHits.size(); i++) ++fNHits[fAllHits[i].detectorID];
