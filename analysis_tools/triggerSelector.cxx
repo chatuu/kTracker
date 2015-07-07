@@ -21,30 +21,30 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-  GeomSvc* p_geomSvc = GeomSvc::instance();
-  p_geomSvc->init(GEOMETRY_VERSION);
+    GeomSvc* p_geomSvc = GeomSvc::instance();
+    p_geomSvc->init(GEOMETRY_VERSION);
 
-  SRawEvent* rawEvent = new SRawEvent();
+    SRawEvent* rawEvent = new SRawEvent();
 
-  TFile* dataFile = new TFile(argv[1], "READ");
-  TTree* dataTree = (TTree *)dataFile->Get("save");
+    TFile* dataFile = new TFile(argv[1], "READ");
+    TTree* dataTree = (TTree *)dataFile->Get("save");
 
-  dataTree->SetBranchAddress("rawEvent", &rawEvent);
+    dataTree->SetBranchAddress("rawEvent", &rawEvent);
 
-  TFile* saveFile = new TFile(argv[2], "recreate");
-  TTree* saveTree = dataTree->CloneTree(0);
+    TFile* saveFile = new TFile(argv[2], "recreate");
+    TTree* saveTree = dataTree->CloneTree(0);
 
-  for(Int_t i = 0; i < dataTree->GetEntries(); ++i)
+    for(Int_t i = 0; i < dataTree->GetEntries(); ++i)
     {
-      dataTree->GetEntry(i);
-      if(rawEvent->isTriggeredBy(SRawEvent::NIM3)) saveTree->Fill();
+        dataTree->GetEntry(i);
+        if(rawEvent->isTriggeredBy(SRawEvent::NIM3)) saveTree->Fill();
 
-      rawEvent->clear();
+        rawEvent->clear();
     }
-  
-  saveFile->cd();
-  saveTree->Write();
-  saveFile->Close();
 
-  return 1;
+    saveFile->cd();
+    saveTree->Write();
+    saveFile->Close();
+
+    return 1;
 }
