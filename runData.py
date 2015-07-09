@@ -17,6 +17,7 @@ parser.add_option('-m', '--jobs', type = 'int', dest = 'nJobsMax', help = 'Maxim
 parser.add_option('-n', '--notify', type = 'string', dest = 'notify', help = 'E-mail sent to notify the end of jobs', default = '')
 parser.add_option('-o', '--output', type = 'string', dest = 'output', help = 'Output file name (i.e. call hadd at the end)', default = '')
 parser.add_option('-s', '--suffix', type = 'string', dest = 'suffix', help = 'Additional arguments needed in commands', default = '')
+parser.add_option('-r', '--refresh', type = 'int', dest = 'refresh', help = 'Number of seconds for process monitor', default = 30)
 (options, args) = parser.parse_args()
 
 exe = args[0]
@@ -25,12 +26,13 @@ pattern2 = args[2]
 suffix = options.suffix
 runlist = options.list
 nJobsMax = options.nJobsMax
+sleepTime = options.refresh
 
 ## get the username
 username = os.environ['USER']
 
 ## Read in run list
-if os.path.isfile(runlist): 
+if os.path.isfile(runlist):
     fin = open(runlist, 'r')
     schemas = [line.strip() for line in fin.readlines()]
     fin.close()
@@ -58,15 +60,16 @@ while nSubmitted < len(schemas):
 
         runCmd(cmd)
         nSubmitted = nSubmitted + 1
-        
-    time.sleep(60)
-    nMinutes = nMinutes + 1.
+
+    time.sleep(sleepTime)
+    nMinutes = nMinutes + sleepTime/60.
 
 ## Only when all jobs are finished should the script quit, depanding on the jobs started by this script only
+sleepTime = sleepTime/2
 nRunning = int(os.popen('pgrep -u %s -g %d %s | wc -l' % (username, os.getpgrp(), exe)).read().strip())
 while nRunning != 0:
-    time.sleep(30)
-    nMinutes = nMinutes + 0.5
+    time.sleep(sleepTime)
+    nMinutes = nMinutes + sleepTime/60.
 
     nRunning = int(os.popen('pgrep -u %s -g %d %s | wc -l' % (username, os.getpgrp(), exe)).read().strip())
     print(exe+': '+str(nMinutes)+' minutes passed, '+str(nSubmitted)+'/'+str(len(schemas))+' submitted, '+str(nRunning)+' running ...' )
