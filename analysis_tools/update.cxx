@@ -32,7 +32,6 @@ int main(int argc, char *argv[])
     //Initialize geometry service
     GeomSvc* p_geomSvc = GeomSvc::instance();
     p_geomSvc->init(GEOMETRY_VERSION);
-    p_geomSvc->loadCalibration("calibration.txt");
 
     //Initialize the trigger analyzer
     TriggerAnalyzer* p_triggerAna = new TriggerAnalyzer();
@@ -51,22 +50,18 @@ int main(int argc, char *argv[])
     dataTree->SetBranchAddress("rawEvent", &rawEvent);
 
     //Output files
-    TFile *saveFile = new TFile(argv[3], "recreate");
-    TTree *saveTree = dataTree->CloneTree(0);
+    SRawEvent* rawEvent_new = new SRawEvent();
+
+    TFile* saveFile = new TFile(argv[3], "recreate");
+    TTree* saveTree = new TTree("save", "save");
+    
+    saveTree->Branch("rawEvent", &rawEvent_new, 256000, 99);
 
     //Do the updating work
     for(int i = 0; i < dataTree->GetEntries(); i++)
     {
         dataTree->GetEntry(i);
-
-        //apply the trigger road info
-        if(trigger)
-        {
-            rawEvent->setTriggerEmu(p_triggerAna->acceptEvent(rawEvent));
-
-            int nRoads[4] = {p_triggerAna->getNRoadsPosTop(), p_triggerAna->getNRoadsPosBot(), p_triggerAna->getNRoadsNegTop(), p_triggerAna->getNRoadsNegBot()};
-            rawEvent->setNRoads(nRoads);
-        }
+	rawEvent_new->setEventInfo(rawEvent);
 
         //apply hit-level alignment/calibration
         if(alignment || calibration)
@@ -76,12 +71,13 @@ int main(int argc, char *argv[])
                 Hit h = rawEvent->getHit(j);
 
                 if(alignment) h.pos = p_geomSvc->getMeasurement(h.detectorID, h.elementID);
-                if(calibration && (h.detectorID <= 24 || h.detectorID >= 41) && h.isInTime() && p_geomSvc->isCalibrationLoaded())
+                if(calibration && (h.detectorID <= 24 || h.detectorID >= 41) && p_geomSvc->isCalibrationLoaded())
                 {
-                    h.driftDistance = p_geomSvc->getDriftDistance(h.detectorID, h.tdcTime);
+		    h.setInTime(p_geomSvc->isInTime(h.detectorID, h.tdcTime));
+                    if(h.isInTime()) h.driftDistance = p_geomSvc->getDriftDistance(h.detectorID, h.tdcTime);
                 }
 
-                rawEvent->setHit(j, h);
+                rawEvent_new->insertHit(h);
             }
 
             for(unsigned int j = 0; j < rawEvent->getNTriggerHits(); ++j)
@@ -89,12 +85,24 @@ int main(int argc, char *argv[])
                 Hit h = rawEvent->getTriggerHit(j);
                 if(alignment) h.pos = p_geomSvc->getMeasurement(h.detectorID, h.elementID);
 
-                rawEvent->setTriggerHit(j, h);
+                rawEvent_new->insertTriggerHit(h);
             }
         }
+	rawEvent_new->reIndex(true);
+
+	//apply the trigger road info
+        if(trigger)
+        {
+            rawEvent_new->setTriggerEmu(p_triggerAna->acceptEvent(rawEvent_new, USE_HIT));
+
+            int nRoads[4] = {p_triggerAna->getNRoadsPosTop(), p_triggerAna->getNRoadsPosBot(), p_triggerAna->getNRoadsNegTop(), p_triggerAna->getNRoadsNegBot()};
+            rawEvent_new->setNRoads(nRoads);
+        }
+
 
         saveTree->Fill();
         rawEvent->clear();
+	rawEvent_new->clear();
     }
 
     saveFile->cd();
