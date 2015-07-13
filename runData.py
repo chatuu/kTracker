@@ -13,10 +13,10 @@ def getNEvents(filename):
     from ROOT import TFile
     from ROOT import TTree
     if 'root' in name:
-		dataFile = TFile(name, 'READ')
-		return dataFile.Get('save').GetEntries()
+        dataFile = TFile(filename, 'READ')
+        return dataFile.Get('save').GetEntries()
     else:
-		return 0
+        return 0
 
 ## Run one job on a given schema
 def runCmd(cmd):
