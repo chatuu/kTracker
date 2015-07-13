@@ -70,8 +70,8 @@ for schema in schemas:
         nEvtMaxOpt = nEvents/nJobs
 
         for i in range(nJobs - 1):
-            cmds.append('./%s %s %s_%d.root %d %d %s > %s_%d &' % (exe, inputFile, outputFile, i, nEvtMaxOpt*i, nEvtMaxOpt, arguments, logFile, i))
-        cmds.append('./%s %s %s_%d.root %d %d %s > %s_%d &' % (exe, inputFile, outputFile, nJobs-1, nEvtMaxOpt*(nJobs-1), nEventsMax, arguments, logFile, nJobs-1))
+            cmds.append('./%s %s %s_%03d.root %d %d %s > %s_%03d &' % (exe, inputFile, outputFile, i, nEvtMaxOpt*i, nEvtMaxOpt, arguments, logFile, i))
+        cmds.append('./%s %s %s_%03d.root %d %d %s > %s_%03d &' % (exe, inputFile, outputFile, nJobs-1, nEvtMaxOpt*(nJobs-1), nEventsMax, arguments, logFile, nJobs-1))
 
 ## Check the active job list
 nSubmitted = 0
