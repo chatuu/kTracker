@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
 import sys
@@ -12,7 +12,7 @@ warnings.filterwarnings(action = 'ignore', category = RuntimeWarning)
 def getNEvents(filename):
     from ROOT import TFile
     from ROOT import TTree
-    if 'root' in name:
+    if 'root' in filename:
         dataFile = TFile(filename, 'READ')
         return dataFile.Get('save').GetEntries()
     else:
