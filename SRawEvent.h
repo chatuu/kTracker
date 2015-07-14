@@ -34,6 +34,8 @@ class Hit: public TObject
 public:
     //Constructor
     Hit();
+    Hit(int uniqueID);
+    Hit(int detectorID, int elementID);
 
     //Decompose the data quality flag
     bool isInTime() { return (flag & Hit::inTime) != 0; }

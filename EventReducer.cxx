@@ -57,6 +57,7 @@ int EventReducer::reduceEvent(SRawEvent* rawEvent)
 
     //dump the vector of hits from SRawEvent to a list first
     hitlist.clear();
+    hodohitlist.clear();
     for(std::vector<Hit>::iterator iter = rawEvent->fAllHits.begin(); iter != rawEvent->fAllHits.end(); ++iter)
     {
         if(outoftime && (!iter->isInTime())) continue;
@@ -93,7 +94,14 @@ int EventReducer::reduceEvent(SRawEvent* rawEvent)
 
         if(realization && iter->detectorID <= 24) iter->driftDistance += rndm.Gaus(0., 0.04);
 
-        hitlist.push_back(*iter);
+        if(iter->detectorID >= 25 && iter->detectorID <= 40)
+        {
+            hodohitlist.push_back(*iter);
+        }
+        else
+        {
+            hitlist.push_back(*iter);
+        }
     }
 
     if(mergehodo)
@@ -101,15 +109,20 @@ int EventReducer::reduceEvent(SRawEvent* rawEvent)
         for(std::vector<Hit>::iterator iter = rawEvent->fTriggerHits.begin(); iter != rawEvent->fTriggerHits.end(); ++iter)
         {
             if(triggermask && p_geomSvc->getPlaneType(iter->detectorID) == 1) continue;
-            hitlist.push_back(*iter);
+            hodohitlist.push_back(*iter);
         }
     }
 
     // manully create the X-hodo hits by the trigger roads
-    if(triggermask) p_triggerAna->trimEvent(rawEvent, hitlist, mergehodo ? (USE_HIT | USE_TRIGGER_HIT) : USE_TRIGGER_HIT);
+    if(triggermask) p_triggerAna->trimEvent(rawEvent, hodohitlist, mergehodo ? (USE_HIT | USE_TRIGGER_HIT) : USE_TRIGGER_HIT);
+
+    //apply hodoscope mask
+    if(hodomask) hodoscopeMask(hitlist, hodohitlist);
 
     //Remove after hits
     hitlist.sort();
+    hodohitlist.sort();
+    hitlist.merge(hodohitlist);
     if(afterhit) hitlist.unique();
 
     //Remove hit clusters
@@ -307,4 +320,85 @@ void EventReducer::processCluster(std::vector<std::list<Hit>::iterator>& cluster
     }
 
     cluster.clear();
+}
+
+void EventReducer::initHodoMaskLUT()
+{
+    h2celementID_lo.clear();
+    h2celementID_hi.clear();
+
+    int hodoIDs[8] = {25, 26, 31, 32, 33, 34, 39, 40};
+    int chamIDs[8][12] = { {1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0},
+                           {1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0},
+                           {7, 8, 9, 10, 11, 12, 0, 0, 0, 0, 0, 0},
+                           {7, 8, 9, 10, 11, 12, 0, 0, 0, 0, 0, 0},
+                           {13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24},
+                           {13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24},
+                           {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                           {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+
+    for(int i = 0; i < 8; ++i)
+    {
+        int nPaddles = p_geomSvc->getPlaneNElements(hodoIDs[i]);
+        for(int j = 1; j <= nPaddles; ++j)
+        {
+            //for each paddle, there is a group of 6/12 chamber planes to work with
+            int uniqueID = hodoIDs[i]*1000 + j;
+            for(int k = 0; k < 12; ++k)
+            {
+                if(chamIDs[i][k] < 1) continue;
+                h2celementID_lo[uniqueID].push_back(0);
+                h2celementID_hi[uniqueID].push_back(999);
+            }
+        }
+    }
+
+    //reverse the LUT
+    c2helementIDs.clear();
+    for(LUT::iterator iter = h2celementID_lo.begin(); iter != h2celementID_lo.end(); ++iter)
+    {
+        int hodoUID = iter->first;
+        for(unsigned int i = 0; i < h2celementID_lo[hodoUID].size(); ++i)
+        {
+            int chamUID_lo = iter->second[i];
+            int chamUID_hi = h2celementID_hi[hodoUID][i];
+            for(int j = chamUID_lo; j <= chamUID_hi; ++j)
+            {
+                c2helementIDs[j].push_back(hodoUID);
+            }
+        }
+    }
+}
+
+void EventReducer::hodoscopeMask(std::list<Hit>& chamberhits, std::list<Hit>& hodohits)
+{
+    for(std::list<Hit>::iterator iter = chamberhits.begin(); iter != chamberhits.end(); )
+    {
+        if(iter->detectorID > 40)
+        {
+            ++iter;
+            continue;
+        }
+
+        int uniqueID = iter->uniqueID();
+
+        bool masked = false;
+        for(std::vector<int>::iterator jter = c2helementIDs[uniqueID].begin(); jter != c2helementIDs[uniqueID].end(); ++jter)
+        {
+            if(std::binary_search(hodohits.begin(), hodohits.end(), Hit(*jter)))
+            {
+                masked = true;
+                break;
+            }
+        }
+
+        if(masked)
+        {
+            ++iter;
+        }
+        else
+        {
+            iter = chamberhits.erase(iter);
+        }
+    }
 }
