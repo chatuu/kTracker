@@ -50,6 +50,11 @@ public:
     //Sign of this hit
     Int_t getSign() { return driftDistance > 0 ? 1 : -1; }
 
+    //convert detectorID and elementID into one number
+    Int_t uniqueID() { return detectorID*1000 + elementID; }
+    Int_t getDetectorID(Int_t uniqueID) { return uniqueID/1000; }
+    Int_t getElementID(Int_t uniqueID) { return uniqueID % 1000; }
+
     //overiden comparison operator for track seeding
     bool operator<(const Hit& elem) const;
     bool operator==(const Hit& elem) const;
