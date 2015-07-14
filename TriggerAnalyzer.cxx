@@ -332,8 +332,9 @@ bool TriggerAnalyzer::acceptEvent(SRawEvent* rawEvent, int mode)
 
             detectorIDs[nHits] = iter->detectorID;
             elementIDs[nHits] = iter->elementID;
+
+            ++nHits;
         }
-        ++nHits;
     }
 
     if((mode & USE_TRIGGER_HIT) != 0)
@@ -344,8 +345,9 @@ bool TriggerAnalyzer::acceptEvent(SRawEvent* rawEvent, int mode)
 
             detectorIDs[nHits] = iter->detectorID;
             elementIDs[nHits] = iter->elementID;
+
+            ++nHits;
         }
-        ++nHits;
     }
 
     return acceptEvent(nHits, detectorIDs, elementIDs);

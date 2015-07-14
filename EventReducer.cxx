@@ -70,7 +70,7 @@ int EventReducer::reduceEvent(SRawEvent* rawEvent)
         else if(iter->detectorID > 24 && iter->detectorID <= 40)
         {
             // if trigger masking is enabled, all the X hodos are discarded
-            if(triggermask && p_geomSvc->getPlaneType(iter->detectorID) == 3) continue;
+            if(triggermask && p_geomSvc->getPlaneType(iter->detectorID) == 1) continue;
         }
 
         /*
@@ -100,7 +100,7 @@ int EventReducer::reduceEvent(SRawEvent* rawEvent)
     {
         for(std::vector<Hit>::iterator iter = rawEvent->fTriggerHits.begin(); iter != rawEvent->fTriggerHits.end(); ++iter)
         {
-            if(triggermask && p_geomSvc->getPlaneType(iter->detectorID) == 3) continue;
+            if(triggermask && p_geomSvc->getPlaneType(iter->detectorID) == 1) continue;
             hitlist.push_back(*iter);
         }
     }
