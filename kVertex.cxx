@@ -54,10 +54,11 @@ int main(int argc, char *argv[])
     VertexFit* vtxfit = new VertexFit();
     vtxfit->enableOptimization();
 
-    int nEvtMax = argc > 3 ? atoi(argv[3]) : dataTree->GetEntries();
+    int offset = argc > 3 ? atoi(argv[3]) : 0;
+    int nEvtMax = argc > 4 ? atoi(argv[4]) + offset : dataTree->GetEntries();
     if(nEvtMax > dataTree->GetEntries()) nEvtMax = dataTree->GetEntries();
-    LogInfo("Running from event 0 through to event " << nEvtMax);
-    for(int i = 0; i < nEvtMax; i++)
+    LogInfo("Running from event " << offset << " through to event " << nEvtMax);
+    for(int i = offset; i < nEvtMax; i++)
     {
         dataTree->GetEntry(i);
         cout << "\r Processing event " << i << " with eventID = " << recEvent->getEventID() << ", ";
