@@ -45,6 +45,8 @@ public:
     //hodosope maksing
     void initHodoMaskLUT();
     void hodoscopeMask(std::list<Hit>& chamberhits, std::list<Hit>& hodohits);
+    bool lineCrossing(double x1, double y1, double x2, double y2,
+                      double x3, double y3, double x4, double y4);
 
 private:
     //pointer to geometry service, inited outside

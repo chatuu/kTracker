@@ -334,8 +334,8 @@ void EventReducer::initHodoMaskLUT()
                            {1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0},
                            {7, 8, 9, 10, 11, 12, 0, 0, 0, 0, 0, 0},
                            {7, 8, 9, 10, 11, 12, 0, 0, 0, 0, 0, 0},
-                           {13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24},
-                           {13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24},
+                           {0, 0, 0, 0, 0, 0, 19, 20, 21, 22, 23, 24},
+                           {13, 14, 15, 16, 17, 18, 0, 0, 0, 0, 0, 0},
                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
@@ -346,11 +346,52 @@ void EventReducer::initHodoMaskLUT()
         {
             //for each paddle, there is a group of 6/12 chamber planes to work with
             int uniqueID = hodoIDs[i]*1000 + j;
+
+            //get the four corners of the paddle
+            double z0, x0_min, x0_max, y0_min, y0_max;
+            z0 = p_geomSvc->getPlanePosition(hodoIDs[i]);
+            p_geomSvc->get2DBoxSize(hodoIDs[i], j, x0_min, x0_max, y0_min, y0_max);
+
             for(int k = 0; k < 12; ++k)
             {
                 if(chamIDs[i][k] < 1) continue;
-                h2celementID_lo[uniqueID].push_back(0);
-                h2celementID_hi[uniqueID].push_back(999);
+
+                //project the box to the chamber plane with maximum xz/yz slope
+                double z = p_geomSvc->getPlanePosition(chamIDs[i][k]);
+                double x_min = x0_min - fabs(TX_MAX*(z - z0));
+                double x_max = x0_max + fabs(TX_MAX*(z - z0));
+                double y_min = y0_min - fabs(TY_MAX*(z - z0));
+                double y_max = y0_max + fabs(TY_MAX*(z - z0));
+
+                int elementID_lo = p_geomSvc->getPlaneNElements(chamIDs[i][k]);;
+                int elementID_hi = 0;
+                if(p_geomSvc->getPlaneType(chamIDs[i][k]) == 1)
+                {
+                    elementID_lo = p_geomSvc->getExpElementID(chamIDs[i][k], x_min);
+                    elementID_hi = p_geomSvc->getExpElementID(chamIDs[i][k], x_max);
+                }
+                else
+                {
+                    for(int m = 1; m <= p_geomSvc->getPlaneNElements(chamIDs[i][k]); ++m)
+                    {
+                        double x1, y1, x2, y2;
+                        p_geomSvc->getWireEndPoints(chamIDs[i][k], m, x1, x2, y1, y2);
+
+                        if(!lineCrossing(x_min, y_min, x_min, y_max, x1, y1, x2, y2) &&
+                           !lineCrossing(x_max, y_min, x_max, y_max, x1, y1, x2, y2)) continue;
+
+                        if(m < elementID_lo) elementID_lo = m;
+                        if(m > elementID_hi) elementID_hi = m;
+                    }
+                }
+
+                elementID_lo -= 2;
+                if(elementID_lo < 1) elementID_lo = 1;
+                elementID_hi += 2;
+                if(elementID_hi > p_geomSvc->getPlaneNElements(chamIDs[i][k])) elementID_hi = p_geomSvc->getPlaneNElements(chamIDs[i][k]);
+
+                h2celementID_lo[uniqueID].push_back(chamIDs[i][k]*1000 + elementID_lo);
+                h2celementID_hi[uniqueID].push_back(chamIDs[i][k]*1000 + elementID_hi);
             }
         }
     }
@@ -403,4 +444,13 @@ void EventReducer::hodoscopeMask(std::list<Hit>& chamberhits, std::list<Hit>& ho
             iter = chamberhits.erase(iter);
         }
     }
+}
+
+bool EventReducer::lineCrossing(double x1, double y1, double x2, double y2,
+                                double x3, double y3, double x4, double y4)
+{
+    double tc = (x1 - x2)*(y3 - y1) + (y1 - y2)*(x1 - x3);
+    double td = (x1 - x2)*(y4 - y1) + (y1 - y2)*(x1 - x4);
+
+    return tc*td < 0;
 }
