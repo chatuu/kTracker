@@ -39,6 +39,8 @@ EventReducer::EventReducer(TString options) : afterhit(false), hodomask(false), 
         p_triggerAna->buildTriggerTree();
     }
 
+    if(hodomask) initHodoMaskLUT();
+
     //set random seed
     rndm.SetSeed(0);
 }
@@ -65,7 +67,7 @@ int EventReducer::reduceEvent(SRawEvent* rawEvent)
         if(iter->detectorID <= 24)    //chamber hits
         {
             if(realization && rndm.Rndm() > 0.94) continue;
-            if(hodomask && (!iter->isHodoMask())) continue;
+            //if(hodomask && (!iter->isHodoMask())) continue;
             //if(triggermask && (!iter->isTriggerMask())) continue;
         }
         else if(iter->detectorID > 24 && iter->detectorID <= 40)
@@ -117,11 +119,11 @@ int EventReducer::reduceEvent(SRawEvent* rawEvent)
     if(triggermask) p_triggerAna->trimEvent(rawEvent, hodohitlist, mergehodo ? (USE_HIT | USE_TRIGGER_HIT) : USE_TRIGGER_HIT);
 
     //apply hodoscope mask
+    hodohitlist.sort();
     if(hodomask) hodoscopeMask(hitlist, hodohitlist);
 
     //Remove after hits
     hitlist.sort();
-    hodohitlist.sort();
     hitlist.merge(hodohitlist);
     if(afterhit) hitlist.unique();
 
@@ -385,7 +387,7 @@ void EventReducer::hodoscopeMask(std::list<Hit>& chamberhits, std::list<Hit>& ho
         bool masked = false;
         for(std::vector<int>::iterator jter = c2helementIDs[uniqueID].begin(); jter != c2helementIDs[uniqueID].end(); ++jter)
         {
-            if(std::binary_search(hodohits.begin(), hodohits.end(), Hit(*jter)))
+            if(std::find(hodohits.begin(), hodohits.end(), Hit(*jter)) != hodohits.end())
             {
                 masked = true;
                 break;
