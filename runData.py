@@ -90,6 +90,15 @@ while nSubmitted < len(cmds):
     time.sleep(sleepTime)
     nMinutes = nMinutes + sleepTime/60.
 
+while True:
+    nRunning = int(os.popen('pgrep -u %s %s | wc -l' % (username, exe)).read().strip())
+    print(exe+': '+str(nMinutes)+' minutes passed, '+str(nSubmitted)+'/'+str(len(cmds))+' submitted, '+str(nRunning)+' running ...' )
+
+    if nRunning == 0: break
+
+    time.sleep(sleepTime)
+    nMinutes = nMinutes + sleepTime/60.
+
 ## Send out notification if required
 if '@' in options.notify:
     subject = '%s finished successfully on %d/%d jobs after %f minutes' % (exe, nSubmitted, len(schemas), nMinutes)
