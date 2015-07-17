@@ -26,6 +26,16 @@ Hit::Hit() : index(-1), detectorID(-1), flag(0)
 {
 }
 
+Hit::Hit(int uniqueID)
+{
+    detectorID = getDetectorID(uniqueID);
+    elementID = getElementID(uniqueID);
+}
+
+Hit::Hit(int dID, int eID) : detectorID(dID), elementID(eID)
+{
+}
+
 bool Hit::operator<(const Hit& elem) const
 {
     if(detectorID < elem.detectorID)
