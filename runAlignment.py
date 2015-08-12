@@ -9,8 +9,19 @@ def runCmd(cmd):
     print cmd
     os.system(cmd)
 
-def prepareConf(log_prev, conf):
-    print 'Generating configuration file for millepede according to '+log_prev
+def checkOverflow(output):
+    if not os.path.exists(output):
+        return True
+
+    for line in open(output).readlines():
+        vals = [float(val) for val in line.strip().split()]
+        for val in vals:
+            if abs(val) > 1.:
+                return False
+    return True
+
+def prepareConf(log_prev, conf, fudge = 1.):
+    print 'Generating configuration file for millepede according to '+log_prev, 'with fudge factor of '+str(fudge)
 
     if os.path.isfile(conf):
     	return
@@ -24,10 +35,10 @@ def prepareConf(log_prev, conf):
             delta = float(line.strip().split()[3])
 
             if abs(delta) < sigma[index][2]:
-            	factor = abs(delta)/sigma[index][2]
+            	factor = fudge*abs(delta)/sigma[index][2]
             	for i in range(3):
             		sigma[index][i] = sigma[index][i]*factor
-    
+
     # save the results
     fout = open(conf, 'w')
     for index, oneline in enumerate(sigma):
@@ -37,14 +48,17 @@ def prepareConf(log_prev, conf):
 ## command line control
 runID = sys.argv[1]
 nCycle = int(sys.argv[2])
-if len(sys.argv) == 4:
+if len(sys.argv) > 3:
     offset = int(sys.argv[3])
 else:
     offset = 1
+skipTracking = False
+if len(sys.argv) > 4:
+    skipTracking = True
 
 ## Key performance knob
-nEvtMax = 200000
-nJobs = 5
+nEvtMax = 600000
+nJobs = 8
 
 for i in range(offset, nCycle+1):
     print 'Working on the '+str(i)+'th optimization cycle ... '
@@ -54,25 +68,27 @@ for i in range(offset, nCycle+1):
     alignFile = 'run_'+runID+'_align_'+str(i)+'.root'
     recFile_initial = 'rec_'+runID+'_align_'+str(i)
 
-    runCmd('./update ac '+rawFile+' '+alignFile)
+    if not skipTracking:
+        runCmd('./update ac '+rawFile+' '+alignFile)
 
     # divide the task to nJobs jobs and submit them all to background
     nEvents_single = nEvtMax/nJobs
     for j in range(nJobs):
-    	runCmd('./kFastTracking %s %s_%d.root %d %d > log_%s_%d &' % (alignFile, recFile_initial, j+1, j*nEvents_single, nEvents_single, runID, j+1))
-    time.sleep(300)
-    
+    	if not skipTracking:
+            runCmd('./kFastTracking %s %s_%d.root %d %d > log_%s_%d &' % (alignFile, recFile_initial, j+1, j*nEvents_single, nEvents_single, runID, j+1))
+
     # check if all jobs are done running
-    nMinutes = 4
+    nMinutes = 0
     while int(os.popen('pgrep -u %s -g %d kFastTracking | wc -l' % (os.environ['USER'], os.getpgrp())).read().strip()) != 0:
         nMinutes = nMinutes+1
         sys.stdout.write('\r'+str(nMinutes)+' minutes passed and tracking is not finished, wait for another 1 minute ...')
         sys.stdout.flush()
         time.sleep(60)
     sys.stdout.write('\n')
-    
+
     # combine the outputs
-    runCmd('hadd '+recFile_initial+'.root '+recFile_initial+'_[1-'+str(nJobs)+'].root')
+    if not skipTracking:
+        runCmd('hadd '+recFile_initial+'.root '+recFile_initial+'_[1-'+str(nJobs)+'].root')
 
     # clean up space
     runCmd('rm log_'+str(runID)+'_[1-'+str(nJobs)+']')
@@ -80,12 +96,21 @@ for i in range(offset, nCycle+1):
     runCmd('rm '+alignFile)
 
     # chamber alignment based on millepede
-    prepareConf('increament.log_'+str(i-1), 'mille.conf')
-    runCmd('./milleAlign '+recFile_initial+'.root align_mille_'+str(i)+'.txt increament.log_'+str(i)+' > log_mille_'+str(i))
+    nTry = 1
+    while nTry < 20:
+        prepareConf('increament.log_'+str(i-1), 'mille.conf', nTry)
+        runCmd('./milleAlign '+recFile_initial+'.root align_mille_'+str(i)+'.txt increament.log_'+str(i)+' > log_mille_'+str(i))
+        if checkOverflow('increament.log_'+str(i)):
+            break
+        runCmd('rm mille.conf')
+        nTry = nTry + 1
+
+    if not checkOverflow('increament.log_'+str(i)):
+        sys.exit()
     runCmd('mv align_eval.root align_eval_'+str(i)+'.root')
     runCmd('cp align_mille_'+str(i)+'.txt align_mille.txt')
-    runCmd('mv mille.conf mille.conf_'+str(i))
-    
+    runCmd('mv mille.conf mille.conf_'+str(i)+'_'+str(nTry))
+
     # hodoscope alignment
     runCmd('./hodoAlign '+recFile_initial+'.root alignment_hodo_'+str(i)+'.txt')
     runCmd('mv hodo_eval.root hodo_eval_'+str(i)+'.root')
@@ -97,7 +122,7 @@ for i in range(offset, nCycle+1):
     	runCmd('mv alignment_prop_temp.txt alignment_prop.txt')
     runCmd('mv prop_eval.root prop_eval_'+str(i)+'.root')
     runCmd('cp alignment_prop.txt alignment_prop_'+str(i)+'.txt')
-    
+
     # chamber calibration
     #runCmd('./makeRTProfile '+recFile_initial+'.root calibration_'+str(i)+'.txt')
     #runCmd('mv cali_eval.root cali_eval_'+str(i)+'.root')

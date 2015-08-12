@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 #endif
 
     //Initialize the event reducer
-    TString opt = "aocs";
+    TString opt = "aocsh";
 #ifdef TRIGGER_TRIMING
     opt = opt + "t";
 #endif
