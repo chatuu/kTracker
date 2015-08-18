@@ -76,7 +76,7 @@
 
 //--------------- Muon identification -----------
 #define MUID_REJECT 4.
-#define MUID_THE_P0 0.11825 
+#define MUID_THE_P0 0.11825
 #define MUID_EMP_P0 0.00643
 #define MUID_EMP_P1 -0.00009
 #define MUID_EMP_P2 0.00000046
@@ -111,7 +111,7 @@
 #define Z_ST2 1347.36
 #define Z_ABSORBER 2028.19
 #define Z_REF 0.
-#define Z_TARGET -129.54 
+#define Z_TARGET -129.54
 #define Z_DUMP 40.
 #define RESOLUTION_DC 0.07
 
@@ -127,7 +127,7 @@
 #define ELOSS_FMAG_P0 7.18274
 #define ELOSS_FMAG_P1 0.0361447
 #define ELOSS_FMAG_P2 -0.000718127
-#define ELOSS_FMAG_P3 7.97312e-06 
+#define ELOSS_FMAG_P3 7.97312e-06
 #define ELOSS_FMAG_P4 -3.05481e-08
 #define Z_UPSTREAM -500.
 #define Z_DOWNSTREAM 500.
@@ -135,6 +135,18 @@
 //-------------- Trigger analyzer modes ---------
 #define USE_TRIGGER_HIT 1
 #define USE_HIT 2
+
+//-------------- Track finding exit code ---------------
+#define TFEXIT_SUCCESS 0;
+#define VFEXIT_SUCCESS 0;
+#define TFEXIT_FAIL_MULTIPLICITY -1;
+#define TFEXIT_FAIL_ROUGH_MUONID -2;
+#define TFEXIT_FAIL_ST2_TRACKLET -3;
+#define TFEXIT_FAIL_ST3_TRACKLET -4;
+#define TFEXIT_FAIL_NO_TRACKS -5;
+#define TFEXIT_FAIL_NO_DIMUON -6;
+#define VFEXIT_FAIL_DIMUONPAIR -10;
+#define VFEXIT_FAIL_ITERATION -20;
 
 //-------------- Useful marcros -----------------
 #define LogInfo(message) std::cout << "DEBUG: " << __FILE__ << "  " << __LINE__ << "  " << __FUNCTION__ << " :::  " << message << std::endl

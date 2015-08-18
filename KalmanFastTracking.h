@@ -32,7 +32,7 @@ public:
     ~KalmanFastTracking();
 
     //Set the input event
-    bool setRawEvent(SRawEvent* event_input);
+    int setRawEvent(SRawEvent* event_input);
     void setRawEventDebug(SRawEvent* event_input); //set the hit list only, tracking is not started, only for debugging
 
     //Event quality cut

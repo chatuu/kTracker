@@ -285,10 +285,10 @@ void KalmanFastTracking::setRawEventDebug(SRawEvent* event_input)
     hitAll = event_input->getAllHits();
 }
 
-bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
+int KalmanFastTracking::setRawEvent(SRawEvent* event_input)
 {
     rawEvent = event_input;
-    if(!acceptEvent(rawEvent)) return false;
+    if(!acceptEvent(rawEvent)) return TFEXIT_FAIL_MULTIPLICITY;
     hitAll = event_input->getAllHits();
 #ifdef _DEBUG_ON
     for(std::vector<Hit>::iterator iter = hitAll.begin(); iter != hitAll.end(); ++iter) iter->print();
@@ -321,7 +321,7 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
 #ifdef _DEBUG_ON
         LogInfo("Failed in prop tube segment building: " << propSegs[0].size() << ", " << propSegs[1].size());
 #endif
-        return false;
+        return TFEXIT_FAIL_ROUGH_MUONID;
     }
 
     //Initialize tracklet lists
@@ -336,7 +336,7 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
 #ifdef _DEBUG_ON
         LogInfo("Failed in tracklet build at station 2");
 #endif
-        return false;
+        return TFEXIT_FAIL_ST2_TRACKLET;
     }
 
     buildTrackletsInStation(3);
@@ -346,7 +346,7 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
 #ifdef _DEBUG_ON
         LogInfo("Failed in tracklet build at station 3");
 #endif
-        return false;
+        return TFEXIT_FAIL_ST3_TRACKLET;
     }
 
     //Build back partial tracks in station 2, 3+ and 3-
@@ -379,8 +379,8 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
     }
 #endif
 
-    if(trackletsInSt[4].empty()) return false;
-    if(!enable_KF) return true;
+    if(trackletsInSt[4].empty()) return TFEXIT_FAIL_NO_TRACKS;
+    if(!enable_KF) return TFEXIT_SUCCESS;
 
     //If there is no possibility of a dimuon, return
     if(DIMUON_MODE == 1)
@@ -399,7 +399,7 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
             }
         }
 
-        if(nPlus < 1 || nMinus < 1) return false;
+        if(nPlus < 1 || nMinus < 1) return TFEXIT_FAIL_NO_DIMUON;
     }
 
     //Build kalman tracks
@@ -416,7 +416,7 @@ bool KalmanFastTracking::setRawEvent(SRawEvent* event_input)
     }
 #endif
 
-    return true;
+    return TFEXIT_SUCCESS;
 }
 
 bool KalmanFastTracking::acceptEvent(SRawEvent* rawEvent)

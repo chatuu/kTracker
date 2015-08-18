@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
         cout << "\r Processing event " << i << " with eventID = " << recEvent->getEventID() << ", ";
         cout << (i + 1)*100/nEvtMax << "% finished .. " << flush;
 
-        vtxfit->setRecEvent(recEvent);
+        recEvent->setRecStatus(vtxfit->setRecEvent(recEvent));
 
         if(recEvent->getNDimuons() > 0) saveTree->Fill();
         if(saveTree->GetEntries() % 1000 == 0) saveTree->AutoSave("SaveSelf");

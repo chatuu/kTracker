@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
         clock_t time_single = clock();
 
         eventReducer->reduceEvent(rawEvent);
-        if(!fastfinder->setRawEvent(rawEvent)) continue;
+        recEvent->setRecStatus(fastfinder->setRawEvent(rawEvent));
 
         //Fill the TClonesArray
         arr_tracklets.Clear();
