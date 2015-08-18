@@ -46,6 +46,12 @@ public:
     //Resolution of the measurement
     double sigma;
 
+    //other basic hit info
+    int charge;
+    double tdctime;
+    double pos;
+    double drift;
+
     //Derivatives w.r.t global parameters
     double dwdz;
     double dwdphi;
