@@ -31,6 +31,8 @@ SMillepede::SMillepede()
     evalFile = NULL;
     evalTree = NULL;
     p_geomSvc = GeomSvc::instance();
+
+    tracker = new KalmanFastTracking(false);
 }
 
 SMillepede::~SMillepede()
@@ -45,6 +47,7 @@ SMillepede::~SMillepede()
     }
 
     delete evalNode;
+    delete tracker;
 }
 
 void SMillepede::init(std::string configFileName)
@@ -130,6 +133,12 @@ void SMillepede::addTrack(Tracklet& trk)
         }
         else
         {
+            //temporarily disable this hit, re-fit the track, turn the hit back again, and calc chisq_km
+            iter->hit.index = -iter->hit.index;
+            tracker->fitTracklet(trk);
+            iter->hit.index = -iter->hit.index;
+            trk.calcChisq();
+
             MPNode node_real(*iter, trk);
             nodes.push_back(node_real);
 
