@@ -106,6 +106,8 @@ public:
     std::string m_fMagFile; ///< Name of fMag ascii file
     std::string m_kMagFile; ///< Name of kMag ascii file
 
+    std::string m_goodSpillFile;  ///< List of the good spills
+
     std::string m_geomVersion; ///< Name of geometry version
     std::string m_mySQLInputServer;  ///< Name of input MySQL server
     std::string m_mySQLOutputServer;  ///< Name of output MySQL server

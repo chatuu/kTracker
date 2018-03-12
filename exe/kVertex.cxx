@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <cmath>
 #include <algorithm>
 #include <string>
@@ -202,32 +204,51 @@ int main(int argc, char *argv[])
         md1occ[i].reserve(25000);
     }
 
+    //Check if the good spill list is provided
+    bool reqSpill = false;
+    set<int> goodSpillIDs;
+    if(!jobOptsSvc->m_goodSpillFile.empty())
+    {
+        ifstream fin(jobOptsSvc->m_goodSpillFile.c_str());
+
+        string line;
+        while(getline(fin, line))
+        {
+            int sID = atoi(line.c_str());
+            goodSpillIDs.insert(sID);
+        }
+        reqSpill = true;
+    }
+
     //Extract all the tracks and put in the container
     for(int i = offset; i < nEvtMax; ++i)
     {
         dataTree->GetEntry(i);
         if(!recEvent->isTriggeredBy(SRawEvent::MATRIX1)) continue;
         if(recEvent->getTargetPos() < 1 || rawEvent->getTargetPos() > 7) continue;
+        if(reqSpill && goodSpillIDs.count(recEvent->getSpillID()) == 0) continue;
 
         int nTracks = recEvent->getNTracks();
-        if(nTracks != 1) continue;
-
-        SRecTrack track = recEvent->getTrack(0);
-        track.setZVertex(track.getZVertex());
-        if(!track.isValid()) continue;
-
-        int index = rawEvent->getTargetPos() - 1;
-        if(track.getCharge() > 0)
+        for(int j = 0; j < nTracks; ++j)
         {
-            ptracks[index].push_back(track);
-            pflags[index].push_back(rawEvent->getEventID());
-            pd1occ[index].push_back(orgEvent->getNChamberHitsAll());
-        }
-        else
-        {
-            mtracks[index].push_back(track);
-            mflags[index].push_back(rawEvent->getEventID());
-            md1occ[index].push_back(orgEvent->getNChamberHitsAll());
+            SRecTrack track = recEvent->getTrack(j);
+            track.setZVertex(track.getZVertex());
+            if(!track.isValid()) continue;
+
+            int index = rawEvent->getTargetPos() - 1;
+            int nChamberHits = orgEvent->getNChamberHitsAll();
+            if(track.getCharge() > 0)
+            {
+                ptracks[index].push_back(track);
+                pflags[index].push_back(rawEvent->getEventID());
+                pd1occ[index].push_back(nChamberHits);
+            }
+            else
+            {
+                mtracks[index].push_back(track);
+                mflags[index].push_back(rawEvent->getEventID());
+                md1occ[index].push_back(nChamberHits);
+            }
         }
 
         rawEvent->clear();
@@ -260,7 +281,7 @@ int main(int argc, char *argv[])
         int nTries = 0;
         int nSuccess = 0;
         existing_pairs.clear();
-        while(nSuccess < nPairs && nTries - nSuccess < 20000)
+        while(nSuccess < nPairs && nTries - nSuccess < 10000)
         {
             ++nTries;
 
@@ -320,7 +341,7 @@ int main(int argc, char *argv[])
         int nTries = 0;
         int nSuccess = 0;
         existing_pairs.clear();
-        while(nSuccess < nPairs && nTries - nSuccess < 20000)
+        while(nSuccess < nPairs && nTries - nSuccess < 10000)
         {
             ++nTries;
 
@@ -363,7 +384,7 @@ int main(int argc, char *argv[])
         nTries = 0;
         nSuccess = 0;
         existing_pairs.clear();
-        while(nSuccess < nPairs && nTries - nSuccess < 20000)
+        while(nSuccess < nPairs && nTries - nSuccess < 10000)
         {
             ++nTries;
 

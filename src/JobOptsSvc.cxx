@@ -96,6 +96,8 @@ JobOptsSvc::JobOptsSvc()
     m_fMagFile = "$GEOMETRY_ROOT/magnetic_fields/tab.Fmag";
     m_kMagFile = "$GEOMETRY_ROOT/magnetic_fields/tab.Kmag";
 
+    m_goodSpillFile = "";
+
     m_geomVersion = "geometry_G18_run3";
     m_mySQLInputServer  = "e906-db1.fnal.gov";
     m_mySQLOutputServer = "e906-db1.fnal.gov";
@@ -162,6 +164,8 @@ bool JobOptsSvc::init(const char* configfile)
 
     stringOpts["fMagFile"] = &m_fMagFile;
     stringOpts["kMagFile"] = &m_kMagFile;
+
+    stringOpts["GoodSpillFile"] = &m_goodSpillFile;
 
     stringOpts["MySQL_InputServer"] = &m_mySQLInputServer;
     stringOpts["MySQL_OutputServer"] = &m_mySQLOutputServer;

@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
     ///Get trees
     TFile* dataFile = new TFile(argv[2], "READ");
-    TTree* configTree = (TTree*)dataFile->Get("config");
+    TTree* configTree = (TTree*)dataFile->Get("vconfig");
     TTree* dataTree = (TTree*)dataFile->Get("save");
     TTree* mixTree = (TTree*)dataFile->Get("save_mix");
     TTree* ppTree = (TTree*)dataFile->Get("save_pp");
