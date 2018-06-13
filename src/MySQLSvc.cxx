@@ -874,7 +874,7 @@ std::string MySQLSvc::getTableDefinition(const TString tableType) const
                "status      SMALLINT, "
                "source1     INTEGER,  "
                "source2     INTEGER,  "
-               "PRIMARY KEY(eventID), "
+               "PRIMARY KEY(runID,eventID), "
                "INDEX(spillID)";
     }
 
