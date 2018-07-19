@@ -30,12 +30,15 @@ runIDs = [int(line.strip().split()[0]) for line in open(options.list)]
 cmds = []
 for index, runFile in enumerate(runFiles):
 
-    nTotalJobs, nFinishedJobs, failedOpts, missingOpts = GU.getJobStatus(conf, options.job, runIDs[index])
-    if len(failedOpts) != 0 or len(missingOpts) != 0 or nTotalJobs != nFinishedJobs:
-        print 'Certain job failed for ', runIDs[index], runFile, nTotalJobs, nFinishedJobs, failedOpts, missingOpts
-        for opt in failedOpts+missingOpts:
+    nTotalJobs, nFinishedJobs, failedOpts, failedOuts = GU.getJobStatus(conf, options.job, runIDs[index])
+    if len(failedOpts) != 0 or nTotalJobs != nFinishedJobs:
+        print 'Certain job failed for ', runIDs[index], runFile, nTotalJobs, nFinishedJobs, failedOpts
+        for opt in failedOpts:
             cmd = GU.makeCommandFromOpts(options.job, opts, conf) + ' --input=%s' % os.path.join(conf.indir, runFile)
             cmds.append(cmd)
+        for out in failedOuts:
+            if os.path.exists(out):
+                os.remove(out)
         continue
 
     targetFile = os.path.join(conf.indir, runFile)

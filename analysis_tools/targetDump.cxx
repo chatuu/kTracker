@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string>
 #include <map>
+#include <set>
+#include <fstream>
+#include <sstream>
 
 #include <TROOT.h>
 #include <TFile.h>
@@ -10,27 +13,22 @@
 #include "SRawEvent.h"
 #include "SRecEvent.h"
 
-#include "dst/DataStruct.h"
-
 using namespace std;
 
 int main(int argc, char* argv[])
 {
-    Spill* p_spill = new Spill; Spill& spill = *p_spill;
-    TFile* spillFile = new TFile(argv[3]);
-    TTree* spillTree = (TTree*)spillFile->Get("save");
+    set<int> goodSpillIDs;
+    ifstream fin(argv[1]);
 
-    spillTree->SetBranchAddress("spill", &p_spill);
-
-    map<int, Spill> spillBank;
-    for(int i = 0; i < spillTree->GetEntries(); ++i)
+    string line;
+    while(getline(fin, line))
     {
-        spillTree->GetEntry(i);
-        if(spill.goodSpill()) spillBank.insert(map<int, Spill>::value_type(spill.spillID, spill));
+        int sID = atoi(line.c_str());
+        goodSpillIDs.insert(sID);
     }
 
     TFile* dataFile = new TFile(argv[1], "READ");
-    TTree* dataTree = (TTree*)dataFile->Get("save");
+    TTree* dataTree = (TTree*)dataFile->Get("mb");
 
     SRawEvent* rawEvent = new SRawEvent();
     dataTree->SetBranchAddress("rawEvent", &rawEvent);
@@ -46,10 +44,11 @@ int main(int argc, char* argv[])
     for(int i = 0; i < dataTree->GetEntries(); ++i)
     {
         dataTree->GetEntry(i);
+        if(i % 10000 == 0) cout << i << "  -  " << dataTree->GetEntries() << endl;
 
         int spillID = rawEvent->getSpillID();
         int eventID = rawEvent->getEventID();
-        if(spillBank.find(spillID) != spillBank.end() && (eventID >= spillBank[spillID].eventID_min && eventID <= spillBank[spillID].eventID_max))
+        if(goodSpillIDs.count(rawEvent->getSpillID()) != 0)
         {
             int index = spillBank[spillID].targetPos - 1;
             if(index >= 0 && index < 7) saveTree[index]->Fill();

@@ -59,13 +59,19 @@ if os.path.exists(options.record):
     fin.close()
 
 # process excluded part, and make the list distinct
+enableTrack = True
+enableVertex = True
+enableUpload = True
 for runID in runIDs:
     if 't' in options.exclude:
         trackedRuns.append(runID)
+        enableTrack = False
     if 'v' in options.exclude:
         vertexedRuns.append(runID)
+        enableVertex = False
     if 'u' in options.exclude:
         uploadedRuns.append(runID)
+        enableUpload = False
 trackedRuns = list(set(trackedRuns))
 vertexedRuns = list(set(vertexedRuns))
 uploadedRuns = list(set(uploadedRuns))
@@ -89,165 +95,174 @@ fout = open(logfile, 'w')
 
 # loop until all jobs has been uploaded/tracked
 while len(uploadedRuns) != len(runIDs) or len(trackedRuns) != len(runIDs) or len(vertexedRuns) != len(runIDs):
-    # commands to be re-submitted
-    failedJobs = []
 
-    # refresh the running job list
-    GU.refreshJobList()
+    if enableTrack:
+        # commands to be re-submitted
+        failedJobs = []
 
-    # check the status of tracking jobs, this part handles mergeing/moving ROOT files, and prepare vertex jobs
-    vertexJobs = []
-    for runID in runIDs:
-        # make sure it has not been already processed
-        if runID in trackedRuns:
-            if not os.path.exists(os.path.join(vconf.outdir, 'opts', GU.version, GU.getSubDir(runID), '%s_%06d_%s.opts' % (GU.auxPrefix['vertex'], runID, GU.version))):
-                vertexJobs.append(GU.makeCommand('vertex', runID, vconf))
-            continue
+        # refresh the running job list
+        GU.refreshJobList()
 
-        # check the running status
-        nTotalJobs, nFinishedJobs, failedOpts, failedOuts = GU.getJobStatus(tconf, 'track', runID)
-        if options.debug:
-            print ' --- Tracking status: ', runID, nTotalJobs, nFinishedJobs, len(failedOpts), failedOpts
-        if len(failedOpts) != 0:   # something wrong
-            fout.write('Tracking [%s]: %06d %02d %02d %02d %s\n' % (GU.getTimeStamp(), runID, nTotalJobs, nFinishedJobs, len(failedOpts), 'certain jobs failed'))
-            fout.write('              ' + str(failedOpts) + '\n')
-            for opt in failedOpts:
-                failedJobs.append(GU.makeCommandFromOpts('track', opt, tconf))
-                os.remove(opt)
-            for out in failedOuts:
-                if os.path.exists(out):
-                    os.remove(out)
-            continue
-        elif nTotalJobs != nFinishedJobs:   # not completely finished
-            continue
+        # check the status of tracking jobs, this part handles mergeing/moving ROOT files, and prepare vertex jobs
+        vertexJobs = []
+        for runID in runIDs:
+            # make sure it has not been already processed
+            if runID in trackedRuns:
+                if not os.path.exists(os.path.join(vconf.outdir, 'opts', GU.version, GU.getSubDir(runID), '%s_%06d_%s.opts' % (GU.auxPrefix['vertex'], runID, GU.version))):
+                    vertexJobs.append(GU.makeCommand('vertex', runID, vconf))
+                continue
 
-        # merge and move the files
-        targetDir = os.path.join(vconf.indir, 'track', GU.version, GU.getSubDir(runID))
-        if not os.path.exists(targetDir):
-            GU.runCommand('mkdir -p ' + targetDir)
-            GU.runCommand('chmod 01755 ' + targetDir)
+            # check the running status
+            nTotalJobs, nFinishedJobs, failedOpts, failedOuts = GU.getJobStatus(tconf, 'track', runID)
+            if options.debug:
+                print ' --- Tracking status: ', runID, nTotalJobs, nFinishedJobs, len(failedOpts), failedOpts
+            if len(failedOpts) != 0:   # something wrong
+                fout.write('Tracking [%s]: %06d %02d %02d %02d %s\n' % (GU.getTimeStamp(), runID, nTotalJobs, nFinishedJobs, len(failedOpts), 'certain jobs failed'))
+                fout.write('              ' + str(failedOpts) + '\n')
+                for opt in failedOpts:
+                    failedJobs.append(GU.makeCommandFromOpts('track', opt, tconf))
+                    os.remove(opt)
+                for out in failedOuts:
+                    if os.path.exists(out):
+                        os.remove(out)
+                continue
+            elif nTotalJobs != nFinishedJobs:   # not completely finished
+                continue
 
-        targetFile = os.path.join(vconf.indir, 'track', GU.version, GU.getSubDir(runID), 'track_%06d_%s.root' % (runID, GU.version))
-        mergedFile = os.path.join(GU.workDir, 'track_%06d_%s.root' % (runID, GU.version))
-        sourceFiles = [os.path.join(tconf.outdir, 'track', GU.version, GU.getSubDir(runID), f) for f in os.listdir(os.path.join(tconf.outdir, 'track', GU.version, GU.getSubDir(runID))) if ('%06d' % runID) in f and 'track' in f and '.root' in f]
-        #sourceFiles = [os.path.join(tconf.outdir, 'track', GU.version, GU.getSubDir(runID), 'track_%06d_%s_%d.root' % (runID, GU.version, tag)) for tag in range(nTotalJobs)]
-        if GU.mergeFiles(mergedFile, sourceFiles):
-            print 'Tracking [%s]: Run %06d finished and merged' % (GU.getTimeStamp(), runID)
-            if targetFile == mergedFile or GU.runCommand('mv %s %s' % (mergedFile, targetFile)):
-                # label this run as tracked in both runtime list and file recorder
-                trackedRuns.append(runID)
-                frecord.write('t %06d %s\n' % (runID, GU.getTimeStamp()))
+            # merge and move the files
+            targetDir = os.path.join(vconf.indir, 'track', GU.version, GU.getSubDir(runID))
+            if not os.path.exists(targetDir):
+                GU.runCommand('mkdir -p ' + targetDir)
+                GU.runCommand('chmod 01755 ' + targetDir)
 
-                # submit the vertexing job
-                vertexJobs.append(GU.makeCommand('vertex', runID, vconf))
+            targetFile = os.path.join(vconf.indir, 'track', GU.version, GU.getSubDir(runID), 'track_%06d_%s.root' % (runID, GU.version))
+            mergedFile = os.path.join(GU.workDir, 'track_%06d_%s.root' % (runID, GU.version))
+            sourceFiles = [os.path.join(tconf.outdir, 'track', GU.version, GU.getSubDir(runID), f) for f in os.listdir(os.path.join(tconf.outdir, 'track', GU.version, GU.getSubDir(runID))) if ('%06d' % runID) in f and 'track' in f and '.root' in f]
+            #sourceFiles = [os.path.join(tconf.outdir, 'track', GU.version, GU.getSubDir(runID), 'track_%06d_%s_%d.root' % (runID, GU.version, tag)) for tag in range(nTotalJobs)]
+            if GU.mergeFiles(mergedFile, sourceFiles):
+                print 'Tracking [%s]: Run %06d finished and merged' % (GU.getTimeStamp(), runID)
+                if targetFile == mergedFile or GU.runCommand('mv %s %s' % (mergedFile, targetFile)):
+                    # label this run as tracked in both runtime list and file recorder
+                    trackedRuns.append(runID)
+                    frecord.write('t %06d %s\n' % (runID, GU.getTimeStamp()))
 
-                # clean up the separated sub-files
-                for sourceFile in sourceFiles:
-                    os.remove(sourceFile)
+                    # submit the vertexing job
+                    vertexJobs.append(GU.makeCommand('vertex', runID, vconf))
+
+                    # clean up the separated sub-files
+                    for sourceFile in sourceFiles:
+                        os.remove(sourceFile)
+                else:
+                    print 'Tracking [%s]: Run %06d failed in moving to pnfs' % (GU.getTimeStamp(), runID)
+                    fout.write('Tracking [%s]: %06d %02d %02d %02d %s\n' % (GU.getTimeStamp(), runID, nTotalJobs, nFinishedJobs, len(failedOpts), 'moving to pnfs failed'))
+                    os.remove(mergedFile)
             else:
-                print 'Tracking [%s]: Run %06d failed in moving to pnfs' % (GU.getTimeStamp(), runID)
-                fout.write('Tracking [%s]: %06d %02d %02d %02d %s\n' % (GU.getTimeStamp(), runID, nTotalJobs, nFinishedJobs, len(failedOpts), 'moving to pnfs failed'))
-                os.remove(mergedFile)
-        else:
-            print 'Tracking [%s]: Run %06d failed in merging' % (GU.getTimeStamp(), runID)
-            fout.write('Tracking [%s]: %06d %02d %02d %02d %s\n' % (GU.getTimeStamp(), runID, nTotalJobs, nFinishedJobs, len(failedOpts), 'merging failed'))
-            
-            if os.path.exists(mergedFile):
-                os.remove(mergedFile)
+                print 'Tracking [%s]: Run %06d failed in merging' % (GU.getTimeStamp(), runID)
+                fout.write('Tracking [%s]: %06d %02d %02d %02d %s\n' % (GU.getTimeStamp(), runID, nTotalJobs, nFinishedJobs, len(failedOpts), 'merging failed'))
                 
-    print 'Tracking [%s]: %d/%d tracked' % (GU.getTimeStamp(), len(trackedRuns), len(runIDs))
-    fout.flush()
-    frecord.flush()
+                if os.path.exists(mergedFile):
+                    os.remove(mergedFile)
+                    
+        print 'Tracking [%s]: %d/%d tracked' % (GU.getTimeStamp(), len(trackedRuns), len(runIDs))
+        fout.flush()
+        frecord.flush()
 
-    #submit all failed tracking jobs
-    GU.submitAllJobs(failedJobs)
+        #submit all failed tracking jobs
+        GU.submitAllJobs(failedJobs)
 
-    #submit all the vertexing jobs
-    if 'v' not in options.exclude:
-        GU.submitAllJobs(vertexJobs)
+        if enableVertex:
+            GU.submitAllJobs(vertexJobs)
 
-    # check the status of vertexing jobs
-    failedJobs = []
-    for index, runID in enumerate(trackedRuns):
-        # make sure this run has not been processed before
-        if runID in vertexedRuns:
-            continue
 
-        # check running status
-        nTotalJobs, nFinishedJobs, failedOpts, failedOuts = GU.getJobStatus(vconf, 'vertex', runID)
-        if options.debug:
-            print ' --- Vertexing status: ', runID, nTotalJobs, nFinishedJobs, len(failedOpts), failedOpts
-        if len(failedOpts) != 0:
-            fout.write('Vertexing [%s]: %06d %02d %02d %02d %s\n' % (GU.getTimeStamp(), runID, nTotalJobs, nFinishedJobs, len(failedOpts), 'certain jobs failed'))
-            for opt in failedOpts:
-                failedJobs.append(GU.makeCommandFromOpts('vertex', opt, vconf))
-                os.remove(opt)
-            for out in failedOuts:
-                if os.path.exists(out):
-                    os.remove(out)
-            continue
-        elif nTotalJobs != nFinishedJobs:
-            continue
+    #vertexing part
+    if enableVertex:
+        # refresh the running job list
+        GU.refreshJobList()
 
-        # label this run as vertexed
-        vertexedRuns.append(runID)
-        frecord.write('v %06d %s\n' % (runID, GU.getTimeStamp()))
+        # check the status of vertexing jobs
+        failedJobs = []
+        for index, runID in enumerate(trackedRuns):
+            # make sure this run has not been processed before
+            if runID in vertexedRuns:
+                continue
 
-    print 'Vertexing [%s]: %d/%d vertexed' % (GU.getTimeStamp(), len(vertexedRuns), len(runIDs))
-    fout.flush()
-    frecord.flush()
+            # check running status
+            nTotalJobs, nFinishedJobs, failedOpts, failedOuts = GU.getJobStatus(vconf, 'vertex', runID)
+            if options.debug:
+                print ' --- Vertexing status: ', runID, nTotalJobs, nFinishedJobs, len(failedOpts), failedOpts
+            if len(failedOpts) != 0:
+                fout.write('Vertexing [%s]: %06d %02d %02d %02d %s\n' % (GU.getTimeStamp(), runID, nTotalJobs, nFinishedJobs, len(failedOpts), 'certain jobs failed'))
+                for opt in failedOpts:
+                    failedJobs.append(GU.makeCommandFromOpts('vertex', opt, vconf))
+                    os.remove(opt)
+                for out in failedOuts:
+                    if os.path.exists(out):
+                        os.remove(out)
+                continue
+            elif nTotalJobs != nFinishedJobs:
+                continue
 
-    # re-submit all the failed jobs
-    GU.submitAllJobs(failedJobs)
+            # label this run as vertexed
+            vertexedRuns.append(runID)
+            frecord.write('v %06d %s\n' % (runID, GU.getTimeStamp()))
+
+        print 'Vertexing [%s]: %d/%d vertexed' % (GU.getTimeStamp(), len(vertexedRuns), len(runIDs))
+        fout.flush()
+        frecord.flush()
+
+        # re-submit all the failed jobs
+        GU.submitAllJobs(failedJobs)
+
 
     # upload the finished jobs
-    nUploaderCycles = 0
-    maxCycles = 10 if len(vertexedRuns) < len(runIDs) else 999999
-    while len(uploadedRuns) < len(vertexedRuns) and nUploaderCycles < maxCycles and ('u' not in options.exclude):
-        toBeUploadedRuns = [runID for runID in vertexedRuns if runID not in uploadedRuns]
+    if enableUpload:
+        nUploaderCycles = 0
+        maxCycles = 10 if len(vertexedRuns) < len(runIDs) else 999999
+        while len(uploadedRuns) < len(vertexedRuns) and nUploaderCycles < maxCycles:
+            toBeUploadedRuns = [runID for runID in vertexedRuns if runID not in uploadedRuns]
 
-        nRunning = int(os.popen('pgrep %s | wc -l' % uploader.split('/')[-1]).read().strip())
-        nJobs = options.nJobsMax - nRunning
-        if nJobs > len(toBeUploadedRuns):
-            nJobs = len(toBeUploadedRuns)
-        if nJobs < 0:
-            nJobs = 0
+            nRunning = int(os.popen('pgrep %s | wc -l' % uploader.split('/')[-1]).read().strip())
+            nJobs = options.nJobsMax - nRunning
+            if nJobs > len(toBeUploadedRuns):
+                nJobs = len(toBeUploadedRuns)
+            if nJobs < 0:
+                nJobs = 0
 
-        print 'Uploading [%s]: %d uploader running, will submit %d more, %d to go.' % (GU.getTimeStamp(), nRunning, nJobs, len(toBeUploadedRuns)-nJobs)
-        for index in range(nJobs):
-            runID = toBeUploadedRuns[index]
-            sourceFile = os.path.join(vconf.outdir, 'vertex', GU.version, GU.getSubDir(runID), 'vertex_%06d_%s.root' % (runID, GU.version))
-            targetSchema = options.output % runID
-            uploadLog = os.path.join(GU.workDir, 'log_upload_%06d' % runID)
-            uploadErr = os.path.join(GU.workDir, 'err_upload_%06d' % runID)
+            print 'Uploading [%s]: %d uploader running, will submit %d more, %d to go.' % (GU.getTimeStamp(), nRunning, nJobs, len(toBeUploadedRuns)-nJobs)
+            for index in range(nJobs):
+                runID = toBeUploadedRuns[index]
+                sourceFile = os.path.join(vconf.outdir, 'vertex', GU.version, GU.getSubDir(runID), 'vertex_%06d_%s.root' % (runID, GU.version))
+                targetSchema = options.output % runID
+                uploadLog = os.path.join(GU.workDir, 'log_upload_%06d' % runID)
+                uploadErr = os.path.join(GU.workDir, 'err_upload_%06d' % runID)
 
-            cmd = '%s %s %s %s %s %d 1> %s 2> %s &' % (uploader, vconf.opts, sourceFile, targetSchema, options.server, options.port, uploadLog, uploadErr)
-            print cmd
-            os.system(cmd)
+                cmd = '%s %s %s %s %s %d 1> %s 2> %s &' % (uploader, vconf.opts, sourceFile, targetSchema, options.server, options.port, uploadLog, uploadErr)
+                print cmd
+                os.system(cmd)
 
-            uploadedRuns.append(runID)
-            frecord.write('u %06d %s\n' % (runID, GU.getTimeStamp()))
+                uploadedRuns.append(runID)
+                frecord.write('u %06d %s\n' % (runID, GU.getTimeStamp()))
 
-        # reap IO dead process every 5 minutes
-        if (nUploaderCycles+1) % 5 == 0:
-            time.sleep(30)
-            processInfo = os.popen('ps eo comm,pid,pcpu,stat | grep sqlResWriter').readlines()
-            for process in processInfo:
-                vals = process.strip().split()
-                if 'D' in vals[3] and float(vals[2]) < 0.5:
-                    if options.debug:
-                        print ' --- kill process ' + vals[1]
-                    os.system('kill -9 ' + vals[1])
+            # reap IO dead process every 5 minutes
+            if (nUploaderCycles+1) % 5 == 0:
+                time.sleep(30)
+                processInfo = os.popen('ps eo comm,pid,pcpu,stat | grep sqlResWriter').readlines()
+                for process in processInfo:
+                    vals = process.strip().split()
+                    if 'D' in vals[3] and float(vals[2]) < 0.5:
+                        if options.debug:
+                            print ' --- kill process ' + vals[1]
+                        os.system('kill -9 ' + vals[1])
 
-        # sleep for 1 minute
-        frecord.flush()
-        nUploaderCycles = nUploaderCycles + 1
-        time.sleep(60)
+            # sleep for 1 minute
+            frecord.flush()
+            nUploaderCycles = nUploaderCycles + 1
+            time.sleep(60)
 
-    # sleep for 10 minutes only if we have no runs to upload
+    # sleep for 10 minutes 
     fout.flush()
     frecord.flush()
-    time.sleep((maxCycles - nUploaderCycles)*60)
+    time.sleep(600)
 
 fout.close()
 frecord.close()
