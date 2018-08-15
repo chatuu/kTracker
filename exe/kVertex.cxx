@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
     {
         dataTree->GetEntry(i);
 
-        if(!rawEvent->isTriggeredBy(SRawEvent::MATRIX3)) continue;
+        //if(!rawEvent->isTriggeredBy(SRawEvent::MATRIX3)) continue;
         vtxfit->setRecEvent(recEvent, 1, 1);
 
         if(recEvent->getNDimuons() > 0) saveTree_pp->Fill();
@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
     {
         dataTree->GetEntry(i);
 
-        if(!rawEvent->isTriggeredBy(SRawEvent::MATRIX3)) continue;
+        //if(!rawEvent->isTriggeredBy(SRawEvent::MATRIX3)) continue;
         vtxfit->setRecEvent(recEvent, -1, -1);
 
         if(recEvent->getNDimuons() > 0) saveTree_mm->Fill();
