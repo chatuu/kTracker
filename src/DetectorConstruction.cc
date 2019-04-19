@@ -315,7 +315,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   char constant[30];
   while ((row = mysql_fetch_row(res)))
   {
-    sprintf(constant, row[0]);
+    sprintf(constant, "%s", row[0]);
     if (!strcmp(constant, "targetLength"))
       targetLength = atof(row[1])*cm;
     else if (!strcmp(constant, "targetCenter"))

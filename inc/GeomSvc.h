@@ -107,8 +107,10 @@ public:
     double rotM[3][3];          //rotation matrix
 
     //Calibration info
-    double tmin;
+    double tmin;                // time window from TW-TDC hits
     double tmax;
+    double tmin_trig;           // time window from v1495 hits
+    double tmax_trig;
     TSpline3* rtprofile;
 };
 
@@ -181,7 +183,7 @@ public:
     ///Calibration related
     bool isCalibrationLoaded() { return calibration_loaded; }
     double getDriftDistance(int detectorID, double tdcTime);
-    bool isInTime(int detectorID, double tdcTime);
+    bool isInTime(int detectorID, double tdcTime, bool trigHits = false);
     TSpline3* getRTCurve(int detectorID) { return planes[detectorID].rtprofile; }
 
     ///Convert the stereo hits to Y value

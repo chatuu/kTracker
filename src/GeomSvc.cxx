@@ -656,6 +656,7 @@ void GeomSvc::loadAlignment(const std::string& alignmentFile_chamber, const std:
     _align_chamber.open(alignmentFile_chamber.c_str(), ios::in);
 
     char buf[300];
+    /*
     if(_align_chamber)
     {
         for(int i = 1; i <= nChamberPlanes; i++)
@@ -681,6 +682,7 @@ void GeomSvc::loadAlignment(const std::string& alignmentFile_chamber, const std:
         cout << "GeomSvc: loaded chamber alignment parameters from " << alignmentFile_chamber << endl;
     }
     _align_chamber.close();
+    */
 
     //load alignment numbers for hodos
     fstream _align_hodo;
@@ -693,7 +695,7 @@ void GeomSvc::loadAlignment(const std::string& alignmentFile_chamber, const std:
             _align_hodo.getline(buf, 100);
             istringstream stringBuf(buf);
 
-            stringBuf >> planes[i].deltaW;
+            stringBuf >> planes[i].deltaW >> planes[i].tmin >> planes[i].tmax >> planes[i].tmin_trig >> planes[i].tmax_trig;
             planes[i].deltaX = planes[i].deltaW*planes[i].costheta;
             planes[i].deltaY = planes[i].deltaW*planes[i].sintheta;
             planes[i].update();
@@ -822,9 +824,16 @@ void GeomSvc::loadCalibration(const std::string& calibrationFile)
     _cali_file.close();
 }
 
-bool GeomSvc::isInTime(int detectorID, double tdcTime)
+bool GeomSvc::isInTime(int detectorID, double tdcTime, bool triggerHit)
 {
-    return tdcTime > planes[detectorID].tmin && tdcTime < planes[detectorID].tmax;
+    if(triggerHit)
+    {
+        return tdcTime > planes[detectorID].tmin_trig && tdcTime < planes[detectorID].tmax_trig;
+    }
+    else
+    {
+        return tdcTime > planes[detectorID].tmin && tdcTime < planes[detectorID].tmax;
+    }
 }
 
 void GeomSvc::printWirePosition()
