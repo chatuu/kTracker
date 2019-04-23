@@ -278,8 +278,7 @@ bool TriggerAnalyzer::acceptEvent(SRawEvent* rawEvent, int mode)
         for(std::vector<Hit>::iterator iter = rawEvent->getAllHits().begin(); iter != rawEvent->getAllHits().end(); ++iter)
         {
             if(iter->detectorID <= nChamberPlanes || iter->detectorID > nChamberPlanes+nHodoPlanes) continue;
-            //if(!iter->isInTime()) continue;
-            if(!p_geomSvc->isInTime(iter->detectorID, iter->tdcTime)) continue;
+            if(!iter->isInTime()) continue;
 
             detectorIDs[nHits] = iter->detectorID;
             elementIDs[nHits]  = iter->elementID;
@@ -292,8 +291,7 @@ bool TriggerAnalyzer::acceptEvent(SRawEvent* rawEvent, int mode)
     {
         for(std::vector<Hit>::iterator iter = rawEvent->getTriggerHits().begin(); iter != rawEvent->getTriggerHits().end(); ++iter)
         {
-            //if(!iter->isInTime()) continue;
-            if(!p_geomSvc->isInTime(iter->detectorID, iter->tdcTime, true)) continue;
+            if(!iter->isInTime()) continue;
 
             detectorIDs[nHits] = iter->detectorID;
             elementIDs[nHits]  = iter->elementID;

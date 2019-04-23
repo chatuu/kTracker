@@ -78,6 +78,8 @@ int EventReducer::reduceEvent(SRawEvent* rawEvent)
     hodohitlist.clear();
     for(std::vector<Hit>::iterator iter = rawEvent->fAllHits.begin(); iter != rawEvent->fAllHits.end(); ++iter)
     {
+        if(outoftime && (!iter->isInTime())) continue;
+
         if(iter->detectorID <= nChamberPlanes)    //chamber hits
         {
             if(realization && rndm.Rndm() > chamEff) continue;
@@ -93,14 +95,11 @@ int EventReducer::reduceEvent(SRawEvent* rawEvent)
         if(externalpar)
         {
             iter->pos = p_geomSvc->getMeasurement(iter->detectorID, iter->elementID);
-            iter->tdcTime = iter->tdcTime + timeOffset;
-            iter->driftDistance = p_geomSvc->getDriftDistance(iter->detectorID, iter->tdcTime); // this is OK because hodoscopes don't have R-T curve anyways
-            if(fabs(timeOffset) > 0.1) iter->setInTime(p_geomSvc->isInTime(iter->detectorID, iter->tdcTime));  // only do this if there is a meaningful change 
+            iter->driftDistance = p_geomSvc->getDriftDistance(iter->detectorID, iter->tdcTime + timeOffset); // this is OK because hodoscopes don't have R-T curve anyways
+            //iter->setInTime(p_geomSvc->isInTime(iter->detectorID, iter->tdcTime));
         }
 
         if(realization && iter->detectorID <= nChamberPlanes) iter->driftDistance += rndm.Gaus(0., chamResol);
-
-        if(outoftime && (!iter->isInTime())) continue;
 
         if(iter->detectorID >= nChamberPlanes+1 && iter->detectorID <= nChamberPlanes+nHodoPlanes)
         {
