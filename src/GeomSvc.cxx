@@ -5,6 +5,8 @@ Implementation of class GeomSvc.
 
 Author: Kun Liu, liuk@fnal.gov
 Created: 10-19-2011
+____________________________
+Fixing D1 ID mismatch for Run FY2017
 */
 
 #include <iostream>
@@ -213,12 +215,12 @@ void GeomSvc::init()
     map_detectorID.insert(nameToID("D0Xp", 4));
     map_detectorID.insert(nameToID("D0V", 5));
     map_detectorID.insert(nameToID("D0Vp", 6));
-    map_detectorID.insert(nameToID("D1V", 7));
-    map_detectorID.insert(nameToID("D1Vp", 8));
+    map_detectorID.insert(nameToID("D1V", 11)); //modified from 7 -> 11 Hugo
+    map_detectorID.insert(nameToID("D1Vp", 12)); //modified from 8 -> 12 Hugo
     map_detectorID.insert(nameToID("D1X", 9));
     map_detectorID.insert(nameToID("D1Xp", 10));
-    map_detectorID.insert(nameToID("D1U", 11));
-    map_detectorID.insert(nameToID("D1Up", 12));
+    map_detectorID.insert(nameToID("D1U", 7)); //modified from 11 -> 7 Hugo
+    map_detectorID.insert(nameToID("D1Up", 8)); //modified from 12 -> 8 Hugo
     map_detectorID.insert(nameToID("D2V", 13));
     map_detectorID.insert(nameToID("D2Vp", 14));
     map_detectorID.insert(nameToID("D2Xp", 15));
