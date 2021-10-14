@@ -94,9 +94,9 @@ int EventReducer::reduceEvent(SRawEvent* rawEvent)
         if(externalpar)
         {
             iter->pos = p_geomSvc->getMeasurement(iter->detectorID, iter->elementID);
-            iter->driftDistance = p_geomSvc->getDriftDistance(iter->detectorID, iter->tdcTime + timeOffset); // this is OK because hodoscopes don't have R-T curve anyways
-            if (iter->detectorID<=nChamberPlanes || (iter->detectorID>nChamberPlanes+nHodoPlanes && iter->nChamberPlanes+nHodoPlanes+nPropPlanes)){ // only modify the intime flag for chamber and proptube hits
+            if (iter->detectorID<=nChamberPlanes || (iter->detectorID>nChamberPlanes+nHodoPlanes && iter->detectorID<=nChamberPlanes+nHodoPlanes+nPropPlanes)){ // only modify the intime flag for chamber and proptube hits
 							iter->setInTime(p_geomSvc->isInTime(iter->detectorID, iter->tdcTime));
+            	iter->driftDistance = p_geomSvc->getDriftDistance(iter->detectorID, iter->tdcTime + timeOffset); // this is OK because hodoscopes don't have R-T curve anyways
 						}
         }
 
