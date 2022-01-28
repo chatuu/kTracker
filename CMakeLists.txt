@@ -45,13 +45,6 @@ if(ALIGNMENTMODE)
   add_definitions(-DALIGNMENT_MODE)
 endif()
 
-# command line option to enable DC0 fix in Run4 -- i.e. shift tdcTime and fake DC0 hit
-option(RUN4DC0FIX "Enable Run4 DC0 fix" OFF)
-if(RUN4DC0FIX)
-  message("-- IMPORTANT! Run4 DC0 fix is enabled")
-  add_definitions(-DRUN4DC0FIX)
-endif()
-
 # Add version number from git if exists
 if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
   execute_process(COMMAND git rev-parse --abbrev-ref HEAD OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -94,7 +87,7 @@ if(ALIGNMENTMODE)
     )
 endif()
 
-# DPSim source code
+# kTracker source code
 include_directories(${PROJECT_SOURCE_DIR}/inc)
 file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cxx   ${PROJECT_SOURCE_DIR}/src/*.cc)
 file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/*.hh)
@@ -116,18 +109,6 @@ execute_process(COMMAND root-config --prefix OUTPUT_VARIABLE ROOT_PREFIX  OUTPUT
 execute_process(COMMAND root-config --cflags OUTPUT_VARIABLE ROOT_CFLAGS  OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process(COMMAND root-config --libs   OUTPUT_VARIABLE ROOT_LINK    OUTPUT_STRIP_TRAILING_WHITESPACE)
 set(ROOT_LINK "${ROOT_LINK} -lMinuit2")  ## because somehow root-config does not include Minuit2 library
-
-# the rest packages are not needed for libonly mode
-# Geant4
-find_program(G4CONF "geant4-config")
-if(G4CONF)
-  message("-- Detecting Geant4:  found at ${G4CONF}")
-else()
-  message(FATAL_ERROR "-- Detecting Geant4:  not found")
-endif()
-find_package(Geant4 REQUIRED vis_all)
-execute_process(COMMAND geant4-config --cflags OUTPUT_VARIABLE GEANT4_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND geant4-config --libs   OUTPUT_VARIABLE GEANT4_LINK   OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # MySQL
 find_program(MYSQLCONF "mysql_config")
@@ -155,13 +136,13 @@ else()
   message(FATAL_ERROR "-- Detecting BOOST:   not found")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GEANT4_CFLAGS} ${ROOT_CFLAGS} ${MYSQL_CFLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CFLAGS} ${MYSQL_CFLAGS}")
 if(ALIGNMENTMODE)
   add_library(kTracker SHARED ${sources} ${headers} ${PROJECT_SOURCE_DIR}/src/FastTrackletDict.cxx ${PROJECT_SOURCE_DIR}/src/SRawEventDict.cxx ${PROJECT_SOURCE_DIR}/src/SRecEventDict.cxx ${PROJECT_SOURCE_DIR}/src/SMillepedeUtilDict.cxx ${PROJECT_SOURCE_DIR}/src/TriggerRoadDict.cxx)
-  target_link_libraries(kTracker "${GEANT4_LINK} ${ROOT_LINK} ${MYSQL_LINK} -lgfortran")
+  target_link_libraries(kTracker "${ROOT_LINK} ${MYSQL_LINK} -lgfortran")
 else()
   add_library(kTracker SHARED ${sources} ${headers} ${PROJECT_SOURCE_DIR}/src/FastTrackletDict.cxx ${PROJECT_SOURCE_DIR}/src/SRawEventDict.cxx ${PROJECT_SOURCE_DIR}/src/SRecEventDict.cxx ${PROJECT_SOURCE_DIR}/src/TriggerRoadDict.cxx)
-  target_link_libraries(kTracker "${GEANT4_LINK} ${ROOT_LINK} ${MYSQL_LINK}")
+  target_link_libraries(kTracker "${ROOT_LINK} ${MYSQL_LINK}")
 endif()
 
 file(GLOB execs ${PROJECT_SOURCE_DIR}/exe/*.cxx)
@@ -172,7 +153,7 @@ foreach(exec ${execs})
 
   add_executable(${exec} ${PROJECT_SOURCE_DIR}/exe/${exec}.cxx)
   target_link_libraries(${exec} ${PROJECT_SOURCE_DIR}/lib/libkTracker.so)
-  target_link_libraries(${exec} "${GEANT4_LINK} ${ROOT_LINK} ${MYSQL_LINK}")
+  target_link_libraries(${exec} "${ROOT_LINK} ${MYSQL_LINK}")
   if(ALIGNMENTMODE)
     target_link_libraries(${exec} "-lgfortran")
   endif()

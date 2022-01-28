@@ -22,81 +22,81 @@ Created: 06-17-2015
 #include "GeomSvc.h"
 #include "SRawEvent.h"
 #include "TriggerAnalyzer.h"
-#include "JobOptsSvc.h"
+#include "recoConsts.h"
 
 class EventReducer
 {
 public:
-    EventReducer(TString options);
-    ~EventReducer();
+  EventReducer(TString options);
+  ~EventReducer();
 
-    //main external call
-    int reduceEvent(SRawEvent* rawEvent);
+  //main external call
+  int reduceEvent(SRawEvent *rawEvent);
 
-    //external handle to set chamber efficiency/resolution
-    void setChamEff(double val)   { chamEff = val;   }
-    void setChamResol(double val) { chamResol = val; }
+  //external handle to set chamber efficiency/resolution
+  void setChamEff(double val) { chamEff = val; }
+  void setChamResol(double val) { chamResol = val; }
 
-    //after pulse removal -- remove the hits within a certain window, probably will be set via job option cards 
-    void afterPulseReducer();
+  //after pulse removal -- remove the hits within a certain window, probably will be set via job option cards
+  void afterPulseReducer();
 
-    //sagitta ratio reducer
-    void sagittaReducer();
+  //sagitta ratio reducer
+  void sagittaReducer();
 
-    //hough transform reducer
-    void houghReducer();
+  //hough transform reducer
+  void houghReducer();
 
-    //hit cluster remover
-    void deClusterize();
-    void processCluster(std::vector<std::list<Hit>::iterator>& cluster);
+  //hit cluster remover
+  void deClusterize();
+  void processCluster(std::vector<std::list<Hit>::iterator> &cluster);
 
-    //hodosope maksing
-    void initHodoMaskLUT();
-    void hodoscopeMask(std::list<Hit>& chamberhits, std::list<Hit>& hodohits);
-    bool lineCrossing(double x1, double y1, double x2, double y2,
-                      double x3, double y3, double x4, double y4);
+  //hodosope maksing
+  void initHodoMaskLUT();
+  void hodoscopeMask(std::list<Hit> &chamberhits, std::list<Hit> &hodohits);
+  bool lineCrossing(double x1, double y1, double x2, double y2,
+                    double x3, double y3, double x4, double y4);
 
 private:
-    //pointer to geometry service, inited outside
-    GeomSvc* p_geomSvc;
+  //pointer to geometry service, inited outside
+  GeomSvc *p_geomSvc;
 
-    //Pointer to job options
-    JobOptsSvc* p_jobOptsSvc;
+  //Pointer to reco consts
+  recConsts* rc;
 
-    //pointer to trigger analyzer, inited inside
-    TriggerAnalyzer* p_triggerAna;
+  //pointer to trigger analyzer, inited inside
+  TriggerAnalyzer *p_triggerAna;
 
-    //Random number
-    TRandom rndm;
+  //Random number
+  TRandom rndm;
 
-    //temporary container for the hit list
-    std::list<Hit> hitlist;
-    std::list<Hit> hodohitlist;
+  //temporary container for the hit list
+  std::list<Hit> hitlist;
+  std::list<Hit> hodohitlist;
 
-    //loop-up table of hodoscope masking
-    typedef std::map<int, std::vector<int> > LUT;
-    LUT h2celementID_lo;
-    LUT h2celementID_hi;
-    LUT c2helementIDs;
+  //loop-up table of hodoscope masking
+  typedef std::map<int, std::vector<int>> LUT;
+  LUT h2celementID_lo;
+  LUT h2celementID_hi;
+  LUT c2helementIDs;
 
-    //flags of the hit manipulation method
-    bool afterhit;            //after pulse removal
-    bool hodomask;            //hodoscope masking
-    bool outoftime;           //out of time hit removal
-    bool decluster;           //remove hit clusters in chamber
-    bool mergehodo;           //merge trigger hit with hit
-    bool triggermask;         //use active trigger road for track masking
-    bool sagitta;             //remove the hits which cannot form a sagitta triplet
-    bool hough;               //remove the hits which cannot form a peak in hough space, will be implemented later
-    bool externalpar;         //re-apply the alignment and calibration parameters
-    bool realization;         //apply detector efficiency and resolution by dropping and smear
-    bool difnim;              //treat the nim/FPGA triggered events differently, i.e. no trigger masking in NIM events
+  //flags of the hit manipulation method
+  bool afterhit;    //after pulse removal
+  bool hodomask;    //hodoscope masking
+  bool outoftime;   //out of time hit removal
+  bool decluster;   //remove hit clusters in chamber
+  bool mergehodo;   //merge trigger hit with hit
+  bool triggermask; //use active trigger road for track masking
+  bool sagitta;     //remove the hits which cannot form a sagitta triplet
+  bool hough;       //remove the hits which cannot form a peak in hough space, will be implemented later
+  bool externalpar; //re-apply the alignment and calibration parameters
+  bool realization; //apply detector efficiency and resolution by dropping and smear
+  bool difnim;      //treat the nim/FPGA triggered events differently, i.e. no trigger masking in NIM events
 
-    //Adjustable parameters
-    double timeOffset;        //timing correction
-    double timeRejWin;     //after pulse removal win
-    double chamEff;           //chamber efficiency
-    double chamResol;         //chamber resolution
+  //Adjustable parameters
+  double timeOffset; //timing correction
+  double timeRejWin; //after pulse removal win
+  double chamEff;    //chamber efficiency
+  double chamResol;  //chamber resolution
 };
 
 #endif
