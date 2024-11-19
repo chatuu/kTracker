@@ -140,30 +140,7 @@ for i in range(options.initial, options.nIter+1):
     runCmd('mv mille.conf %s/mille.conf_%d_%d' % (options.work, i, nTry))
     runCmd('mv log_mille_%d %s' % (i, options.work))
     runCmd('rm %s' % inputFile)
-
-    # chamber calibration
-    if options.cali:
-        runCmd('./makeRTv7 %d %d %s > %s/log_calibration_%d' % (options.run, i, outputFile, options.work, i))
-        runCmd('cp param_calib/calibration_%d.txt %s' % (i, options.work))
-        runCmd('mv param_calib/calibration_%d.txt alignment/calibration.txt' % i)
-        runCmd('mv plot/* %s' % options.work)
-
-    # hodo alignment
-    if options.hodo:
-        for m in range(10):
-            runCmd('./hodoAlign %s alignment_hodo_%d.txt' % (outputFile, i))
-            runCmd('cp alignment_hodo_%d.txt alignment/alignment_hodo.txt' % i)
-        runCmd('mv hodo_eval.root %s/hodo_eval_%d.root' % (options.work, i))
-        runCmd('mv alignment_hodo_%d.txt %s' % (i, options.work))
-
-    # prop alignment
-    if options.prop:
-        for m in range(10):
-            runCmd('./propAlign %s alignment_prop_%d.txt' % (outputFile, i))
-            runCmd('cp alignment_prop_%d.txt alignment/alignment_prop.txt' % i)
-        runCmd('mv prop_eval.root %s/prop_eval_%d.root' % (options.work, i))
-        runCmd('mv alignment_prop_%d.txt %s' % (i, options.work))
-
+   
     # final clean up
     runCmd('rm -r %s/*' % conf.outdir)
     runCmd('mv %s %s' % (outputFile, options.work))
